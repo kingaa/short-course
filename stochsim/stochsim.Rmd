@@ -264,7 +264,7 @@ As an example that we can probe in some depth, let's look at an isolated outbrea
 Download the data and examine it:
 ```{r flu-data1}
 base_url <- "http://kingaa.github.io/short-course/"
-bsflu <- read.table(paste0(base_url,"data/bsflu_data.txt"))
+bsflu <- read.table(paste0(base_url,"stochsim/bsflu_data.txt"))
 head(bsflu)
 ```
 The variable `B` refers to boys confined to bed and `C` to boys in convalescence.

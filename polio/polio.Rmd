@@ -6,7 +6,7 @@ output:
   html_document:
     toc: yes
     toc_depth: 4
-bibliography: polio.bib
+bibliography: ../course.bib
 csl: ../ecology.csl
 ---
 
@@ -73,10 +73,10 @@ options(cores=30)
 ## Introduction
 
 The massive global polio eradication initiative (GPEI) has brought polio from a major global disease to the brink of extinction. 
-Finishing this task is proving hard, and improved understanding polio ecology might assist.  Martinez et al. investigated this using extensive state level pre-vaccination era data in the USA [[@martinez-bakker15]](http://dx.doi.org/10.1371/journal.pbio.1002172). 
-We will follow the approach of @martinez-bakker15 for one state (Wisconsin). 
+Finishing this task is proving hard, and improved understanding polio ecology might assist.  Martinez et al. investigated this using extensive state level pre-vaccination era data in the USA [[@Martinez-Bakker2015]](http://dx.doi.org/10.1371/journal.pbio.1002172). 
+We will follow the approach of @Martinez-Bakker2015 for one state (Wisconsin). 
 In the context of their model, we can quantify seasonality of transmission, the role of the birth rate in explaining the transmission dynamics, and the persistence mechanism of polio. 
-@martinez-bakker15 carrried out this analysis for all 48 contigous states and District of Columbia, and their data and code are all publicly available. 
+@Martinez-Bakker2015 carrried out this analysis for all 48 contigous states and District of Columbia, and their data and code are all publicly available. 
 The data we study, in consist of `cases`, the monthly reported polio cases; `births`, the  monthly recorded births; `pop`, the annual census; `time`, date in years.
 
 ```{r data}
@@ -101,16 +101,16 @@ polio_data %>%
 
 ### Model formulation
 
-We implement the compartment model of @martinez-bakker15, having compartments representing susceptible babies in each of six one-month birth cohorts ($S^B_1$,...,$S^B_6$), susceptible older individuals ($S^O$), infected babies ($I^B$), infected older individuals ($I^O$), and recovered with lifelong immunity ($R$). The state vector of the disease transmission model consists of numbers of individuals in each compartment at each time, 
+We implement the compartment model of @Martinez-Bakker2015, having compartments representing susceptible babies in each of six one-month birth cohorts ($S^B_1$,...,$S^B_6$), susceptible older individuals ($S^O$), infected babies ($I^B$), infected older individuals ($I^O$), and recovered with lifelong immunity ($R$). The state vector of the disease transmission model consists of numbers of individuals in each compartment at each time, 
 $$X(t)=\big(S^B_1(t),...,S^B_6(t), I^B(t),I^O(t),R(t) \big).$$
 Babies under six months are modeled as fully protected from symptomatic poliomyelitis; older infections lead to reported cases (usually paralysis) at a rate $\rho$. 
 
-The flows through the compartments are graphically represented as follows (Figure 1A of @martinez-bakker15):
+The flows through the compartments are graphically represented as follows (Figure 1A of @Martinez-Bakker2015):
 
 ![Polio model diagram](./polio_fig1A.png)
 
 Since duration of infection is comparable to the one-month reporting aggregation, a discrete time model may be appropriate. 
-@martinez-bakker15 fitted monthly observations from May 1932 through January 1953, so we define $t_n=1932+ (4+n)/12$ for $n=0,\dots,N$, and we write
+@Martinez-Bakker2015 fitted monthly observations from May 1932 through January 1953, so we define $t_n=1932+ (4+n)/12$ for $n=0,\dots,N$, and we write
 $$X_n=X(t_n)=\big(S^B_{1,n},...,S^B_{6,n}, I^B_n,I^O_n,R_n \big).$$
 The mean force of infection, in units of $\mathrm{yr}^{-1}$, is modeled as
 $$\bar\lambda_n=\left( \beta_n \frac{I^O_n+I^B_n}{P_n} + \psi \right)$$
@@ -123,7 +123,7 @@ Within each month, all susceptible individuals are modeled as having exposure to
 $$p_n = \exp\big\{ -(\delta+\lambda_n)/12\big\},$$
 with the chance of polio infection being 
 $$q_n = (1-p_n)\lambda_n\big/(\lambda_n+\delta).$$
-We employ a continuous population model, with no demographic stochasticity (in some sense, the demographic-scale stochasticity in $\lambda_n$ is in fact environmental stochasticity since it modifies a rate that affects all compartments equally). Writing $B_n$ for births in month $n$, we obtain the dynamic model of @martinez-bakker15:
+We employ a continuous population model, with no demographic stochasticity (in some sense, the demographic-scale stochasticity in $\lambda_n$ is in fact environmental stochasticity since it modifies a rate that affects all compartments equally). Writing $B_n$ for births in month $n$, we obtain the dynamic model of @Martinez-Bakker2015:
 $$\begin{aligned}
 S^B_{1,n+1}&= B_{n+1}\\
 S^B_{k,n+1}&= p_nS^B_{k-1,n} \quad\mbox{for $k=2,\dots,6$}\\
@@ -136,7 +136,7 @@ $$Y_n= \max\{\mathrm{round}(Z_n),0\}, \quad Z_n\sim\dist{Normal}{\rho I^O_n, \bi
 Additional parameters are used to specify initial state values at time $t_0=1932+ 4/12$. 
 We will suppose there are parameters $\big(\tilde S^B_{1,0},...,\tilde S^B_{6,0}, \tilde I^B_0,\tilde I^O_0,\tilde S^O_0\big)$ that specify the population in each compartment at time $t_0$ via
 $$ S^B_{1,0}= {\tilde S}^B_{1,0} ,...,S^B_{6,0}= \tilde S^B_{6,0}, \quad I^B_{0}= P_0 \tilde I^B_{0},\quad S^O_{0}= P_0 \tilde S^O_{0}, \quad I^O_{0}= P_0 \tilde I^O_{0}.$$
-Following @martinez-bakker15, we make an approximation for the initial conditions of ignoring infant infections at time $t_0$. 
+Following @Martinez-Bakker2015, we make an approximation for the initial conditions of ignoring infant infections at time $t_0$. 
 Thus, we set $\tilde I^B_{0}=0$ and use monthly births in the preceding months (ignoring infant mortality) to fix $\tilde S^B_{k,0}=B_{1-k}$ for $k=1,\dots,6$. The estimated initial conditions are then defined by the two parameters $\tilde I^O_{0}$ and $\tilde S^O_{0}$, since the initial recovered population, $R_0$, is specified by subtraction of all the other compartments from the total initial population, $P_0$. 
 Note that it is convenient to parameterize the estimated initial states as fractions of the population, whereas the initial states fixed at births are parameterized directly as a count.
 
@@ -431,7 +431,7 @@ write.csv(params,file="polio_params.csv",row.names=FALSE,na="")
 
 This search gives a maximized likelihood estimate of `r with(m2,round(max(loglik),1))` with a standard error of `r with(subset(m2,loglik==max(loglik)),round(loglik.se,2))`.
 It took about `r round(t2[3]/60)` mins on a `r getOption("cores")`-core machine.
-This compares with the results of @martinez-bakker15, who report a maximized likelihood of -794.3 with a standard error of 0.11.
+This compares with the results of @Martinez-Bakker2015, who report a maximized likelihood of -794.3 with a standard error of 0.11.
 
 Plotting these diverse parameter estimates can help to give a feel for the global geometry of the likelihood surface.
 ```{r pairs_global,fig.width=6,fig.height=6}
@@ -518,7 +518,9 @@ pairs(~loglik+psi+rho+tau+sigma_dem+sigma_env,data=subset(pp,loglik>max(loglik)-
 
 ### Simulation to investigate the fitted model: Local persistence
 
-The scientific purpose of fitting a model typically involves analyzing properties of the fitted model, often investigated using simulation. Following @martinez-bakker15, we are interested in how often months with no reported cases ($Y_n=0$) correspond to months without any local asymptomatic cases, defined for our continuous state model as $I^B_n+I^O_n<\tfrac{1}{2}$. For Wisconsin, using our model at the estimated MLE, we compute as follows:
+The scientific purpose of fitting a model typically involves analyzing properties of the fitted model, often investigated using simulation.
+Following @Martinez-Bakker2015, we are interested in how often months with no reported cases ($Y_n=0$) correspond to months without any local asymptomatic cases, defined for our continuous state model as $I^B_n+I^O_n<\tfrac{1}{2}$.
+For Wisconsin, using our model at the estimated MLE, we compute as follows:
 
 ```{r persistence}
 library(plyr)

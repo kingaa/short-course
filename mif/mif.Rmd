@@ -5,7 +5,7 @@ date: "06/25/2015"
 output:
   html_document:
     toc: yes
-bibliography: mif.bib
+bibliography: ../course.bib
 csl: ../ecology.csl
 ---
 
@@ -61,7 +61,7 @@ stopifnot(packageVersion("pomp")>="1.4")
 
 This tutorial is part of a series given as a [short course](http://kingaa.github.io/short-course) given at the [Summer Institute in Statistics and Modeling in Infectious Diseases](http://sismid.uw.org).
 It covers likelihood estimation via the method of iterated filtering.
-It presupposes familiarity with building partially observed Markov process (POMP) objects in the **R** package **pomp** [@king15]. 
+It presupposes familiarity with building partially observed Markov process (POMP) objects in the **R** package **pomp** [@King2016]. 
 **pomp** is available from [CRAN](http://cran.r-project.org/web/packages/pomp) and [github](http://kingaa.github.io/pomp).
 The code here runs **pomp** version `r packageVersion("pomp")` on **R** version `r getRversion()`.
 This tutorial follows on from the topic of carrying out particle filtering (also known as sequential Monte Carlo) via `pfilter` in **pomp**. 
@@ -75,7 +75,7 @@ We have the following goals:
 
 ## Introduction
 
-Many, many statistical methods have been proposed for inference on POMP models [@he10,@king15]. The volume of research indicates both the importance and the difficulty of the problem. Let's start by considering three criteria to categorize inference methods: the plug-and-play property; full-information or feature-based; frequentist or Bayesian.
+Many, many statistical methods have been proposed for inference on POMP models [@he10,@King2016]. The volume of research indicates both the importance and the difficulty of the problem. Let's start by considering three criteria to categorize inference methods: the plug-and-play property; full-information or feature-based; frequentist or Bayesian.
 
 ### Plug-and-play (also called simulation-based) methods
 
@@ -241,7 +241,7 @@ Here is one possible explanation: the precision of interest is often the second 
 
 For a relatively simple epidemiological example of IF2, we consider fitting a stochastic SIR model to an influenza outbreak in a British boarding school [@anonymous78]. Reports consist of the number of children confined to bed for each of the 14 days of the outbreak. The total number of children at the school was 763, and a total of 512 children spent time away from class. Only one adult developed influenza-like illness, so adults are omitted from the data and model. First, we read in the boarding school flu (bsflu) data:
 ```{r load_bbs}
-bsflu_data <- read.table("http://kingaa.github.io/short-course/data/bsflu_data.txt")
+bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt")
 ```
 
 Our model is a variation on a basic SIR Markov chain, with state $X(t)=(S(t),I(t),R_1(t),R_2(t),R_3(t))$ giving the number of individuals in the susceptible and infectious categories, and three stages of recovery. The recovery stages, $R_1$, $R_2$ and $R_3$, are all modeled to be non-contagious. $R_1$ consists of individuals who are bed-confined if they show symptoms; $R_2$ consists of individuals who are convalescent if they showed symptoms; $R_3$ consists of recovered individuals who have returned to school-work if they were symtomatic.  The observation on day $n$ of the observed epidemic (with $n=1$ being 22 January) consists of the numbers of children who are bed-confined and convalescent. These measurements are modeled as $Y_n=(B_n,C_n)$ with $B_n\sim\mathrm{Poisson}(\rho R_1(t_n))$ and $C_n\sim\mathrm{Poisson}(\rho R_2(t_n))$. Here, $\rho$ is a reporting rate corresponding to the chance of being symptomatic.

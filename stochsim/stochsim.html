@@ -291,7 +291,7 @@ P[N_{IR}(t+\delta)=N_{IR}(t)] &amp;= 1-\mu_{IR}(t) \, I(t) \delta + o(\delta)\\
 <h3>The boarding-school flu outbreak</h3>
 <p>As an example that we can probe in some depth, let’s look at an isolated outbreak of influenza that occurred in a boarding school for boys in England <span class="citation">(Anonymous 1978)</span>. <!--- 763 boys were at risk, and ultimately 512 became infected. ---> Download the data and examine it:</p>
 <pre class="r"><code>base_url &lt;- &quot;http://kingaa.github.io/short-course/&quot;
-bsflu &lt;- read.table(paste0(base_url,&quot;data/bsflu_data.txt&quot;))
+bsflu &lt;- read.table(paste0(base_url,&quot;stochsim/bsflu_data.txt&quot;))
 head(bsflu)</code></pre>
 <pre><code>##              B  C day
 ## 1978-01-22   1  0   1
@@ -398,10 +398,10 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim==&quot;data&quot;))+
 <h2>References</h2>
 <div id="refs" class="references">
 <div id="ref-Anonymous1978">
-<p>Anonymous. 1978. Influenza in a boarding school. Br Med J 1:587.</p>
+<p>Anonymous. 1978. Influenza in a boarding school. British medical journal 1:587.</p>
 </div>
 <div id="ref-bhadra11">
-<p>Bhadra, A., E. L. Ionides, K. Laneri, M. Pascual, M. Bouma, and R. Dhiman. 2011. Malaria in Northwest India: Data analysis via partially observed stochastic differential equation models driven by Lévy noise. J. Am. Stat. Assoc. 106:440–451.</p>
+<p>Bhadra, A., E. L. Ionides, K. Laneri, M. Pascual, M. Bouma, and R. Dhiman. 2011. Malaria in Northwest India: Data analysis via partially observed stochastic differential equation models driven by Lévy noise. Journal of the American Statistical Association 106:440–451.</p>
 </div>
 <div id="ref-breto09">
 <p>Bretó, C., D. He, E. L. Ionides, and A. A. King. 2009. Time series analysis via mechanistic models. Annals of Applied Statistics 3:319–348.</p>
@@ -410,7 +410,7 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim==&quot;data&quot;))+
 <p>Keeling, M., and P. Rohani. 2007. Modeling infectious diseases in humans and animals. Princeton University Press, Princeton.</p>
 </div>
 <div id="ref-laneri10">
-<p>Laneri, K., A. Bhadra, E. L. Ionides, M. Bouma, R. Yadav, R. Dhiman, and M. Pascual. 2010. Forcing versus feedback: Epidemic malaria and monsoon rains in NW India. PLoS Comput. Biol. 6:e1000898.</p>
+<p>Laneri, K., A. Bhadra, E. L. Ionides, M. Bouma, R. Yadav, R. Dhiman, and M. Pascual. 2010. Forcing versus feedback: Epidemic malaria and monsoon rains in NW India. PLoS Computational Biology 6:e1000898.</p>
 </div>
 </div>
 </div>

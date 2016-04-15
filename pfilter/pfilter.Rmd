@@ -131,7 +131,7 @@ Measurements, $Y_n$, at time $t_n$ depend on the state, $X_n$, at that time.
 State variables depend on state variables at the previous timestep.
 To be more precise, the distribution of the state $X_{n+1}$, conditional on $X_{n}$, is independent of the values of $X_{k}$, $k<n$ and $Y_{k}$, $k\le n$.
 Moreover, the distribution of the measurement $Y_{n}$, conditional on $X_{n}$, is independent of all other variables.
-```{r ssdiag,echo=FALSE,out.width="1200px",purl=FALSE}
+```{r ssdiag,echo=FALSE,purl=FALSE}
 library(grid)
 vp <- viewport(width=unit(20/3,"inches"),height=unit(5,"inches"))
 pushViewport(vp)
@@ -233,7 +233,7 @@ Let's reconstruct the toy SIR model we were working with.
 
 ```{r sir-construct}
 base_url <- "http://kingaa.github.io/short-course/"
-url <- paste0(base_url,"data/bsflu_data.txt")
+url <- paste0(base_url,"stochsim/bsflu_data.txt")
 bsflu <- read.table(url)
 
 sir_step <- Csnippet("

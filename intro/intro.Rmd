@@ -215,7 +215,7 @@ Schematic of the structure of a POMP showing causal relations and direction of i
    
 *********************
 
-```{r ssdiag2,echo=FALSE,out.width="1200px",purl=FALSE}
+```{r ssdiag2,echo=FALSE,purl=FALSE}
 library(grid)
 vp <- viewport(width=unit(20/3,"inches"),height=unit(5,"inches"))
 pushViewport(vp)
@@ -451,7 +451,7 @@ We'll illustrate this process a dataset of *Parus major* abundance in Wytham Woo
 
 Download and plot the data:
 ```{r parus-data}
-loc <- url("http://kingaa.github.io/short-course/data/parus.csv")
+loc <- url("http://kingaa.github.io/short-course/intro/parus.csv")
 dat <- read.csv(loc)
 head(dat)
 plot(pop~year,data=dat,type='o')

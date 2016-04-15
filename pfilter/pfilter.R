@@ -18,7 +18,7 @@ stopifnot(packageVersion("pomp")>="1.4.5")
 
 ## ----sir-construct-------------------------------------------------------
 base_url <- "http://kingaa.github.io/short-course/"
-url <- paste0(base_url,"data/bsflu_data.txt")
+url <- paste0(base_url,"stochsim/bsflu_data.txt")
 bsflu <- read.table(url)
 
 sir_step <- Csnippet("
