@@ -1,43 +1,160 @@
 ---
-title: "Simulation-based Inference for Epidemiological Dynamics"
-author: "Aaron A. King and Edward L. Ionides"
+title: 'Model-based Inference in Ecology and Epidemiology'
+date: ICTP Spring College 9--20 May 2016
 output: html_document
 bibliography: sbied.bib
 csl: ecology.csl
 
 ---
 
-## Module description
-This module introduces statistical inference techniques and computational methods for dynamic models of epidemiological systems. The course will explore deterministic and stochastic formulations of epidemiological dynamics and develop inference methods appropriate for a range of models. Special emphasis will be on exact and approximate likelihood as the key elements in parameter estimation, hypothesis testing, and model selection. Specifically, the course will cover sequential Monte Carlo and synthetic likelihood techniques. Students will learn to implement these in R to carry out maximum likelihood and Bayesian inference. Knowledge of the material in Module 1 is assumed. Students new to R should complete a tutorial before the module.
+```{r knitr-opts,include=FALSE,purl=FALSE,cache=FALSE}
+library(knitr)
+require(plyr)
+require(reshape2)
+require(magrittr)
+
+prefix <- "syllabus"
+opts_chunk$set(
+  progress=TRUE,
+  prompt=FALSE,tidy=FALSE,highlight=TRUE,
+  strip.white=TRUE,
+  warning=FALSE,
+  message=FALSE,
+  error=FALSE,
+  echo=FALSE,
+  cache=FALSE,
+  cache.extra=rand_seed,
+  results='markup',
+  fig.show='asis',
+  size='small',
+  fig.lp="fig:",
+  fig.path=paste0("figure/",prefix,"-"),
+  cache.path=paste0("cache/",prefix,"-"),
+  fig.pos="h!",
+  fig.align='center',
+  fig.height=4,fig.width=6.83,
+  dpi=300,
+  dev='png',
+  dev.args=list(bg='transparent')
+  )
+
+options(
+  keep.source=TRUE,
+  stringsAsFactors=FALSE,
+  encoding="UTF-8"
+  )
+```
+
+### Instructor
+
+Prof.&nbsp;Aaron A. King, Ph.D.  
+Departments of Ecology & Evolutionary Biology and Mathematics  
+University of Michigan  
+Email: kingaa@umich.edu  
+
+### Perspective
+
+Ecological and epidemiological systems are particularly interesting from the physical point of view.
+Their complexity and high-dimensionality makes it natural to approach them as stochastic, nonlinear dynamical systems and within this context, many questions of both intrinsic interest and practical concern can be formulated.
+To answer these questions, it is necessary to rigorously confront hypothetical models with data.
+In this regard, time-series data are of particular value inasmuch as they have the potential to express the characteristic signatures of causal mechanisms.
+This course will take students into the heart of these issues via an introduction to ecological and epidemiological stochastic dynamical systems models using a series of examples with real data.
+Students will learn how to formulate questions as models and answer the questions using state-of-the-art inference algorithms.
 
 ## Course objectives
 
-1. to introduce partially observed Markov process (POMP) models as tools for scientific investigation and public health policy
+1. to introduce partially observed Markov process (POMP) models as tools for scientific investigation
 1. to give students the ability to formulate POMP models of their own
 1. to teach efficient approaches for performing scientific inference using POMP models
 1. to familiarize students with the **pomp** package
 1. to give students opportunities to work with such inference methods
 1. to provide documented examples for student re-use
 
+### Prerequisites
+
+- Familiarity with deterministic dynamics (discrete-time maps, ordinary differential equations) and probability.
+- Some programming experience, in any language.
+- Completion of the [**R** tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial) before the beginning of the course.
+- A sense of humor.
+
+### Format and expectations
+
+The course will be taught using a mixture of lectures and computational laboratory exercises.
+Students are expected to complete assigned readings before class meetings, keep up with assigned homework, participate fully in discussions, and work on course activities during class meetings.
+
+### Course website
+
+Materials and readings will be posted on the [course website](http://kingaa.github.io/short-course).
+
+### Computing in **R**
+
+We will make extensive use of the open-source **R** statistical computing environment and the **pomp** package for inference based on partially-observed Markov process models.
+
+Students with laptops should install **R** and **RStudio** on their computers before the first day of the course.
+[Instructions for doing so can be found here](./prep/preparation.html).
+
+The course does not assume familiarity with **R**, but students should work through the [**R** tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial) before the course commences.
+In particular, students should work through the the exercises in the tutorial.
+
+### Readings
+
+The following papers serve as background for some of the central issues:
+
+- S. N. Wood (2010) Statistical inference for noisy nonlinear ecological dynamic systems. *Nature*, **466**:&nbsp;1102&ndash;1104. [DOI:&nbsp;10.1038/nature09319](http://dx.doi.org/10.1038/nature09319).
+- A. A. King, E. L. Ionides, M. Pascual, and M. J. Bouma (2008) Inapparent infections and cholera dynamics. *Nature*, **454**:&nbsp;877&ndash;880. [DOI:&nbsp;10.1038/nature07084](http://dx.doi.org/10.1038/nature07084)
+- S. Shrestha, A. A. King, and P. Rohani (2011) Statistical Inference for Multi-Pathogen Systems. *PLoS&nbsp;Comput.&nbsp;Biol.*, **7**:&nbsp;e1002135. [DOI:&nbsp;10.1371/journal.pcbi.1002135](http://dx.doi.org/10.1371/journal.pcbi.1002135)
+
+A good reference for modeling in infectious disease epidemiology is:
+
+- Keeling, M. & Rohani, P. *Modeling infectious diseases in humans and animals*. Princeton University Press, 2008.
+
+The **pomp** package is described and illustrated in
+
+- A. A. King, D. Nguyen, and E. L. Ionides (2016) Statistical Inference for Partially Observed Markov Processes via the R Package pomp. *J.&nbsp;Stat.&nbsp;Soft.*, **69**:&nbsp;1&ndash;43. [DOI:&nbsp;10.18637/jss.v069.i12](http://dx.doi.org/10.18637/jss.v069.i12)
+
+### Tentative schedule
+
+```{r sched1,echo=FALSE}
+begin.date <- as.Date("2016-05-06")
+data.frame(date=begin.date+cumsum(c(rep(c(3,1,1,1,1),times=2)))) -> dates
+
+read.csv(colClasses=c(Date="Date"),comment.char="#",
+         text='
+Date,Topic
+2016-05-09,Ecological and epidemiological dynamics; introduction to **R**
+2016-05-10,Partially-observed Markov processes; introduction to **pomp**
+2016-05-11,Deterministic dynamics; trajectory matching
+2016-05-12,Stochastic simulation
+2016-05-13,Likelihood for POMP models
+2016-05-16,Iterated filtering
+2016-05-17,Case study: influenza in a closed population
+2016-05-18,Diagnostics
+2016-05-19,Case study: measles and extrademographic stochasticity
+2016-05-20,Case study: pertussis and natural immune boosting
+') %>%
+  mutate(Topic=mapvalues(as.character(Topic),NA,""),
+         Date=format(Date,"%b %e")) %>% 
+  kable()
+```
+
 ----------------------
 
 ## Schedule of Topics
 
-
-0. [Instructions for preparing your laptop for the course exercises](./prep/preparation.html)
-1. [Introduction: What is "Simulation-based Inference for Epidemiological Dynamics?"](./intro/intro.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/intro/intro.R)
-1. [Dynamic models and their simulation by Euler's method.](./stochsim/stochsim.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/stochsim/stochsim.R)
-1. [Likelihood for POMPs: theory and practice](./pfilter/pfilter.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/pfilter/pfilter.R)
-1. [Iterated filtering: theory and practice](./mif/mif.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/mif/mif.R)
-1. [Case study I: polio.](./polio/polio.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/polio/polio.R)
-1. [Case study II: measles.](./measles/measles.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/measles/measles.R)
-1. [Case study III: sexual contacts panel data](./contacts/contacts.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/contacts/contacts.R)
-1. [Case study IV: Ebola and forecasting](./ebola/ebola.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/master/ebola/ebola.R)
+1. [Ecological and epidemiological dynamics; introduction to **R**]&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/intro/intro.R)
+1. Deterministic dynamics; trajectory matching
+1. [Stochastic simulation of dynamic models.](./stochsim/stochsim.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/stochsim/stochsim.R)
+1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/pfilter/pfilter.R)
+1. [Iterated filtering: theory and practice](./mif/mif.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/mif/mif.R)
+1. Case study: influenza in a closed population
+1. [Case study: the persistence of polio.](./polio/polio.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/polio/polio.R)
+1. [Case study: measles and extra-demographic stochasticity.](./measles/measles.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/measles/measles.R)
+1. [Case study: Ebola and forecasting](./ebola/ebola.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/ebola/ebola.R)
 
 ----------------------
 
 [**pomp** homepage](http://kingaa.github.io/pomp)  
 
-[Source code for these notes](http://github.com/kingaa/sbied/)  
+[Source code for these notes](http://github.com/kingaa/short-course/)  
 
 ----------------------
