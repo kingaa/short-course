@@ -131,3 +131,7 @@ The **pomp** package is described and illustrated in
 [Source code for these notes](http://github.com/kingaa/short-course/)  
 
 ----------------------
+
+[The materials in this course are licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
+Please share and remix noncommercially, mentioning its origin.  
+![CC-BY_NC](graphics/cc-by-nc.png)

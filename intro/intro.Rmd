@@ -19,7 +19,7 @@ nocite: |
 \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 \newcommand\dlta[1]{{\Delta}{#1}}
 
-Licensed under the Creative Commons attribution-noncommercial license, http://creativecommons.org/licenses/by-nc/3.0/.
+[Licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
 Please share and remix noncommercially, mentioning its origin.  
 ![CC-BY_NC](../graphics/cc-by-nc.png)
 
