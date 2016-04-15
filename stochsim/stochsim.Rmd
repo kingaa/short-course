@@ -6,7 +6,7 @@ output:
   html_document:
     toc: yes
     toc_depth: 4
-bibliography: ../sbied.bib
+bibliography: ../course.bib
 csl: ../ecology.csl
 nocite: >
   @Keeling2007
@@ -255,7 +255,7 @@ Consider some difficulties that might arise with non-negativity constraints, and
 
 ## Compartmental models in **pomp**.
 
-[Download a script containing the **R** commands below.](http://raw.githubusercontent.com/kingaa/sbied/master/stochsim/stochsim.R).
+[Download a script containing the **R** commands below.](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/stochsim/stochsim.R).
 
 ### The boarding-school flu outbreak
 
@@ -263,7 +263,7 @@ As an example that we can probe in some depth, let's look at an isolated outbrea
 <!--- 763 boys were at risk, and ultimately 512 became infected. --->
 Download the data and examine it:
 ```{r flu-data1}
-base_url <- "http://kingaa.github.io/sbied/"
+base_url <- "http://kingaa.github.io/short-course/"
 bsflu <- read.table(paste0(base_url,"data/bsflu_data.txt"))
 head(bsflu)
 ```
@@ -458,8 +458,8 @@ Obtain some ballpark estimates of the parameters and simulate to see if you can 
 
 --------------------------
 
-## [Back to course homepage](http://kingaa.github.io/sbied)
-## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/sbied/master/stochsim/stochsim.R)
+## [Back to course homepage](http://kingaa.github.io/short-course)
+## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/stochsim/stochsim.R)
 
 --------------------------
 

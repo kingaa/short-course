@@ -6,7 +6,7 @@ output:
   html_document:
     toc: yes
     toc_depth: 3
-bibliography: ../sbied.bib
+bibliography: ../course.bib
 csl: ../ecology.csl
 
 ---
@@ -1081,7 +1081,7 @@ pomp(m1,toEstimationScale=toEst,
 ## Constructing a likelihood profile
 
 [The linked document shows how a likelihood profile can be constructed using IF2](./measles-profile.html).
-[The corresponding **R** script is here](http://raw.githubusercontent.com/kingaa/sbied/master/measles/measles-profile.R).
+[The corresponding **R** script is here](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles-profile.R).
 
 ## Exercises
 
@@ -1104,8 +1104,8 @@ Compare likelihoods but also use simulations to diagnose differences between the
 
 --------------------------
 
-## [Back to course homepage](http://kingaa.github.io/sbied)
-## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/sbied/master/measles/measles.R)
+## [Back to course homepage](http://kingaa.github.io/short-course)
+## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
 
 ----------------------
 

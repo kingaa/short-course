@@ -4,7 +4,7 @@ options(cores=20,stringsAsFactors=FALSE)
 stopifnot(packageVersion("pomp")>="1.4")
 
 ## ----load_bbs------------------------------------------------------------
-bsflu_data <- read.table("http://kingaa.github.io/sbied/data/bsflu_data.txt")
+bsflu_data <- read.table("http://kingaa.github.io/short-course/data/bsflu_data.txt")
 
 ## ----bsflu_names---------------------------------------------------------
 bsflu_statenames <- c("S","I","R1","R2")

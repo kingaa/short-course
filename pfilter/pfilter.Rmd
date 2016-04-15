@@ -6,7 +6,7 @@ output:
   html_document:
     toc: yes
     toc_depth: 4
-bibliography: ../sbied.bib
+bibliography: ../course.bib
 csl: ../ecology.csl
 
 ---
@@ -229,10 +229,10 @@ This implies that if we generate trajectories by simulation, all we have to do i
 
 Let's go back to the boarding school influenza outbreak to see what this looks like in practice.
 Let's reconstruct the toy SIR model we were working with.
-[Download a script containing the **R** commands below.](http://raw.githubusercontent.com/kingaa/sbied/master/pfilter/pfilter.R)
+[Download a script containing the **R** commands below.](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R)
 
 ```{r sir-construct}
-base_url <- "http://kingaa.github.io/sbied/"
+base_url <- "http://kingaa.github.io/short-course/"
 url <- paste0(base_url,"data/bsflu_data.txt")
 bsflu <- read.table(url)
 
@@ -678,8 +678,8 @@ Do you find any other local maxima?
 
 --------------------------
 
-## [Back to course homepage](http://kingaa.github.io/sbied)
-## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/sbied/master/pfilter/pfilter.R)
+## [Back to course homepage](http://kingaa.github.io/short-course)
+## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R)
 
 --------------------------
 

@@ -5,7 +5,7 @@ date: 2015-07-14
 output:
   html_document:
     toc: yes
-bibliography: ../sbied.bib
+bibliography: ../course.bib
 csl: ../ecology.csl
 nocite: |
   @King2008, @Romero-Severson2015, @He2010, 
@@ -258,7 +258,7 @@ Measurements, $y$, at time $t$ depend only on the state at that time.
 
 ## Example: the Ricker model
 
-[Download a script containing the **R** commands below.](http://raw.githubusercontent.com/kingaa/sbied/master/intro/intro.R)
+[Download a script containing the **R** commands below.](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/intro/intro.R)
 
 #### The deterministic skeleton
 
@@ -451,7 +451,7 @@ We'll illustrate this process a dataset of *Parus major* abundance in Wytham Woo
 
 Download and plot the data:
 ```{r parus-data}
-loc <- url("http://kingaa.github.io/sbied/data/parus.csv")
+loc <- url("http://kingaa.github.io/short-course/data/parus.csv")
 dat <- read.csv(loc)
 head(dat)
 plot(pop~year,data=dat,type='o')
@@ -597,8 +597,8 @@ Assume the same measurement model as before.
 
 --------------------------
 
-## [Back to course homepage](http://kingaa.github.io/sbied)
-## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/sbied/master/intro/intro.R)
+## [Back to course homepage](http://kingaa.github.io/short-course)
+## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/intro/intro.R)
 
 ----------------------
 

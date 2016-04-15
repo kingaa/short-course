@@ -2,7 +2,7 @@
 title: 'Model-based Inference in Ecology and Epidemiology'
 date: ICTP Spring College 9--20 May 2016
 output: html_document
-bibliography: sbied.bib
+bibliography: course.bib
 csl: ecology.csl
 
 ---
@@ -112,44 +112,17 @@ The **pomp** package is described and illustrated in
 
 - A. A. King, D. Nguyen, and E. L. Ionides (2016) Statistical Inference for Partially Observed Markov Processes via the R Package pomp. *J.&nbsp;Stat.&nbsp;Soft.*, **69**:&nbsp;1&ndash;43. [DOI:&nbsp;10.18637/jss.v069.i12](http://dx.doi.org/10.18637/jss.v069.i12)
 
-### Tentative schedule
-
-```{r sched1,echo=FALSE}
-begin.date <- as.Date("2016-05-06")
-data.frame(date=begin.date+cumsum(c(rep(c(3,1,1,1,1),times=2)))) -> dates
-
-read.csv(colClasses=c(Date="Date"),comment.char="#",
-         text='
-Date,Topic
-2016-05-09,Ecological and epidemiological dynamics; introduction to **R**
-2016-05-10,Partially-observed Markov processes; introduction to **pomp**
-2016-05-11,Deterministic dynamics; trajectory matching
-2016-05-12,Stochastic simulation
-2016-05-13,Likelihood for POMP models
-2016-05-16,Iterated filtering
-2016-05-17,Case study: influenza in a closed population
-2016-05-18,Diagnostics
-2016-05-19,Case study: measles and extrademographic stochasticity
-2016-05-20,Case study: pertussis and natural immune boosting
-') %>%
-  mutate(Topic=mapvalues(as.character(Topic),NA,""),
-         Date=format(Date,"%b %e")) %>% 
-  kable()
-```
-
-----------------------
-
 ## Schedule of Topics
 
-1. [Ecological and epidemiological dynamics; introduction to **R**]&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/intro/intro.R)
+1. [Ecological and epidemiological dynamics; introduction to **R** and **pomp**](./intro/intro.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/intro/intro.R)
 1. Deterministic dynamics; trajectory matching
-1. [Stochastic simulation of dynamic models.](./stochsim/stochsim.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/stochsim/stochsim.R)
-1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/pfilter/pfilter.R)
-1. [Iterated filtering: theory and practice](./mif/mif.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/mif/mif.R)
+1. [Stochastic simulation of dynamic models.](./stochsim/stochsim.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/stochsim/stochsim.R)
+1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R)
+1. [Iterated filtering: theory and practice](./mif/mif.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/mif/mif.R)
 1. Case study: influenza in a closed population
-1. [Case study: the persistence of polio.](./polio/polio.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/polio/polio.R)
-1. [Case study: measles and extra-demographic stochasticity.](./measles/measles.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/measles/measles.R)
-1. [Case study: Ebola and forecasting](./ebola/ebola.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/sbied/gh-pages/ebola/ebola.R)
+1. [Case study: the persistence of polio.](./polio/polio.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/polio/polio.R)
+1. [Case study: measles and extra-demographic stochasticity.](./measles/measles.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
+1. [Case study: Ebola and forecasting](./ebola/ebola.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/ebola/ebola.R)
 
 ----------------------
 

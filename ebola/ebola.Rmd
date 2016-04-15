@@ -4,7 +4,7 @@ author: "Aaron A. King, Matthieu Domenech de Cell&egrave;s, Felicia M. G. Magpan
 output:
   html_document:
     toc: yes
-bibliography: ../sbied.bib
+bibliography: ../course.bib
 csl: ../ecology.csl
 ---
 
@@ -92,7 +92,7 @@ Key questions included:
 
 Download the data from the WHO Situation Report of 1 October 2014:
 ```{r get-data}
-base_url <- "http://kingaa.github.io/sbied/"
+base_url <- "http://kingaa.github.io/short-course/"
 read.csv(paste0(base_url,"data/ebola_data.csv"),stringsAsFactors=FALSE,
          colClasses=c(date="Date")) -> dat
 sapply(dat,class)
@@ -551,8 +551,8 @@ simq %>% ggplot(aes(x=date))+
 
 --------------------------
 
-## [Back to course homepage](http://kingaa.github.io/sbied)
-## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/sbied/master/ebola/ebola.R)
+## [Back to course homepage](http://kingaa.github.io/short-course)
+## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/ebola/ebola.R)
 
 ----------------------
 

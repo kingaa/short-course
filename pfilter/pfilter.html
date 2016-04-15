@@ -147,8 +147,8 @@ $(document).ready(function () {
 <li><a href="#exercise-visualizing-the-likelihood-surface">Exercise: Visualizing the likelihood surface</a></li>
 <li><a href="#exercise-global-maximization">Exercise: Global maximization</a></li>
 </ul></li>
-<li><a href="#back-to-course-homepage"><a href="http://kingaa.github.io/sbied">Back to course homepage</a></a></li>
-<li><a href="#r-codes-for-this-document"><a href="http://raw.githubusercontent.com/kingaa/sbied/master/pfilter/pfilter.R"><strong>R</strong> codes for this document</a></a></li>
+<li><a href="#back-to-course-homepage"><a href="http://kingaa.github.io/short-course">Back to course homepage</a></a></li>
+<li><a href="#r-codes-for-this-document"><a href="http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R"><strong>R</strong> codes for this document</a></a></li>
 <li><a href="#references">References</a></li>
 </ul>
 </div>
@@ -220,8 +220,8 @@ $(document).ready(function () {
 <p>For a POMP model, the likelihood takes the form of an integral: <span class="math display">\[{\mathscr{L}}(\theta)={\mathbb{P}\left[{y^*_{1:N}|\theta}\right]}=\int\!\prod_{n=1}^{N}\!{\mathbb{P}\left[{y^*_n|x_n,\theta}\right]}\,{\mathbb{P}\left[{x_n|x_{n-1},\theta}\right]}\,dx_{1}\,\cdots\,dx_{N}.\]</span> To compute this integral, we can use <a href="./monteCarlo.html#monte-carlo-integration">Monte Carlo integration</a>. In particular, if we propose trajectories of the unobserved state process according to some probabilistic rule, we can generate a large number of these and approximate <span class="math inline">\({\mathscr{L}}(\theta)\)</span> by its Monte Carlo estimate. Specifically, let us generate <span class="math inline">\(J\)</span> trajectories of length <span class="math inline">\(N\)</span>, <span class="math inline">\(x_{n,j}\)</span>, <span class="math inline">\(j=1\,\dots,J\)</span>, <span class="math inline">\(n=1,\dots,N\)</span>. Let <span class="math inline">\(w_j\)</span> denote the probability that we propose trajectory <span class="math inline">\(j\)</span>. We compute the likelihood of each trajectory <span class="math display">\[{\mathscr{L}}{_j}(\theta)=\prod_{n=1}^{N} {\mathbb{P}\left[{y^*_n|x_{n,j},\theta}\right]}\,{\mathbb{P}\left[{x_{n,j}|x_{n-1,j},\theta}\right]}\]</span> Then by the Monte Carlo theorem, we have <span class="math display">\[{\mathscr{L}}(\theta) \approx \frac{1}{J}\,\sum_{j=1}^{J}\!\frac{{\mathscr{L}}_j(\theta)}{w_j}.\]</span></p>
 <p>How shall we choose our trajectories? One idea would be to choose them so as to simplify the computation. If we choose them such that <span class="math display">\[w_j=\prod_{n=1}^{N} {\mathbb{P}\left[{x_{n,j}|x_{n-1,j},\theta}\right]},\]</span> then we have <span class="math display">\[{\mathscr{L}}(\theta) \approx \frac{1}{J}\,\sum_{j=1}^{J} \frac{{\mathscr{L}}_j(\theta)}{w_j} = \frac{1}{J}\,\sum_{j=1}^{J}\!\frac{\prod_{n=1}^{N} {\mathbb{P}\left[{y^*_n|x_{n,j},\theta}\right]}\,{\mathbb{P}\left[{x_{n,j}|x_{n-1,j},\theta}\right]}}{\prod_{n=1}^{N} {\mathbb{P}\left[{x_{n,j}|x_{n-1,j},\theta}\right]}} = \frac{1}{J}\,\sum_{j=1}^{J}\!\prod_{n=1}^{N} {\mathbb{P}\left[{y^*_n|x_{n,j},\theta}\right]}\]</span></p>
 <p>This implies that if we generate trajectories by simulation, all we have to do is compute the likelihood of the data with given each trajectory and then average.</p>
-<p>Let’s go back to the boarding school influenza outbreak to see what this looks like in practice. Let’s reconstruct the toy SIR model we were working with. <a href="http://raw.githubusercontent.com/kingaa/sbied/master/pfilter/pfilter.R">Download a script containing the <strong>R</strong> commands below.</a></p>
-<pre class="r"><code>base_url &lt;- &quot;http://kingaa.github.io/sbied/&quot;
+<p>Let’s go back to the boarding school influenza outbreak to see what this looks like in practice. Let’s reconstruct the toy SIR model we were working with. <a href="http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R">Download a script containing the <strong>R</strong> commands below.</a></p>
+<pre class="r"><code>base_url &lt;- &quot;http://kingaa.github.io/short-course/&quot;
 url &lt;- paste0(base_url,&quot;data/bsflu_data.txt&quot;)
 bsflu &lt;- read.table(url)
 
@@ -491,10 +491,10 @@ ll &lt;- logmeanexp(lls,se=TRUE); ll</code></pre>
 </div>
 </div>
 <div id="back-to-course-homepage" class="section level2">
-<h2><a href="http://kingaa.github.io/sbied">Back to course homepage</a></h2>
+<h2><a href="http://kingaa.github.io/short-course">Back to course homepage</a></h2>
 </div>
 <div id="r-codes-for-this-document" class="section level2">
-<h2><a href="http://raw.githubusercontent.com/kingaa/sbied/master/pfilter/pfilter.R"><strong>R</strong> codes for this document</a></h2>
+<h2><a href="http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R"><strong>R</strong> codes for this document</a></h2>
 <hr />
 </div>
 <div id="references" class="section level2 unnumbered">

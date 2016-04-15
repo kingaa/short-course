@@ -15,7 +15,7 @@ theme_set(theme_bw())
 stopifnot(packageVersion("pomp")>="1.4.5")
 
 ## ----flu-data1-----------------------------------------------------------
-base_url <- "http://kingaa.github.io/sbied/"
+base_url <- "http://kingaa.github.io/short-course/"
 bsflu <- read.table(paste0(base_url,"data/bsflu_data.txt"))
 head(bsflu)
 

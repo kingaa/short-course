@@ -97,7 +97,7 @@ pf <- pfilter(pf,Np=100)
 logLik(pf)
 
 ## ----parus-data----------------------------------------------------------
-loc <- url("http://kingaa.github.io/sbied/data/parus.csv")
+loc <- url("http://kingaa.github.io/short-course/data/parus.csv")
 dat <- read.csv(loc)
 head(dat)
 plot(pop~year,data=dat,type='o')
