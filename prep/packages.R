@@ -12,9 +12,7 @@ bbmle
 coda
 colorspace
 deSolve
-devtools
 foreach
-doMC
 doParallel
 ggplot2
 gridExtra
@@ -22,15 +20,12 @@ gtable
 knitr
 lhs
 magrittr
-maptools
 mvtnorm
 nloptr
 plyr
 RColorBrewer
 reshape2
-scales
 sos
-sp
 stringr
 subplex
 xtable

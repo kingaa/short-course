@@ -14,8 +14,8 @@ Once you’ve installed these, open a session in **R** or **Rstudio** and run th
 
 ```
 > update.packages()
-> source("http://kingaa.github.io/sbied/prep/packages.R",echo=TRUE)
-> source("http://kingaa.github.io/sbied/prep/pompTest.R",echo=TRUE)
+> source("http://kingaa.github.io/short-course/prep/packages.R",echo=TRUE)
+> source("http://kingaa.github.io/scripts/pompTest.R",echo=TRUE)
 ```
 
 [The `>` is the command prompt; it’s not part of the command.  Also, depending on your email client program, you may need to replace the quotation marks with plain keyboard double quotes.]
@@ -24,7 +24,7 @@ The first command updates your installed packages.  You may be prompted to speci
 
 If the final command fails, try the following:
 ```
-> source("http://kingaa.github.io/sbied/prep/hello.R",echo=TRUE)
+> source("http://kingaa.github.io/scripts/hello.R",echo=TRUE)
 ```
 If this fails to give the "Hello world!" message, you will need to follow the instructions below that correspond to your OS.
 
