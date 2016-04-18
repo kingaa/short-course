@@ -1,10 +1,11 @@
-export INSTALLDIR=$(CURDIR)/www
+INSTALLDIR=www
+PUBDIR=$(INSTALLDIR)/polio
 
-default: index.html modules
-	install -m0600 index.html $(INSTALLDIR)
-
-modules: prep intro stochsim pfilter mif polio contacts ebola measles 
-	for module in $^; do (cd $$module; $(MAKE) INSTALLDIR=$(INSTALLDIR) ); done
+default: polio.html polio_model.R polio.R profile_rho.R \
+	polio_params.csv polio_wisconsin.csv local_search.rda \
+	global_search.rda profile_rho.rds sims.rds	
+	mkdir -p $(PUBDIR)
+	install -m0600 $^ $(PUBDIR)
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
@@ -23,4 +24,5 @@ clean:
 
 fresh: clean
 	$(RM) -r cache figure
-	for module in $^; do (cd $$module; make fresh); done
+
+

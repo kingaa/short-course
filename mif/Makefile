@@ -1,10 +1,10 @@
-export INSTALLDIR=$(CURDIR)/www
+INSTALLDIR=www
+PUBDIR=$(INSTALLDIR)/mif
 
-default: index.html modules
-	install -m0600 index.html $(INSTALLDIR)
-
-modules: prep intro stochsim pfilter mif polio contacts ebola measles 
-	for module in $^; do (cd $$module; $(MAKE) INSTALLDIR=$(INSTALLDIR) ); done
+default: box_search_global.rda box_search_local.rda bsflu_params.csv \
+	lik_local.rda pf.rda mif.html mif.R
+	mkdir -p $(PUBDIR)
+	install -m0600 $^ $(PUBDIR)
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
@@ -23,4 +23,3 @@ clean:
 
 fresh: clean
 	$(RM) -r cache figure
-	for module in $^; do (cd $$module; make fresh); done

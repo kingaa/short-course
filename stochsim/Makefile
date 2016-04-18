@@ -1,10 +1,9 @@
-export INSTALLDIR=$(CURDIR)/www
+INSTALLDIR=www
+PUBDIR=$(INSTALLDIR)/stochsim
 
-default: index.html modules
-	install -m0600 index.html $(INSTALLDIR)
-
-modules: prep intro stochsim pfilter mif polio contacts ebola measles 
-	for module in $^; do (cd $$module; $(MAKE) INSTALLDIR=$(INSTALLDIR) ); done
+default: stochsim.R stochsim.html bsflu_data.txt
+	mkdir -p $(PUBDIR)
+	install -m0600 $^ $(PUBDIR)
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
@@ -23,4 +22,3 @@ clean:
 
 fresh: clean
 	$(RM) -r cache figure
-	for module in $^; do (cd $$module; make fresh); done
