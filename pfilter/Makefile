@@ -1,6 +1,6 @@
 INSTALLDIR=www
 
-default: pfilter.R pfilter.html monteCarlo.R monteCarlo.html
+default: pfilter.R pfilter.html monteCarlo.html sir-grid1.rds
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
 
