@@ -1,6 +1,6 @@
 ## ----prelims,include=FALSE,purl=TRUE,cache=FALSE-------------------------
 library(pomp)
-options(cores=20,stringsAsFactors=FALSE)
+options(stringsAsFactors=FALSE)
 stopifnot(packageVersion("pomp")>="1.4")
 
 ## ----load_bbs------------------------------------------------------------

@@ -100,8 +100,8 @@ In particular, students should work through the the exercises in the tutorial.
 
 The following papers serve as background for some of the central issues:
 
-- S. N. Wood (2010) Statistical inference for noisy nonlinear ecological dynamic systems. *Nature*, **466**:&nbsp;1102&ndash;1104. [DOI:&nbsp;10.1038/nature09319](http://dx.doi.org/10.1038/nature09319).
-- A. A. King, E. L. Ionides, M. Pascual, and M. J. Bouma (2008) Inapparent infections and cholera dynamics. *Nature*, **454**:&nbsp;877&ndash;880. [DOI:&nbsp;10.1038/nature07084](http://dx.doi.org/10.1038/nature07084)
+- S. N. Wood (2010) Statistical inference for noisy nonlinear ecological dynamic systems. *Nature*, **466**:&nbsp;1102--1104. [DOI:&nbsp;10.1038/nature09319](http://dx.doi.org/10.1038/nature09319).
+- A. A. King, E. L. Ionides, M. Pascual, and M. J. Bouma (2008) Inapparent infections and cholera dynamics. *Nature*, **454**:&nbsp;877--880. [DOI:&nbsp;10.1038/nature07084](http://dx.doi.org/10.1038/nature07084)
 - S. Shrestha, A. A. King, and P. Rohani (2011) Statistical Inference for Multi-Pathogen Systems. *PLoS&nbsp;Comput.&nbsp;Biol.*, **7**:&nbsp;e1002135. [DOI:&nbsp;10.1371/journal.pcbi.1002135](http://dx.doi.org/10.1371/journal.pcbi.1002135)
 
 A good reference for modeling in infectious disease epidemiology is:
@@ -110,19 +110,19 @@ A good reference for modeling in infectious disease epidemiology is:
 
 The **pomp** package is described and illustrated in
 
-- A. A. King, D. Nguyen, and E. L. Ionides (2016) Statistical Inference for Partially Observed Markov Processes via the R Package pomp. *J.&nbsp;Stat.&nbsp;Soft.*, **69**:&nbsp;1&ndash;43. [DOI:&nbsp;10.18637/jss.v069.i12](http://dx.doi.org/10.18637/jss.v069.i12)
+- A. A. King, D. Nguyen, and E. L. Ionides (2016) Statistical Inference for Partially Observed Markov Processes via the R Package pomp. *J.&nbsp;Stat.&nbsp;Soft.*, **69**:&nbsp;1--43. [DOI:&nbsp;10.18637/jss.v069.i12](http://dx.doi.org/10.18637/jss.v069.i12)
 
 ## Schedule of Topics
 
-1. [Ecological and epidemiological dynamics; introduction to **R** and **pomp**](./intro/intro.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/intro/intro.R)
+1. [Ecological and epidemiological dynamics; introduction to **R** and **pomp**](./intro/intro.html)
 1. Deterministic dynamics; trajectory matching
-1. [Stochastic simulation of dynamic models.](./stochsim/stochsim.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/stochsim/stochsim.R)
-1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R)
-1. [Iterated filtering: theory and practice](./mif/mif.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/mif/mif.R)
+1. [Stochastic simulation of dynamic models.](./stochsim/stochsim.html)
+1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)
+1. [Iterated filtering: theory and practice](./mif/mif.html)
 1. Case study: influenza in a closed population
-1. [Case study: the persistence of polio.](./polio/polio.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/polio/polio.R)
-1. [Case study: measles and extra-demographic stochasticity.](./measles/measles.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
-1. [Case study: Ebola and forecasting](./ebola/ebola.html)&nbsp;&nbsp;&nbsp;[(**R** script)](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/ebola/ebola.R)
+1. [Case study: the persistence of polio.](./polio/polio.html)
+1. [Case study: measles and extra-demographic stochasticity.](./measles/measles.html)
+1. [Case study: Ebola and forecasting](./ebola/ebola.html)
 
 ----------------------
 
