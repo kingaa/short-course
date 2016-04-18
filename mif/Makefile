@@ -1,10 +1,9 @@
 INSTALLDIR=www
-PUBDIR=$(INSTALLDIR)/mif
 
 default: box_search_global.rda box_search_local.rda bsflu_params.csv \
 	lik_local.rda pf.rda mif.html mif.R
-	mkdir -p $(PUBDIR)
-	install -m0600 $^ $(PUBDIR)
+	mkdir -p $(INSTALLDIR)
+	install -m0600 $^ $(INSTALLDIR)
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

@@ -1,9 +1,8 @@
 INSTALLDIR=www
-PUBDIR=$(INSTALLDIR)/prep
 
 default: preparation.html packages.R
-	mkdir -p $(PUBDIR)
-	install -m0600 $^ $(PUBDIR)
+	mkdir -p $(INSTALLDIR)
+	install -m0600 $^ $(INSTALLDIR)
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

@@ -1,9 +1,8 @@
 INSTALLDIR=www
-PUBDIR=$(INSTALLDIR)/ebola
 
 default: ebola_data.csv ebola.html ebola-profiles.csv ebola.R
-	mkdir -p $(PUBDIR)
-	install -m0600 $^ $(PUBDIR)
+	mkdir -p $(INSTALLDIR)
+	install -m0600 $^ $(INSTALLDIR)
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

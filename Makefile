@@ -1,10 +1,11 @@
-export INSTALLDIR=$(CURDIR)/www
+MODULES=prep intro stochsim pfilter mif polio contacts ebola measles 
+INSTALLDIR=$(CURDIR)/www
 
 default: index.html modules
 	install -m0600 index.html $(INSTALLDIR)
 
-modules: prep intro stochsim pfilter mif polio contacts ebola measles 
-	for module in $^; do (cd $$module; $(MAKE) INSTALLDIR=$(INSTALLDIR) ); done
+modules:
+	for module in $(MODULES); do ($(MAKE) INSTALLDIR=$(INSTALLDIR)/$$module -C $$module); done
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
@@ -23,4 +24,4 @@ clean:
 
 fresh: clean
 	$(RM) -r cache figure
-	for module in $^; do (cd $$module; make fresh); done
+	for module in $(MODULES); do (cd $$module && $(MAKE) fresh); done
