@@ -67,7 +67,7 @@ library(plyr)
 library(reshape2)
 library(magrittr)
 library(pomp)
-stopifnot(packageVersion("pomp")>="0.69-1")
+stopifnot(packageVersion("pomp")>="1.4.7")
 ```
 
 ## Objectives
@@ -173,6 +173,18 @@ rSim <- Csnippet('
   N_EI += transE[nstageE-1]; // No of transitions from E to I
   N_IR += transI; // No of transitions from I to R
 ')
+
+rInit <- Csnippet("
+  double m = N/(S_0+E_0+I_0+R_0);
+  double *E = &E1;
+  int j;
+  S = nearbyint(m*S_0);
+  for (j = 0; j < nstageE; j++) E[j] = nearbyint(m*E_0/nstageE);
+  I = nearbyint(m*I_0);
+  R = nearbyint(m*R_0);
+  N_EI = 0;
+  N_IR = 0;
+")
 ```
 
 
@@ -266,25 +278,17 @@ ebolaModel <- function (country=c("Guinea", "SierraLeone", "Liberia"),
       times="week",
       t0=min(dat$week)-1,
       globals=globs,
-      statenames=c("S","E1","I","R","N_EI","N_IR"),
+      statenames=c("S",sprintf("E%1d",seq_len(nstageE)),
+                   "I","R","N_EI","N_IR"),
       zeronames=c("N_EI","N_IR"),
       paramnames=c("N","R0","alpha","gamma","rho","k",
                    "S_0","E_0","I_0","R_0"),
-      nstageE=nstageE,
       dmeasure=dObs, rmeasure=rObs,
       rprocess=discrete.time.sim(step.fun=rSim, delta.t=timestep),
       skeleton=skel, skeleton.type="vectorfield",
       toEstimationScale=toEst,
       fromEstimationScale=fromEst,
-      initializer=function (params, t0, nstageE, ...) {
-        all.state.names <- c("S",paste0("E",1:nstageE),"I","R","N_EI","N_IR")
-        comp.names <- c("S",paste0("E",1:nstageE),"I","R")
-        x0 <- setNames(numeric(length(all.state.names)),all.state.names)
-        frac <- c(params["S_0"],rep(params["E_0"]/nstageE,nstageE),params["I_0"],params["R_0"])
-        x0[comp.names] <- round(params["N"]*frac/sum(frac))
-        x0
-      }
-    ) -> po
+      initializer=rInit) -> po
 }
 
 ebolaModel("Guinea") -> gin
