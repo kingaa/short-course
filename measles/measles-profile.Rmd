@@ -59,8 +59,6 @@ opts_chunk$set(
   dev='png',
   dev.args=list(bg='transparent')
   )
-
-options(cores=4)
 ```
 ```{r opts,include=FALSE,cache=FALSE,purl=FALSE}
 options(

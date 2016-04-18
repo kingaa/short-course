@@ -59,8 +59,6 @@ opts_chunk$set(
   dev.args=list(bg='transparent')
   )
 
-options(cores=4)
-
 line.color <- "red"
 plot.color <- "black"
 ```
