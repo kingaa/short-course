@@ -51,7 +51,8 @@ options(keep.source=TRUE,encoding="UTF-8")
 ```{r prelims,include=FALSE,purl=TRUE,cache=FALSE}
 library(pomp)
 options(stringsAsFactors=FALSE)
-stopifnot(packageVersion("pomp")>="1.4")
+stopifnot(packageVersion("pomp")>="1.4.7")
+set.seed(557976883)
 ```
 
 ----------------------------
@@ -383,7 +384,7 @@ Let's treat $\mu_{R_1}$ and  $\mu_{R_2}$ as known, and fix these parameters at t
 We will estimate $\beta$, $\mu_I$, and $\rho$.
 
 It will be helpful to parallelize most of the computations.
-Most machines nowadays have multiple cores and using this computational capacity involves only 
+Most machines nowadays have multiple cores and using this computational capacity involves only:
 
 i. the following lines of code to let R know you plan to use multiple processors; 
 i. the parallel for loop provided by the **foreach** package; and
@@ -394,14 +395,11 @@ library(foreach)
 library(doParallel)
 
 registerDoParallel()
-
-set.seed(2036049659,kind="L'Ecuyer")
 ```
 
 The first two lines load the **foreach** and **doParallel** packages, the latter being a "backend" for the **foreach** package.
 The next line tells **foreach** that we will use the **doParallel** backend.
 By default, **R** will guess how many concurrent **R** processes to run on this single multicore machine.
-The final line sets up a parallel random number generator and fixes its seed.
 
 ### Running a particle filter.
 

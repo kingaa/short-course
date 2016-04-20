@@ -1,3 +1,6 @@
+library(pomp)
+stopifnot(packageVersion("pomp")>"1.4.5")
+set.seed(1173489184)
 f <- seq(0,1,length=100)
 R0 <- -log(1-f)/f
 plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
@@ -161,64 +164,8 @@ plot(I~time,data=out,type='l',log='y')
 plot(R~time,data=out,type='l',log='y')
 plot(I~S,data=out,log='xy',pch='.',cex=0.5)
 par(op) 
-rain <- read.csv(paste0(baseurl,"data/dacca_rainfall.csv"))
-rain$time <- with(rain,year+(month-1)/12)
-
-plot(rainfall~time,data=rain,type='l')
-
-interpol <- with(rain,approxfun(time,rainfall,rule=2,method='constant'))
-
-data.frame(time=seq(from=1920,to=1930,by=1/365)) -> smoothed.rain
-smoothed.rain$rainfall <- sapply(smoothed.rain$time,interpol)
-
-plot(rainfall~time,data=rain,col='black',cex=2,pch=16,log='')
-lines(rainfall~time,data=smoothed.rain,col='red')
-
-
-rain.sir.model <- function (t, x, params) {
-  a <- params["a"]
-  b <- params["b"]
-  mu <- params["mu"]
-  gamma <- params["gamma"]
-  R <- interpol(t)
-  beta <- a*R/(b+R)
-  dSdt <- mu*(1-x[1])-beta*x[1]*x[2]
-  dIdt <- beta*x[1]*x[2]-(mu+gamma)*x[2]
-  dRdt <- gamma*x[2]-mu*x[3]
-  list(c(dSdt,dIdt,dRdt))
-}
-
-params <- c(a=500,b=50,mu=1/50,gamma=365/13)
-xstart <- c(S=0.07,I=0.00039,R=0.92961)
-times <- seq(from=1920,to=1930,by=7/365)
-out <- as.data.frame(
-                     ode(
-                         func=rain.sir.model,
-                         y=xstart,
-                         times=times,
-                         parms=params
-                         )
-                     )
-
-op <- par(fig=c(0,1,0,1),mfrow=c(2,2),
-          mar=c(3,3,1,1),mgp=c(2,1,0))
-plot(S~time,data=out,type='l',log='y')
-plot(I~time,data=out,type='l',log='y')
-plot(R~time,data=out,type='l',log='y')
-plot(I~S,data=out,log='xy',pch='.',cex=1)
-par(op) 
-
-
-fit <- loess(log1p(rainfall)~time,data=rain,span=0.05)
-
-data.frame(time=seq(from=1920,to=1930,by=1/365)) -> smoothed.rain
-smoothed.rain$rainfall <- expm1(predict(fit,newdata=smoothed.rain))
-
-plot(rainfall~time,data=rain,col='black',cex=2,pch=16,log='')
-lines(rainfall~time,data=smoothed.rain,col='red')
-
-url <- paste0(baseurl,"data/niamey.csv")
-niamey <- read.csv(url,comment.char="#")
+# niamey <- read.csv("http://kingaa.github.io/parest/niamey.csv",comment.char="#")
+niamey <- read.csv("niamey.csv",comment.char="#")
 plot(measles~biweek,data=niamey,type='n')
 lines(measles~biweek,data=subset(niamey,community=="A"),col=1)
 lines(measles~biweek,data=subset(niamey,community=="B"),col=2)
@@ -286,7 +233,7 @@ f <- function (beta, X.0) {
 grid <- expand.grid(beta=seq(from=100,to=300,length=50),
                     X.0=seq(from=4000,to=20000,length=50))
 grid$SSE <- with(grid,mapply(f,beta,X.0))
-require(lattice)
+library(lattice)
 contourplot(sqrt(SSE)~beta+X.0,data=grid,cuts=30)
 ## ?optim
 dat <- subset(niamey,community=="A")

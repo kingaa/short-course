@@ -182,11 +182,11 @@ library(doParallel)
 registerDoParallel()
 
 set.seed(998468235L,kind="L'Ecuyer")
-mcopts <- list(preschedule=FALSE,set.seed=TRUE)
 
 foreach(i=1:4,
         .packages="pomp",
-        .options.multicore=mcopts) %dopar% {
+        .options.multicore=list(set.seed=TRUE)
+        ) %dopar% {
   pfilter(m1,Np=10000,params=theta)
 } -> pfs
 logmeanexp(sapply(pfs,logLik),se=TRUE)

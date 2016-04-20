@@ -69,7 +69,7 @@ library(grid)
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
-set.seed(594709947L)
+set.seed(594709947)
 ```
 
 ## Objectives

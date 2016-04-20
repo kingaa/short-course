@@ -6,7 +6,7 @@ library(grid)
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
-set.seed(594709947L)
+set.seed(594709947)
 base_url <- "http://kingaa.github.io/short-course/"
 url <- paste0(base_url,"stochsim/bsflu_data.txt")
 bsflu <- read.table(url)

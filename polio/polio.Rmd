@@ -64,7 +64,7 @@ set.seed(5996485L)
 1. Show how partially observed Markov process (POMP) methods can be used to understand transmission dynamics of polio.
 2. More broadly, discuss the use of POMP methods for compartmental models for biological systems having age structure, seasonality and other covariates.
 3. Get some practice maximizing the likelihood for such models. How does one set up a _global_ search for a maximum likelihood estimate (MLE)? 
-  How does one test whether such a search has been successful?
+How does one test whether such a search has been successful?
 
 ## Introduction
 
@@ -402,6 +402,7 @@ We use the iterated filtering algorithm IF2 of @ionides15, which uses a random w
 We set a constant random walk standard deviation for each of the regular parameters and a larger constant for each of the initial value parameters. 
 ```{r local_search}
 stew(file="local_search.rda",{
+  w1 <- getDoParWorkers()
   t1 <- system.time({
     m1 <- foreach(i=1:90,
                   .packages='pomp', .combine=rbind,
@@ -427,7 +428,7 @@ stew(file="local_search.rda",{
 },seed=318817883,kind="L'Ecuyer")
 ```
 
-This investigation took `r round(t1["elapsed"]/60,1)` minutes on a machine with `r getDoParWorkers()` cores.
+This investigation took `r round(t1["elapsed"]/60,1)` minutes on a machine with `r w1` cores.
 The maximum likelihood we obtain is `r with(subset(m1,loglik==max(loglik)),round(loglik,1))`.
 These repeated stochastic maximizations can also show us the geometry of the likelihood surface in a neighborhood of this point estimate:
 ```{r pairs_local,fig.width=6,fig.height=6}
@@ -505,6 +506,7 @@ We then carry out a search identical to the local one except for the starting pa
 
 ```{r global_search}
 stew(file="global_search.rda",{
+  w2 <- getDoParWorkers()
   t2 <- system.time({
     m2 <- foreach(i=1:400,.packages='pomp',.combine=rbind,
                   .options.multicore=list(set.seed=TRUE)
@@ -533,7 +535,7 @@ write.csv(params,file="polio_params.csv",row.names=FALSE,na="")
 ```
 
 This search gives a maximized likelihood estimate of `r with(m2,round(max(loglik),1))` with a standard error of `r with(subset(m2,loglik==max(loglik)),round(loglik.se,2))`.
-It took about `r round(t2[3]/60)` mins on a `r getDoParWorkers()`-core machine.
+It took about `r round(t2[3]/60)` mins on a `r w2`-core machine.
 This compares with the results of @Martinez-Bakker2015, who report a maximized likelihood of -794.3 with a standard error of 0.11.
 
 Plotting these diverse parameter estimates can help to give a feel for the global geometry of the likelihood surface.
@@ -596,37 +598,37 @@ library(reshape2)
 library(magrittr)
 
 bake(file="profile_rho.rds",{
-    params %>% 
-        subset(loglik>max(loglik)-20,
-               select=-c(loglik,loglik.se,rho)) %>% 
-        melt(id=NULL) %>% 
-        daply(~variable,function(x)range(x$value)) -> box
-    
-    starts <- profileDesign(rho=seq(0.01,0.025,length=30),
-                            lower=box[,1],upper=box[,2],
-                            nprof=10)
-
-    foreach(start=iter(starts,"row"),
-            .combine=rbind,
-            .options.multicore=list(set.seed=TRUE),
-            .options.mpi=list(seed=290860873,chunkSize=1)
-            ) %dopar% {
-                mf <- mif2(polio,
-                           start=unlist(start),
-                           Np=2000,
-                           Nmif=300,
-                           cooling.type="geometric",
-                           cooling.fraction.50=0.5,
-                           transform=TRUE,
-                           rw.sd=rw.sd(
-                               b1=0.02, b2=0.02, b3=0.02, b4=0.02, b5=0.02, b6=0.02,
-                               psi=0.02, tau=0.02, sigma_dem=0.02, sigma_env=0.02,
-                               IO_0=ivp(0.2), SO_0=ivp(0.2)
-                           ))
-                mf <- mif2(mf,Np=5000,Nmif=100,cooling.fraction.50=0.1)
-                ll <- logmeanexp(replicate(10,logLik(pfilter(mf,Np=5000))),se=TRUE)
-                data.frame(as.list(coef(mf)),loglik=ll[1],loglik.se=ll[2])
-            }
+  params %>% 
+    subset(loglik>max(loglik)-20,
+           select=-c(loglik,loglik.se,rho)) %>% 
+    melt(id=NULL) %>% 
+    daply(~variable,function(x)range(x$value)) -> box
+  
+  starts <- profileDesign(rho=seq(0.01,0.025,length=30),
+                          lower=box[,1],upper=box[,2],
+                          nprof=10)
+  
+  foreach(start=iter(starts,"row"),
+          .combine=rbind,
+          .options.multicore=list(set.seed=TRUE),
+          .options.mpi=list(seed=290860873,chunkSize=1)
+  ) %dopar% {
+    mf <- mif2(polio,
+               start=unlist(start),
+               Np=2000,
+               Nmif=300,
+               cooling.type="geometric",
+               cooling.fraction.50=0.5,
+               transform=TRUE,
+               rw.sd=rw.sd(
+                 b1=0.02, b2=0.02, b3=0.02, b4=0.02, b5=0.02, b6=0.02,
+                 psi=0.02, tau=0.02, sigma_dem=0.02, sigma_env=0.02,
+                 IO_0=ivp(0.2), SO_0=ivp(0.2)
+               ))
+    mf <- mif2(mf,Np=5000,Nmif=100,cooling.fraction.50=0.1)
+    ll <- logmeanexp(replicate(10,logLik(pfilter(mf,Np=5000))),se=TRUE)
+    data.frame(as.list(coef(mf)),loglik=ll[1],loglik.se=ll[2])
+  }
 }) -> m3
 ```
 ```{r save_profile_rho}
@@ -671,7 +673,7 @@ params %>%
 
 bake(file="sims.rds",seed=398906785,
      simulate(polio,nsim=2000,as.data.frame=TRUE,include.data=TRUE)
-     ) -> sims
+) -> sims
 ddply(sims,~sim,summarize,zeros=sum(cases==0)) -> num_zeros
 
 num_zeros %>%
@@ -709,7 +711,7 @@ print(pl2,vp=viewport(x=0.8,y=0.75,height=0.4,width=0.2))
 sims %>%
   subset(sim!="data") %>%
   summarize(imports=coef(polio,"psi")*mean(SO+SB1+SB2+SB3+SB4+SB5+SB6)/12
-            ) -> imports
+  ) -> imports
 ```
 
 Since only `r with(subset(num_zeros,sim!="data"),round(sum(zeros<datz)/length(zeros)*100,1))`% of the simulations had fewer zero-case months than did the data, the model does predict significantly more fadeouts than does the model.

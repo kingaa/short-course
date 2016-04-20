@@ -1,6 +1,7 @@
 library(pomp)
 options(stringsAsFactors=FALSE)
-stopifnot(packageVersion("pomp")>="1.4")
+stopifnot(packageVersion("pomp")>="1.4.7")
+set.seed(557976883)
 bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt")
 statenames <- c("S","I","R1","R2")
 paramnames <- c("Beta","mu_I","rho","mu_R1","mu_R2")
@@ -67,8 +68,6 @@ library(foreach)
 library(doParallel)
 
 registerDoParallel()
-
-set.seed(2036049659,kind="L'Ecuyer")
 stew(file="pf.rda",{
   t_pf <- system.time(
     pf <- foreach(i=1:10,.packages='pomp',
