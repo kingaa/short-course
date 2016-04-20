@@ -1,8 +1,5 @@
-## ----ncpu,include=FALSE,purl=TRUE,cache=FALSE----------------------------
 ncpu <- as.integer(Sys.getenv("PBS_NP"))
 if (is.na(ncpu)) ncpu <- 40
-
-## ----mles,include=FALSE--------------------------------------------------
 read.csv(text="
 town,loglik,loglik.sd,mu,delay,sigma,gamma,rho,R0,amplitude,alpha,iota,cohort,psi,S_0,E_0,I_0,R_0,sigmaSE
 Bedwellty,-1125.1,0.14,0.02,4,57.9,146,0.311,24.7,0.16,0.937,0.0396,0.351,0.951,0.0396,2.64e-05,2.45e-05,0.96,0.0611
@@ -26,8 +23,6 @@ Nottingham,-2703.5,0.53,0.02,4,70.2,115,0.609,22.6,0.157,0.982,0.17,0.34,0.258,0
 Oswestry,-696.1,0.49,0.02,4,37.3,168,0.631,52.9,0.339,1.04,0.0298,0.263,0.476,0.0218,1.56e-05,1.61e-05,0.978,0.0699
 Sheffield,-2810.7,0.21,0.02,4,54.3,62.2,0.649,33.1,0.313,1.02,0.853,0.225,0.175,0.0291,6.04e-05,8.86e-05,0.971,0.0428
 ",stringsAsFactors=FALSE) -> mles
-
-## ----prelims,cache=FALSE-------------------------------------------------
 set.seed(594709947L)
 library(ggplot2)
 theme_set(theme_bw())
@@ -35,45 +30,33 @@ library(plyr)
 library(reshape2)
 library(magrittr)
 library(pomp)
-stopifnot(packageVersion("pomp")>="0.70-1")
-
-## ----load-data-----------------------------------------------------------
+stopifnot(packageVersion("pomp")>="1.4.5")
 daturl <- "http://kingaa.github.io/pomp/vignettes/twentycities.rda"
 datfile <- file.path(tempdir(),"twentycities.rda")
 download.file(daturl,destfile=datfile,mode="wb")
 load(datfile)
-
-## ----plot-data-----------------------------------------------------------
 measles %>% 
   mutate(year=as.integer(format(date,"%Y"))) %>%
   subset(town=="London" & year>=1950 & year<1964) %>%
   mutate(time=(julian(date,origin=as.Date("1950-01-01")))/365.25+1950) %>%
   subset(time>1950 & time<1964, select=c(time,cases)) -> dat
 demog %>% subset(town=="London",select=-town) -> demog
-
-## ----data-plot-----------------------------------------------------------
 dat %>% ggplot(aes(x=time,y=cases))+geom_line()
 demog %>% melt(id="year") %>%
   ggplot(aes(x=year,y=value))+geom_point()+
   facet_wrap(~variable,ncol=1,scales="free_y")
-
-## ----prep-covariates-----------------------------------------------------
 demog %>% 
   summarize(
     time=seq(from=min(year),to=max(year),by=1/12),
     pop=predict(smooth.spline(x=year,y=pop),x=time)$y,
     birthrate=predict(smooth.spline(x=year+0.5,y=births),x=time-4)$y
     ) -> covar
-
-## ----covarplot-----------------------------------------------------------
 plot(pop~time,data=covar,type='l')
 points(pop~year,data=demog)
 plot(birthrate~time,data=covar,type='l')
 points(births~year,data=demog)
 plot(birthrate~I(time-4),data=covar,type='l')
 points(births~I(year+0.5),data=demog)
-
-## ----seir-diagram,echo=FALSE,cache=FALSE---------------------------------
 library(DiagrammeR)
 DiagrammeR("digraph SEIR {
   graph [rankdir=TD, overlap=false, fontsize = 10]
@@ -90,8 +73,6 @@ DiagrammeR("digraph SEIR {
   b->S
   {S E I R}->d
    }",type="grViz",engine="dot",height=300,width=800)
-
-## ----rprocess------------------------------------------------------------
 rproc <- Csnippet("
   double beta, br, seas, foi, dw, births;
   double rate[6], trans[6];
@@ -138,8 +119,6 @@ rproc <- Csnippet("
   W += (dw - dt)/sigmaSE;  // standardized i.i.d. white noise
   C += trans[4];           // true incidence
 ")
-
-## ----initializer---------------------------------------------------------
 initlz <- Csnippet("
   double m = pop/(S_0+E_0+I_0+R_0);
   S = nearbyint(m*S_0);
@@ -149,8 +128,6 @@ initlz <- Csnippet("
   W = 0;
   C = 0;
 ")
-
-## ----dmeasure------------------------------------------------------------
 dmeas <- Csnippet("
   double m = rho*C;
   double v = m*(1.0-rho+psi*psi*m);
@@ -161,8 +138,6 @@ dmeas <- Csnippet("
     lik = pnorm(cases+0.5,m,sqrt(v)+tol,1,0)+tol;
   }
 ")
-
-## ----rmeasure------------------------------------------------------------
 rmeas <- Csnippet("
   double m = rho*C;
   double v = m*(1.0-rho+psi*psi*m);
@@ -174,8 +149,6 @@ rmeas <- Csnippet("
     cases = 0.0;
   }
 ")
-
-## ----pomp-construction---------------------------------------------------
 dat %>% 
   pomp(t0=with(dat,2*time[1]-time[2]),
        time="time",
@@ -191,15 +164,11 @@ dat %>%
                     "rho","sigmaSE","psi","cohort","amplitude",
                     "S_0","E_0","I_0","R_0")
        ) -> m1
-
-## ----plot-pomp-----------------------------------------------------------
 m1 %>% as.data.frame() %>% 
   melt(id="time") %>%
   ggplot(aes(x=time,y=value))+
   geom_line()+
   facet_grid(variable~.,scales="free_y")
-
-## ----mle-----------------------------------------------------------------
 mles %>% subset(town=="London") -> mle
 paramnames <- c("R0","mu","sigma","gamma","alpha","iota",
                 "rho","sigmaSE","psi","cohort","amplitude",
@@ -207,8 +176,6 @@ paramnames <- c("R0","mu","sigma","gamma","alpha","iota",
 mle %>% extract(paramnames) %>% unlist() -> theta
 mle %>% subset(select=-c(S_0,E_0,I_0,R_0)) %>%
   knitr::kable(row.names=FALSE)
-
-## ----pfilter1------------------------------------------------------------
 library(foreach)
 library(doParallel)
 
@@ -223,15 +190,11 @@ foreach(i=1:4,
   pfilter(m1,Np=10000,params=theta)
 } -> pfs
 logmeanexp(sapply(pfs,logLik),se=TRUE)
-
-## ----sims1,fig.height=8--------------------------------------------------
 m1 %>% 
   simulate(params=theta,nsim=9,as.data.frame=TRUE,include.data=TRUE) %>%
   ggplot(aes(x=time,y=cases,group=sim,color=(sim=="data")))+
   guides(color=FALSE)+
   geom_line()+facet_wrap(~sim,ncol=2)
-
-## ----sims2---------------------------------------------------------------
 m1 %>% 
   simulate(params=theta,nsim=100,as.data.frame=TRUE,include.data=TRUE) %>%
   subset(select=c(time,sim,cases)) %>%
@@ -243,8 +206,6 @@ m1 %>%
   dcast(time+data~p,value.var='q') %>%
   ggplot(aes(x=time,y=med,color=data,fill=data,ymin=lo,ymax=hi))+
   geom_ribbon(alpha=0.2)
-
-## ----transforms----------------------------------------------------------
 toEst <- Csnippet("
   Tmu = log(mu);
   Tsigma = log(sigma);
@@ -282,4 +243,3 @@ pomp(m1,toEstimationScale=toEst,
      paramnames=c("R0","mu","sigma","gamma","alpha","iota",
                   "rho","sigmaSE","psi","cohort","amplitude",
                   "S_0","E_0","I_0","R_0")) -> m1
-

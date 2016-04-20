@@ -1,7 +1,6 @@
 ---
 title: "Introduction to Simulation-based Inference"
 author: "Aaron A. King and Edward L. Ionides"
-date: 2015-07-14
 output:
   html_document:
     toc: yes
@@ -27,7 +26,7 @@ Produced in **R** version `r getRversion()` using **pomp** version `r packageVer
 
 ```{r knitr-opts,include=FALSE,purl=FALSE,cache=FALSE}
 library(knitr)
-prefix <- "pomp-intro"
+prefix <- "intro"
 opts_chunk$set(
   progress=TRUE,
   prompt=FALSE,tidy=FALSE,highlight=TRUE,
@@ -47,18 +46,18 @@ opts_chunk$set(
   fig.pos="h!",
   fig.align='center',
   fig.height=4,fig.width=6.83,
-  dpi=300,
+  dpi=100,
   dev='png',
   dev.args=list(bg='transparent')
   )
-```
-```{r opts,include=FALSE,cache=FALSE}
 options(
   keep.source=TRUE,
-  stringsAsFactors=FALSE,
   encoding="UTF-8"
   )
 
+```
+```{r opts,include=FALSE,cache=FALSE}
+options(stringsAsFactors=FALSE)
 library(ggplot2)
 theme_set(theme_bw())
 ```
@@ -329,19 +328,17 @@ Let's see what can be done with a `pomp` object.
 First, if we haven't already, we must install **pomp** and `pompExamples`.
 Run the following to do so.
 ```{r install-pomp,eval=FALSE}
-library(devtools)
-install_github("kingaa/pomp")
-# install_github("kingaa/pompExamples")
+install.packages("pomp",repos="http://kingaa.github.io")
 ```
 
 Now we'll load some packages, including **pomp**.
 ```{r prelims,cache=F}
-set.seed(594709947L)
 library(ggplot2)
 library(plyr)
 library(reshape2)
 library(pomp)
-stopifnot(packageVersion("pomp")>="0.69-1")
+stopifnot(packageVersion("pomp")>="1.4.5")
+set.seed(594709947L)
 ```
 
 A pre-built `pomp` object encoding the Ricker model comes included with the package.

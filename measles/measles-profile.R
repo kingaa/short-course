@@ -1,11 +1,8 @@
-## ----mpi-setup,include=FALSE,purl=TRUE,cache=FALSE-----------------------
 library(foreach)
 library(doMPI)
 
 cl <- startMPIcluster()
 registerDoMPI(cl)
-
-## ----prelims,cache=FALSE-------------------------------------------------
 set.seed(594709947L)
 library(ggplot2)
 theme_set(theme_bw())
@@ -13,9 +10,7 @@ library(plyr)
 library(reshape2)
 library(magrittr)
 library(pomp)
-stopifnot(packageVersion("pomp")>="0.75-1")
-
-## ----load-data-----------------------------------------------------------
+stopifnot(packageVersion("pomp")>="1.4.5")
 daturl <- "http://kingaa.github.io/pomp/vignettes/twentycities.rda"
 datfile <- file.path(tempdir(),"twentycities.rda")
 download.file(daturl,destfile=datfile,mode="wb")
@@ -26,16 +21,12 @@ measles %>%
   mutate(time=(julian(date,origin=as.Date("1950-01-01")))/365.25+1950) %>%
   subset(time>1950 & time<1964, select=c(time,cases)) -> dat
 demog %>% subset(town=="London",select=-town) -> demog
-
-## ----prep-covariates-----------------------------------------------------
 demog %>% 
   summarize(
     time=seq(from=min(year),to=max(year),by=1/12),
     pop=predict(smooth.spline(x=year,y=pop),x=time)$y,
     birthrate=predict(smooth.spline(x=year+0.5,y=births),x=time-4)$y
     ) -> covar
-
-## ----rprocess------------------------------------------------------------
 rproc <- Csnippet("
   double beta, br, seas, foi, dw, births;
   double rate[6], trans[6];
@@ -82,8 +73,6 @@ rproc <- Csnippet("
   W += (dw - dt)/sigmaSE;  // standardized i.i.d. white noise
   C += trans[4];           // true incidence
 ")
-
-## ----initializer---------------------------------------------------------
 initlz <- Csnippet("
   double m = pop/(S_0+E_0+I_0+R_0);
   S = nearbyint(m*S_0);
@@ -93,8 +82,6 @@ initlz <- Csnippet("
   W = 0;
   C = 0;
 ")
-
-## ----dmeasure------------------------------------------------------------
 dmeas <- Csnippet("
   double m = rho*C;
   double v = m*(1.0-rho+psi*psi*m);
@@ -105,8 +92,6 @@ dmeas <- Csnippet("
     lik = pnorm(cases+0.5,m,sqrt(v)+tol,1,0)+tol;
   }
 ")
-
-## ----rmeasure------------------------------------------------------------
 rmeas <- Csnippet("
   double m = rho*C;
   double v = m*(1.0-rho+psi*psi*m);
@@ -118,8 +103,6 @@ rmeas <- Csnippet("
     cases = 0.0;
   }
 ")
-
-## ----transforms----------------------------------------------------------
 toEst <- Csnippet("
   Tsigma = log(sigma);
   Tgamma = log(gamma);
@@ -141,8 +124,6 @@ fromEst <- Csnippet("
   TR0 = exp(R0);
   from_log_barycentric (&TS_0, &S_0, 4);
 ")
-
-## ----mles,include=FALSE--------------------------------------------------
 read.csv(text="
 town,loglik,loglik.sd,mu,delay,sigma,gamma,rho,R0,amplitude,alpha,iota,cohort,psi,S_0,E_0,I_0,R_0,sigmaSE
 Bedwellty,-1125.1,0.14,0.02,4,57.9,146,0.311,24.7,0.16,0.937,0.0396,0.351,0.951,0.0396,2.64e-05,2.45e-05,0.96,0.0611
@@ -166,15 +147,11 @@ Nottingham,-2703.5,0.53,0.02,4,70.2,115,0.609,22.6,0.157,0.982,0.17,0.34,0.258,0
 Oswestry,-696.1,0.49,0.02,4,37.3,168,0.631,52.9,0.339,1.04,0.0298,0.263,0.476,0.0218,1.56e-05,1.61e-05,0.978,0.0699
 Sheffield,-2810.7,0.21,0.02,4,54.3,62.2,0.649,33.1,0.313,1.02,0.853,0.225,0.175,0.0291,6.04e-05,8.86e-05,0.971,0.0428
 ",stringsAsFactors=FALSE) -> mles
-
-## ----mle-----------------------------------------------------------------
 mles %>% subset(town=="London") -> mle
 paramnames <- c("R0","mu","sigma","gamma","alpha","iota",
                 "rho","sigmaSE","psi","cohort","amplitude",
                 "S_0","E_0","I_0","R_0")
 mle %>% extract(paramnames) %>% unlist() -> theta
-
-## ----pomp-construct------------------------------------------------------
 dat %>% 
   pomp(t0=with(dat,2*time[1]-time[2]),
        time="time",
@@ -193,9 +170,6 @@ dat %>%
                     "rho","sigmaSE","psi","cohort","amplitude",
                     "S_0","E_0","I_0","R_0")
   ) -> m1
-plot(simulate(m1))
-
-## ----sigmaSE-prof-design-------------------------------------------------
 estpars <- setdiff(names(theta),c("sigmaSE","mu","alpha","rho","iota"))
 
 theta["alpha"] <- 1
@@ -216,8 +190,6 @@ dim(pd)
 pd <- as.data.frame(t(partrans(m1,t(pd),"fromEstimationScale")))
 
 pairs(~sigmaSE+R0+mu+sigma+gamma+S_0+E_0,data=pd)
-
-## ----sigmaSE-prof-round1,eval=TRUE,cache=FALSE---------------------------
 bake("sigmaSE-profile1.rds",{
  
   foreach (p=iter(pd,"row"),
@@ -282,13 +254,6 @@ bake("sigmaSE-profile1.rds",{
                etime = as.numeric(etime))
   }
 }) -> sigmaSE_prof
-
-## ----round1-plot---------------------------------------------------------
-pairs(~loglik+sigmaSE+R0+I(1/gamma)+I(1/sigma)+psi+log(cohort),
-      data=sigmaSE_prof,subset=loglik>max(loglik)-100)
-summary(sigmaSE_prof)
-
-## ----sigmaSE-prof-round2,cache=FALSE-------------------------------------
 sigmaSE_prof %>%
   mutate(sigmaSE=exp(signif(log(sigmaSE),5))) %>%
   ddply(~sigmaSE,subset,rank(-loglik)<=20) %>%
@@ -358,25 +323,7 @@ bake("sigmaSE-profile2.rds",{
                etime = as.numeric(etime))
   }
 }) -> sigmaSE_prof
-
-## ----plot-sigmaSE-profile------------------------------------------------
-sigmaSE_prof %<>%
-  subset(nfail.max==0) %>%
-  mutate(sigmaSE=exp(signif(log(sigmaSE),5))) %>%
-  ddply(~sigmaSE,subset,rank(-loglik)<=2)
-
-sigmaSE_prof %>%
-  ggplot(aes(x=sigmaSE,y=loglik))+
-  geom_point()+
-  geom_smooth(method="loess")
-
-## ----profile-traces------------------------------------------------------
-pairs(~loglik+sigmaSE+R0+I(1/gamma)+I(1/sigma),
-      data=sigmaSE_prof)
-
-## ----include=FALSE,cache=FALSE,eval=TRUE,purl=TRUE-----------------------
 closeCluster(cl)
 try(detach("package:doMPI",unload=TRUE),silent=TRUE)
 if (exists("mpi.exit")) mpi.exit()
 try(detach("package:Rmpi",unload=TRUE),silent=TRUE)
-

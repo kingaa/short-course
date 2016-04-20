@@ -1,7 +1,6 @@
 ---
 title: "Case study: Measles in large and small towns"
 author: "Aaron A. King"
-date: "2015-07-07"
 output:
   html_document:
     toc: yes
@@ -767,7 +766,7 @@ library(plyr)
 library(reshape2)
 library(magrittr)
 library(pomp)
-stopifnot(packageVersion("pomp")>="0.70-1")
+stopifnot(packageVersion("pomp")>="1.4.5")
 ```
 
 ### Data and covariates
@@ -1079,7 +1078,6 @@ pomp(m1,toEstimationScale=toEst,
 ## Constructing a likelihood profile
 
 [The linked document shows how a likelihood profile can be constructed using IF2](./measles-profile.html).
-[The corresponding **R** script is here](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles-profile.R).
 
 ## Exercises
 
@@ -1103,7 +1101,11 @@ Compare likelihoods but also use simulations to diagnose differences between the
 --------------------------
 
 ## [Back to course homepage](http://kingaa.github.io/short-course)
-## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
+## **R** codes for this document
+
+- [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
+- [Profile likelihood computation for this example](./measles-profile.html)
+- [**R** code for the profile likelihood computation](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles-profile.R)
 
 ----------------------
 

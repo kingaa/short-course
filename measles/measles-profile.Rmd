@@ -1,7 +1,6 @@
 ---
 title: "Measles profile computation"
 author: "Aaron A. King"
-date: "2015-07-07"
 output:
   html_document:
     toc: yes
@@ -89,7 +88,7 @@ library(plyr)
 library(reshape2)
 library(magrittr)
 library(pomp)
-stopifnot(packageVersion("pomp")>="0.75-1")
+stopifnot(packageVersion("pomp")>="1.4.5")
 ```
 
 ### Data and covariates
@@ -320,6 +319,8 @@ dat %>%
                     "rho","sigmaSE","psi","cohort","amplitude",
                     "S_0","E_0","I_0","R_0")
   ) -> m1
+```
+```{r plotsim,purl=F}
 plot(simulate(m1))
 ```
 
@@ -433,7 +434,7 @@ bake("sigmaSE-profile1.rds",{
 The preceding calculations took `r round(sum(sigmaSE_prof$etime),1)`&nbsp;cpu&nbsp;hr, or about `r signif(mean(sigmaSE_prof$etime)*3600/120,2)`&nbsp;cpu&nbsp;sec per iteration per 1000 particles.
 Let's examine the results.
 
-```{r round1-plot}
+```{r round1-plot,purl=F}
 pairs(~loglik+sigmaSE+R0+I(1/gamma)+I(1/sigma)+psi+log(cohort),
       data=sigmaSE_prof,subset=loglik>max(loglik)-100)
 summary(sigmaSE_prof)
@@ -516,7 +517,7 @@ bake("sigmaSE-profile2.rds",{
 
 The preceding calculations took `r round(sum(sigmaSE_prof$etime),1)`&nbsp;cpu&nbsp;hr, or about `r signif(mean(sigmaSE_prof$etime)/550*3600,2)`&nbsp;cpu&nbsp;sec per iteration per 1000 particles.
 
-```{r plot-sigmaSE-profile}
+```{r plot-sigmaSE-profile,purl=F}
 sigmaSE_prof %<>%
   subset(nfail.max==0) %>%
   mutate(sigmaSE=exp(signif(log(sigmaSE),5))) %>%
@@ -530,7 +531,7 @@ sigmaSE_prof %>%
 
 Plot profile traces, which show the trade-off between intensity of extra-demographic stochasticity and duration of the infectious and latent periods.
 
-```{r profile-traces}
+```{r profile-traces,purl=F}
 pairs(~loglik+sigmaSE+R0+I(1/gamma)+I(1/sigma),
       data=sigmaSE_prof)
 ```

@@ -1,7 +1,8 @@
-INSTALLDIR=www
+INSTALLDIR = www
+TARGETS = mif.R mif.html box_search_global.rda box_search_local.rda \
+lik_local.rda pf.rda bsflu_params.csv 
 
-default: box_search_global.rda box_search_local.rda bsflu_params.csv \
-	lik_local.rda pf.rda mif.html mif.R
+default: $(TARGETS)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
 
@@ -14,7 +15,7 @@ default: box_search_global.rda box_search_local.rda bsflu_params.csv \
 	Rscript --vanilla -e "rmarkdown::render(\"$*.md\",output_format=\"html_document\")"
 
 %.R: %.Rmd
-	Rscript --vanilla -e "library(knitr); purl(\"$*.Rmd\",output=\"$*.R\")"
+	Rscript --vanilla -e "knitr::purl(\"$*.Rmd\",output=\"$*.R\",documentation=0)"
 
 clean:
 	$(RM) *.o *.so *.log *.aux *.out *.nav *.snm *.toc *.bak

@@ -1,7 +1,6 @@
 ---
 title: "Iterated filtering: Principles and practice"
 author: "Edward Ionides and Aaron A. King"
-date: "06/25/2015"
 output:
   html_document:
     toc: yes
@@ -251,34 +250,34 @@ from 15 to 18 January. It would therefore be reasonable to initialize the epidem
 
 Our Markov transmission model is that each individual in $S$ transitions to $I$ at rate $\beta I(t)$; each individual in $I$ transitions at rate $\mu_I$ to $R_1$. Subsequently, the individual moves from $R_1$ to $R_2$ at  rate $\mu_{R_1}$, and finally from $R_2$ to $R_3$ at rate $\mu_{R_2}$. Therefore, $1/\mu_I$ is the mean infectious time prior to bed-confinement; $1/R_1$ is the mean duration of bed-confinement for symptomatic cases;  $1/R_2$ is the mean duration of convalescence for symptomatic cases. All rates have units $\mathrm{day}^{-1}$. 
 
-This model has limitations and weaknesses. Writing down and fitting a model is a starting point for data analysis, not an end point. In particular, one should try model variations. For example, one could include a latency period for infections, or one could modify the model to give a better description of the bed-confinement and convalescence processes. Ten individuals received antibiotics for secondary infections, and they had longer bed-confinement and convalescence times. Partly for this reason, we will initially fit only the bed-confinement data, using $Y_n=B_n$ for our `dmeasure`. 
+This model has limitations and weaknesses. Writing down and fitting a model is a starting point for data analysis, not an end point. In particular, one should try model variations. For example, one could include a latency period for infections, or one could modify the model to give a better description of the bed-confinement and convalescence processes. Ten individuals received antibiotics for secpondary infections, and they had longer bed-confinement and convalescence times. Partly for this reason, we will initially fit only the bed-confinement data, using $Y_n=B_n$ for our `dmeasure`. 
 
 We do not need a representation of $R_3$ since the total population size is fixed at $P=763$ and hence $R_3(t)=P-S(t)-I(t)-R_1(t)-R_2(t)$. 
 For the code, we enumerate the state variables ($S$, $I$, $R_1$, $R_2$) and the parameters ($\beta$, $\mu_I$, $\rho$, $\mu_{R_1}$, $\mu_{R_2}$) as follows:
 
 ```{r bsflu_names}
-bsflu_statenames <- c("S","I","R1","R2")
-bsflu_paramnames <- c("Beta","mu_I","rho","mu_R1","mu_R2")
+statenames <- c("S","I","R1","R2")
+paramnames <- c("Beta","mu_I","rho","mu_R1","mu_R2")
 ```
 
 In the codes below, we'll refer to the data variables by their names ($B$, $C$), as given in the `bsflu_data` data-frame:
-```{r bsflu_obsnames,purl=FALSE}
+```{r obsnames,purl=FALSE}
 colnames(bsflu_data)[1:2]
 ```
 
 Now, we write the model code:
 
 ```{r csnippets_bsflu}
-bsflu_dmeasure <- "
+dmeas <- "
   lik = dpois(B,rho*R1+1e-6,give_log);
 "
 
-bsflu_rmeasure <- "
+rmeas <- "
   B = rpois(rho*R1+1e-6);
   C = rpois(rho*R2);
 "
 
-bsflu_rprocess <- "
+rproc <- "
   double t1 = rbinom(S,1-exp(-Beta*I*dt));
   double t2 = rbinom(I,1-exp(-dt*mu_I));
   double t3 = rbinom(R1,1-exp(-dt*mu_R1));
@@ -289,19 +288,19 @@ bsflu_rprocess <- "
   R2 += t3 - t4;
 "
 
-bsflu_fromEstimationScale <- "
+fromEst <- "
  TBeta = exp(Beta);
  Tmu_I = exp(mu_I);
  Trho = expit(rho);
 "
 
-bsflu_toEstimationScale <- "
+toEst <- "
  TBeta = log(Beta);
  Tmu_I = log(mu_I);
  Trho = logit(rho);
 "
 
-bsflu_initializer <- "
+init <- "
  S=762;
  I=1;
  R1=0;
@@ -313,22 +312,22 @@ We build the `pomp` object:
 
 ```{r pomp_bsflu}
 library(pomp)
-bsflu <- pomp(
+pomp(
   data=bsflu_data,
   times="day",
   t0=0,
   rprocess=euler.sim(
-    step.fun=Csnippet(bsflu_rprocess),
+    step.fun=Csnippet(rproc),
     delta.t=1/12
   ),
-  rmeasure=Csnippet(bsflu_rmeasure),
-  dmeasure=Csnippet(bsflu_dmeasure),
-  fromEstimationScale=Csnippet(bsflu_fromEstimationScale),
-  toEstimationScale=Csnippet(bsflu_toEstimationScale),
-  statenames=bsflu_statenames,
-  paramnames=bsflu_paramnames,
-  initializer=Csnippet(bsflu_initializer)
-)
+  rmeasure=Csnippet(rmeas),
+  dmeasure=Csnippet(dmeas),
+  fromEstimationScale=Csnippet(fromEst),
+  toEstimationScale=Csnippet(toEst),
+  initializer=Csnippet(init),
+  statenames=statenames,
+  paramnames=paramnames
+) -> bsflu
 ```
 ```{r bsflu_plot,purl=F}
 plot(bsflu)
@@ -418,12 +417,13 @@ stew(file="pf.rda",{
       pfilter(bsflu,params=c(Beta=0.01,mu_I=2,rho=0.9,fixed_params),Np=10000)
     }
   )
+  n_pf <- getDoParWorkers()
 },seed=625904618,kind="L'Ecuyer")
 
 (L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
 ```
 
-In  `r round(t_pf["elapsed"],1)` seconds, we obtain an unbiased likelihood estimate of `r round(L_pf[1],1)` with a Monte Carlo standard error of `r round(L_pf[2],2)`.
+In `r round(t_pf["elapsed"],1)` seconds on a `r n_pf`-core machine, we obtain an unbiased likelihood estimate of `r round(L_pf[1],1)` with a Monte Carlo standard error of `r round(L_pf[2],2)`.
 
 ### Building up a picture of the likelihood surface
 
@@ -520,7 +520,7 @@ Practical parameter estimation involves trying many starting values for the para
 For our flu model, a box containing reasonable parameter values might be
 
 ```{r box_global}
-bsflu_box <- rbind(
+params_box <- rbind(
   Beta=c(0.001,0.01),
   mu_I=c(0.5,3),
   rho = c(0.5,1)
@@ -531,9 +531,10 @@ We are now ready to carry out likelihood maximizations from diverse starting poi
 
 ```{r box_search_global}
 stew(file="box_search_global.rda",{
+  n_global <- getDoParWorkers()
   t_global <- system.time({
     mf1 <- mifs_local[[1]]
-    guesses <- as.data.frame(apply(bsflu_box,1,function(x)runif(300,x[1],x[2])))
+    guesses <- as.data.frame(apply(params_box,1,function(x)runif(300,x[1],x[2])))
     results_global <- foreach(guess=iter(guesses,"row"), 
                               .packages='pomp', 
                               .combine=rbind,
@@ -556,10 +557,10 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 ```
 
 In the above, we took advantage of a general **pomp** behavior:
-re-running a command on an object (i.e., `mif2` on `mf1`)created by the same command preserves the algorithmic arguments.
+re-running a command on an object (i.e., `mif2` on `mf1`) created by the same command preserves the algorithmic arguments.
 
 Evaluation of the best result of this search gives a likelihood of `r round(max(results_global$loglik),1)` with a standard error of `r round(results_global$loglik.se[which.max(results_global$loglik)],2)`.
-This took in `r round(t_global["elapsed"]/60,1)` minutes altogether on a machine with `r getDoParWorkers()` processors.
+This took in `r round(t_global["elapsed"]/60,1)` minutes altogether on a machine with `r n_global` processors.
 One can visualize aspects of the global geometry of the likelihood surface with a scatterplot matrix of these diverse parameter estimates:
 
 ```{r pairs_global,purl=FALSE}

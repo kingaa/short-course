@@ -1,7 +1,6 @@
 ---
 title: "Dynamic models and their simulation by Euler's method"
 author: "Edward L. Ionides and Aaron A. King"
-date: "11 April 2016"
 output:
   html_document:
     toc: yes
@@ -57,23 +56,21 @@ opts_chunk$set(
   dev='CairoPNG',
   dev.args=list(bg='transparent')
   )
-```
-```{r opts,include=FALSE,cache=FALSE}
 options(
   keep.source=TRUE,
-  stringsAsFactors=FALSE,
   encoding="UTF-8"
   )
 ```
 
 ```{r prelims,echo=F,cache=F}
-set.seed(594709947L)
 library(plyr)
 library(reshape2)
 library(pomp)
 library(ggplot2)
 theme_set(theme_bw())
+options(stringsAsFactors=FALSE)
 stopifnot(packageVersion("pomp")>="1.4.5")
+set.seed(594709947L)
 ```
 
 ## Objectives
@@ -89,9 +86,9 @@ This tutorial develops some classes of dynamic models relevant for biological sy
 We will develop deterministic and stochastic representations of a susceptible-infected-recovered (SIR) system, a fundamental class of models for disease transmission dynamics. 
 We will do this using notation which generalizes to more complex systems [[@breto09]](http://dept.stat.lsa.umich.edu/~ionides/pubs/breto09.pdf).
 
-```{r sir-diagram,echo=FALSE,purl=FALSE,fig.height=7/9}
+```{r sir-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=6}
 library(grid)
-vp <- viewport(width=unit(32/6,"inches"),height=unit(2/3,"inches"))
+vp <- viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc"))
 pushViewport(vp)
 grid.rect(x=c(1/4,2/4,3/4),y=1/2,width=1/8,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
 grid.text(x=c(1/4,2/4,3/4),y=1/2,label=c(expression(S),expression(I),expression(R)),
@@ -285,7 +282,7 @@ I, infected (and infectious) hosts;
 R, recovered and immune hosts. 
 The rate at which individuals move from S to I is the force of infection, $\lambda=\beta\,I/N$, while that at which individuals move into the R class is $\gamma$.
 
-```{r sir-diagram,echo=FALSE,purl=FALSE,fig.height=7/9}
+```{r sir-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=6}
 ```
 
 Let's look at how we can view the SIR as a POMP model.
@@ -385,9 +382,9 @@ where $f=R(\infty)/N$ is the final size of the epidemic, together with the idea 
 If the infectious period is roughly 1&nbsp;da, then $1/\gamma \approx 1~\text{da}$ and $\beta = \gamma\,R_0 \approx 1.5~\text{da}^{-1}$.
 Let's simulate the model at these parameters.
 
-```{r}
+```{r sir_sim1}
 sims <- simulate(sir,params=c(Beta=1.5,gamma=1,rho=0.9,N=2600),
-                 nsim=20,as=TRUE,include=TRUE)
+                 nsim=20,as.data.frame=TRUE,include.data=TRUE)
 
 ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
   geom_line()+guides(color=FALSE)
@@ -402,9 +399,9 @@ Fiddle with the parameters to see if you can't find parameters for which the dat
 Below is a diagram of the so-called SEIR model.
 This differs from the SIR model in that infected individuals must pass a period of latency before becoming infectious.
 
-```{r seir-diagram,echo=FALSE,purl=FALSE,fig.height=7/9}
+```{r seir-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=15/2}
 library(grid)
-vp <- viewport(width=unit(20/3,"inches"),height=unit(2/3,"inches"))
+vp <- viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc"))
 pushViewport(vp)
 fs <- 24
 grid.rect(x=c(1/5,2/5,3/5,4/5),y=1/2,width=1/10,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
@@ -439,9 +436,9 @@ ggplot(data=melt(bsflu,id="day"),mapping=aes(x=day,y=value,color=variable))+
 Formulate a model with both confinement and convalescent stages.
 Implement it in **pomp** using a compartmental model like that diagrammed below.
 
-```{r sirr-diagram,echo=FALSE,purl=FALSE,fig.height=7/9}
+```{r sirr-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=15/2}
 library(grid)
-vp <- viewport(width=unit(20/3,"inches"),height=unit(2/3,"inches"))
+vp <- viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc"))
 pushViewport(vp)
 fs <- 24
 grid.rect(x=c(1/5,2/5,3/5,4/5),y=1/2,width=1/10,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))

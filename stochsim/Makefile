@@ -13,7 +13,7 @@ default: stochsim.R stochsim.html bsflu_data.txt
 	Rscript --vanilla -e "rmarkdown::render(\"$*.md\",output_format=\"html_document\")"
 
 %.R: %.Rmd
-	Rscript --vanilla -e "library(knitr); purl(\"$*.Rmd\",output=\"$*.R\")"
+	Rscript --vanilla -e "knitr::purl(\"$*.Rmd\",output=\"$*.R\",documentation=0)"
 
 clean:
 	$(RM) *.o *.so *.log *.aux *.out *.nav *.snm *.toc *.bak

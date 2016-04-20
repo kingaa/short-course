@@ -1,7 +1,6 @@
 ---
 title: Likelihood for POMPs
 author: "Aaron A. King and Edward L. Ionides"
-date: "11 April 2016"
 output:
   html_document:
     toc: yes
@@ -55,24 +54,22 @@ opts_chunk$set(
   dev='png',
   dev.args=list(bg='transparent')
 )
-```
-```{r prelims,include=FALSE,cache=FALSE}
 options(
   keep.source=TRUE,
-  stringsAsFactors=FALSE,
   encoding="UTF-8"
 )
+```
 
-set.seed(594709947L)
+```{r prelims,cache=FALSE,include=FALSE}
+library(pomp)
+stopifnot(packageVersion("pomp")>="1.4.5")
 library(ggplot2)
 theme_set(theme_bw())
 library(grid)
 library(plyr)
 library(reshape2)
-library(foreach)
-library(doParallel)
-library(pomp)
-stopifnot(packageVersion("pomp")>="1.4.5")
+options(stringsAsFactors=FALSE)
+set.seed(594709947L)
 ```
 
 ## Objectives
@@ -232,6 +229,7 @@ ggplot(data=y,
 For a POMP model, the likelihood takes the form of an integral:
 $$\lik(\theta)=\prob{y^*_{1:N}|\theta}=\int\!\prod_{n=1}^{N}\!\prob{y^*_n|x_n,\theta}\,\prob{x_n|x_{n-1},\theta}\,dx_{1}\,\cdots\,dx_{N}.$$
 To compute this integral, we can use [Monte Carlo integration](./monteCarlo.html#monte-carlo-integration).
+[See here for a quick introduction to Monte Carlo methods](./monteCarlo.html).
 In particular, if we propose trajectories of the unobserved state process according to some probabilistic rule, we can generate a large number of these and approximate $\lik(\theta)$ by its Monte Carlo estimate.
 Specifically, let us generate $J$ trajectories of length $N$, $x_{n,j}$, $j=1\,\dots,J$, $n=1,\dots,N$.
 Let $w_j$ denote the probability that we propose trajectory $j$.
@@ -251,7 +249,6 @@ This implies that if we generate trajectories by simulation, all we have to do i
 
 Let's go back to the boarding school influenza outbreak to see what this looks like in practice.
 Let's reconstruct the toy SIR model we were working with.
-[Download a script containing the **R** commands below.](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/pfilter/pfilter.R)
 
 ```{r sir-construct}
 base_url <- "http://kingaa.github.io/short-course/"
@@ -445,6 +442,7 @@ bake(file="sir-grid1.rds",seed=421776444,kind="L'Ecuyer",{
     library(doParallel)
     registerDoParallel()
     
+    ## Now we do the computation
     foreach (theta=iter(p,"row"),.combine=rbind,.inorder=FALSE,
              .options.multicore=list(set.seed=TRUE)
              ) %dopar% 
@@ -478,7 +476,7 @@ Compute a slice of the likelihood in the $\beta$-$N$ plane.
 ------------------------
 
 
-```{r sir-grid2,eval=FALSE,include=FALSE,purl=FALSE,fig.show=FALSE}
+```{r sir-grid2,eval=FALSE,include=FALSE,purl=FALSE}
 expand.grid(Beta=seq(from=1,to=3,length=50),
             gamma=1,
             rho=0.8,
@@ -637,7 +635,7 @@ Note how the `freeze` function is used to fix the seed of the RNG.
 Note too, how this function returns a large (and therefore bad) value when the particle filter encounters and error.
 This behavior makes the objective function more robust.
 
-```{r sir-like-optim-1,echo=T,eval=T,results='markup',cache=T}
+```{r sir-like-optim-1,echo=T,eval=T,results='markup'}
 neg.ll <- function (par, est) {
   allpars <- coef(sir,transform=TRUE)
   allpars[est] <- par
