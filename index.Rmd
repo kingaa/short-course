@@ -115,8 +115,8 @@ The **pomp** package is described and illustrated in
 ## Schedule of Topics
 
 1. [Ecological and epidemiological dynamics; introduction to **R** and **pomp**](./intro/intro.html)
+1. [Simulation of stochastic dynamic models.](./stochsim/stochsim.html)
 1. Deterministic dynamics; trajectory matching
-1. [Stochastic simulation of dynamic models.](./stochsim/stochsim.html)
 1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)
 1. [Iterated filtering: theory and practice](./mif/mif.html)
 1. Case study: influenza in a closed population

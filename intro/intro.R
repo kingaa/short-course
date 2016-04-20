@@ -1,13 +1,13 @@
 options(stringsAsFactors=FALSE)
 library(ggplot2)
 theme_set(theme_bw())
-## install.packages("pomp",repos="http://kingaa.github.io")
+set.seed(2028866059L)
+## install.packages(c("pomp","pompExamples"),repos="http://kingaa.github.io")
 library(ggplot2)
 library(plyr)
 library(reshape2)
 library(pomp)
 stopifnot(packageVersion("pomp")>="1.4.5")
-set.seed(594709947L)
 pompExample(ricker)
 plot(ricker)
 x <- simulate(ricker)
@@ -60,11 +60,6 @@ plot(pop~year,data=dat,type='o')
 library(pomp)
 parus <- pomp(dat,times="year",t0=1959)
 plot(parus)
-skel <- Csnippet("DN = r*N*exp(-N);")
-parus <- pomp(parus,skeleton=skel,skeleton.type='map',
-              paramnames=c("r"),statenames=c("N"))
-traj <- trajectory(parus,params=c(N.0=1,r=12),as.data.frame=TRUE)
-ggplot(data=traj,aes(x=time,y=N))+geom_line()
 stochStep <- Csnippet("
   e = rnorm(0,sigma);
   N = r*N*exp(-N+e);
@@ -74,11 +69,17 @@ pomp(parus,rprocess=discrete.time.sim(step.fun=stochStep,delta.t=1),
 sim <- simulate(parus,params=c(N.0=1,e.0=0,r=12,sigma=0.5),
                 as.data.frame=TRUE,states=TRUE)
 plot(N~time,data=sim,type='o')
-lines(N~time,data=traj,type='l',col='red')
 rmeas <- Csnippet("pop = rpois(phi*N);")
 dmeas <- Csnippet("lik = dpois(pop,phi*N,give_log);")
 pomp(parus,rmeasure=rmeas,dmeasure=dmeas,statenames=c("N"),paramnames=c("phi")) -> parus
 coef(parus) <- c(N.0=1,e.0=0,r=20,sigma=0.1,phi=200)
+library(ggplot2)
 sims <- simulate(parus,nsim=3,as.data.frame=TRUE,include.data=TRUE)
 ggplot(data=sims,mapping=aes(x=time,y=pop))+geom_line()+
-  facet_wrap(~sim)
+  facet_wrap(~sim,ncol=1,scales="free_y")
+skel <- Csnippet("DN = r*N*exp(-N);")
+parus <- pomp(parus,skeleton=skel,skeleton.type='map',
+              paramnames=c("r"),statenames=c("N"))
+traj <- trajectory(parus,params=c(N.0=1,r=12),as.data.frame=TRUE)
+plot(N~time,data=sim,type='o')
+lines(N~time,data=traj,type='l',col='red')
