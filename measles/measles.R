@@ -57,22 +57,22 @@ plot(birthrate~time,data=covar,type='l')
 points(births~year,data=demog)
 plot(birthrate~I(time-4),data=covar,type='l')
 points(births~I(year+0.5),data=demog)
-library(DiagrammeR)
-DiagrammeR("digraph SEIR {
-  graph [rankdir=TD, overlap=false, fontsize = 10]
-  node[shape=egg, label='B'] b;
-  subgraph {
-    rank=same;
-    node[shape=oval, label='S'] S;
-    node[shape=oval, label='E'] E;
-    node[shape=oval, label='I'] I;
-    node[shape=oval, label='R'] R;
-    S->E E->I I->R
-  }
-  node[shape=diamond, label='dead'] d;
-  b->S
-  {S E I R}->d
-   }",type="grViz",engine="dot",height=300,width=800)
+## library(DiagrammeR)
+## DiagrammeR("digraph SEIR {
+##   graph [rankdir=TD, overlap=false, fontsize = 10]
+##   node[shape=egg, label='B'] b;
+##   subgraph {
+##     rank=same;
+##     node[shape=oval, label='S'] S;
+##     node[shape=oval, label='E'] E;
+##     node[shape=oval, label='I'] I;
+##     node[shape=oval, label='R'] R;
+##     S->E E->I I->R
+##   }
+##   node[shape=diamond, label='dead'] d;
+##   b->S
+##   {S E I R}->d
+##    }",type="grViz",engine="dot",height=300,width=800)
 rproc <- Csnippet("
   double beta, br, seas, foi, dw, births;
   double rate[6], trans[6];
