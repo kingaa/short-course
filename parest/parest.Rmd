@@ -919,18 +919,24 @@ model.pred <- trajectory(niameyA)["I",,]
 
 raply(2000,rpois(n=length(model.pred),lambda=params["p"]*model.pred)) -> simdat
 aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
-ggplot(data=cbind(dat,quantiles),mapping=aes(x=biweek))+
-  geom_line(aes(y=measles),color='black')+
+
+typ <- sample(nrow(simdat),1)
+
+ggplot(data=cbind(dat,quantiles,typical=simdat[typ,]),
+       mapping=aes(x=biweek))+
   geom_line(aes(y=`50%`),color='red')+
-  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)
+  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=typical),color='blue')
+
 ```
 
 
 ### Overdispersion: a negative binomial model
 
-Clearly the model is not doing a very good job of capturing the pattern in the data.
-It appears that we will need an error model that has the potential for more variability than does the Poisson.
+Clearly the Poisson model is not doing a very good job of capturing the pattern in the data.
 Recall that, under the Poisson assumption, the variance of the error is equal to the mean.
+It appears that we will need an error model that has the potential for more variability than does the Poisson.
 The negative binomial distribution is such a distribution.
 Let's explore the alternative assumption that $y_t$ is negative-binomially distributed with mean $p\,Y_t$, as before, but larger variance, $p\,Y_t\,(1+\theta\,p\,Y_t)$, i.e.,
 $$y_t\;\sim\;\dist{Negbin}{\mathrm{mu}=p\,Y_t,\;\mathrm{size}=\frac{1}{\theta}}$$
@@ -966,17 +972,21 @@ raply(2000,rnbinom(n=length(model.pred),
                    mu=params["p"]*model.pred,
                    size=1/params["theta"])) -> simdat
 aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
-ggplot(data=cbind(dat,quantiles),mapping=aes(x=biweek))+
-  geom_line(aes(y=measles),color='black')+
-  geom_line(aes(y=`50%`),color='red')+
-  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)
 
+typ <- sample(nrow(simdat),1)
+
+ggplot(data=cbind(dat,quantiles,typical=simdat[typ,]),
+       mapping=aes(x=biweek))+
+  geom_line(aes(y=`50%`),color='red')+
+  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=typical),color='blue')
 ```
 
 What does this plot tell us?
 Essentially, the deterministic SIR model, as we've written it, cannot capture the shape of the epidemic.
 In order to fit the data, the optimization algorithm has expanded the error variance, to the point of absurdity.
-The typical model realization (in black) does not much resemble the data.
+The typical model realization (in blue) does not much resemble the data.
 
 #### Challenge
 Try to estimate $p$, $b$, and $S(0)$ simultaneously.

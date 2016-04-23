@@ -326,10 +326,16 @@ model.pred <- trajectory(niameyA)["I",,]
 
 raply(2000,rpois(n=length(model.pred),lambda=params["p"]*model.pred)) -> simdat
 aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
-ggplot(data=cbind(dat,quantiles),mapping=aes(x=biweek))+
-  geom_line(aes(y=measles),color='black')+
+
+typ <- sample(nrow(simdat),1)
+
+ggplot(data=cbind(dat,quantiles,typical=simdat[typ,]),
+       mapping=aes(x=biweek))+
   geom_line(aes(y=`50%`),color='red')+
-  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)
+  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=typical),color='blue')
+
 negbin.loglik <- function (params) {
   x <- trajectory(niameyA,params=params)
   prediction <- x["I",,]
@@ -360,8 +366,12 @@ raply(2000,rnbinom(n=length(model.pred),
                    mu=params["p"]*model.pred,
                    size=1/params["theta"])) -> simdat
 aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
-ggplot(data=cbind(dat,quantiles),mapping=aes(x=biweek))+
-  geom_line(aes(y=measles),color='black')+
-  geom_line(aes(y=`50%`),color='red')+
-  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)
 
+typ <- sample(nrow(simdat),1)
+
+ggplot(data=cbind(dat,quantiles,typical=simdat[typ,]),
+       mapping=aes(x=biweek))+
+  geom_line(aes(y=`50%`),color='red')+
+  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=typical),color='blue')
