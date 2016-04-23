@@ -785,6 +785,8 @@ Under what definition of SSE will least-squares and maximum likelihood give the 
 
 ## Modeling the noise
 
+### Poisson errors
+
 All this raises the question of what the best model for the errors really is.
 Of course, the answer will certainly depend on the nature of the data.
 The philosophy of likelihood encourages us to think about the question mechanistically.
@@ -838,7 +840,7 @@ fit
 
 We can get an idea about the uncertainty and in particular obtain confidence intervals using the *profile likelihood*.
 To profile over a parameter, we fix the value of that parameter at each of several values, then maximize the likelihood over the remaining unknown parameters.
-In `bblme`, this is quite easy to obtain.
+In **bblme**, this is quite easy to obtain.
 
 ```{r profile1}
 prof.b <- profile(fit)
@@ -923,6 +925,9 @@ ggplot(data=cbind(dat,quantiles),mapping=aes(x=biweek))+
   geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)
 ```
 
+
+### Overdispersion: a negative binomial model
+
 Clearly the model is not doing a very good job of capturing the pattern in the data.
 It appears that we will need an error model that has the potential for more variability than does the Poisson.
 Recall that, under the Poisson assumption, the variance of the error is equal to the mean.
@@ -973,11 +978,8 @@ Essentially, the deterministic SIR model, as we've written it, cannot capture th
 In order to fit the data, the optimization algorithm has expanded the error variance, to the point of absurdity.
 The typical model realization (in black) does not much resemble the data.
 
-#### Exercise
-Revisit the other communities of Niamey and/or the British boarding school influenza data using the Poisson model and `bbmle`.
-
 #### Challenge
-Try to estimate $p$, $b$, and $X_0$ simultaneously.
+Try to estimate $p$, $b$, and $S(0)$ simultaneously.
 
 #### Challenge
 Reformulate the problem using the binomial error model.
@@ -985,16 +987,16 @@ Modify the parameter estimation codes appropriately, estimate the parameters, an
 
 #### Challenge
 Reformulate the problem using a normal error model in which the variance is proportional to the mean:
-$$y_t\;\sim\;\mathrm{normal}\left(p\,Y_t,\sigma\,\sqrt{Y_t}\right).$$
+$$y_t\;\sim\;\dist{Normal}{p\,I_t,\sigma\,\sqrt{I_t}}.$$
 Modify the parameter estimation codes appropriately, estimate the parameters (including both $p$ and $\sigma$), and comment on the results.
 
 #### Challenge
 We've been treating the Niamey data as if they were direct---though inaccurate---measurements of the prevalence.
 Actually, these are incidence data: they are measures of unique infections.
 It would be more appropriate to model these data by adding another equation
-$$\frac{dC}{dt} = \frac{\beta\,X\,Y}{N}$$
+$$\frac{dH}{dt} = \frac{\beta\,S\,I}{N}$$
 to accumulate new infections and assuming the data are distributed according to, for example,
-$$y_t\;\sim\;\mathrm{Poisson}\left(p\,(C_t-C_{t-1})\right).$$
+$$y_t\;\sim\;\dist{Poisson}{p\,(H_t-H_{t-1})}.$$
 Modify the codes above to reflect these more appropriate assumptions, estimate the parameters, and comment on the results.
 
 ## [Back to course homepage](http://kingaa.github.io/short-course)
