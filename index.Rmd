@@ -50,7 +50,7 @@ options(
 Prof.&nbsp;Aaron A. King, Ph.D.  
 Departments of Ecology & Evolutionary Biology and Mathematics  
 University of Michigan  
-Email: kingaa@umich.edu  
+Email: kingaaictp@gmail.com  
 
 ### Perspective
 
@@ -116,10 +116,9 @@ The **pomp** package is described and illustrated in
 
 1. [Ecological and epidemiological dynamics; introduction to **R** and **pomp**](./intro/intro.html)
 1. [Simulation of stochastic dynamic models.](./stochsim/stochsim.html)
-1. [Introduction to parameter estimation](./parest/parest.html)
+1. [Introduction to inference: parameter estimation](./parest/parest.html)
 1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)
 1. [Iterated filtering: theory and practice](./mif/mif.html)
-1. Case study: influenza in a closed population
 1. [Case study: the persistence of polio.](./polio/polio.html)
 1. [Case study: measles and extra-demographic stochasticity.](./measles/measles.html)
 1. [Case study: Ebola and forecasting](./ebola/ebola.html)
