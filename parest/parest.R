@@ -1,5 +1,10 @@
 library(pomp)
 stopifnot(packageVersion("pomp")>"1.4.5")
+library(plyr)
+library(reshape2)
+options(stringsAsFactors=FALSE)
+library(ggplot2)
+theme_set(theme_bw())
 set.seed(1173489184)
 f <- seq(0,1,length=100)
 R0 <- -log(1-f)/f
@@ -18,242 +23,183 @@ slope <- coef(fit)[2]; slope
 coef(summary(fit))
 slope.se <- coef(summary(fit))[2,2]
 2.5*slope.se
-days <- 2:10
-slope <- numeric(length=length(days))
-slope.se <- numeric(length=length(days))
-for (k in seq_along(days)) {
-  fit <- lm(log(B)~day,data=subset(bsflu,day<=days[k]))
-  slope[k] <- coef(summary(fit))[2,1]
-  slope.se[k] <- coef(summary(fit))[2,2]
+fitfn <- function (interval) {
+  fit <- lm(log(B)~day,data=subset(bsflu,day<=interval))
+  slope <- coef(summary(fit))[2,1]
+  slope.se <- coef(summary(fit))[2,2]
+  c(interval=interval,R0.hat=slope*2.5+1,R0.se=slope.se*2.5)
 }
-R0.hat <- slope*2.5+1
-R0.se <- slope.se*2.5
-plot(slope~days,type='o')
-plot(range(days),
-     range(c(R0.hat-2*R0.se,R0.hat+2*R0.se),na.rm=T),
-     type='n',bty='l',
-     xlab="length of initial phase (da)",
-     ylab=expression("estimated"~R[0]))
-lines(R0.hat~days,type='o',lwd=2)
-lines(R0.hat+2*R0.se~days,type='l')
-lines(R0.hat-2*R0.se~days,type='l')
-## niamey <- read.csv("http://kingaa.github.io/parest/niamey.csv",comment.char="#")
-## plot(measles~biweek,data=niamey,subset=community=="A",type='b')
-## plot(measles~biweek,data=niamey,subset=community=="B",type='b')
-## plot(measles~biweek,data=niamey,subset=community=="C",type='b')
-require(deSolve)
-## ?ode
+ldply(2:10,fitfn) -> ests
+ggplot(ests,mapping=aes(x=interval,y=R0.hat,
+                        ymin=R0.hat-2*R0.se,
+                        ymax=R0.hat+2*R0.se))+
+  geom_point()+geom_errorbar(width=0.2)+
+  labs(x="length of initial phase",y=expression("estimated"~R[0]))
+## niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
+## ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
+##   geom_line()+geom_point()
+library(pomp)
 
-closed.sir.model <- function (t, x, params) {
-  ## first extract the state variables
-  S <- x[1]
-  I <- x[2]
-  R <- x[3]
-  ## now extract the parameters
-  beta <- params["beta"]
-  gamma <- params["gamma"]
-  ## now code the model equations
-  dSdt <- -beta*S*I
-  dIdt <- beta*S*I-gamma*I
-  dRdt <- gamma*I
-  ## combine results into a single vector
-  dxdt <- c(dSdt,dIdt,dRdt) 
-  ## return result as a list!
-  list(dxdt)                              
+closed.sir.ode <- Csnippet("
+  DS = -Beta*S*I/N;
+  DI = Beta*S*I/N-gamma*I;
+  DR = gamma*I;
+")
+
+init <- Csnippet("
+  S = N-1;
+  I = 1;
+  R = 0;
+  ")
+
+pomp(data=bsflu,times="day",t0=0,
+     skeleton=closed.sir.ode,
+     skeleton.type="vectorfield",
+     initializer=init,
+     statenames=c("S","I","R"),
+     paramnames=c("Beta","gamma","N")) -> closed.sir
+
+params <- c(Beta=1,gamma=1/13,N=763)
+x <- trajectory(closed.sir,params=params,as.data.frame=TRUE)
+
+ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
+
+expand.grid(Beta=c(0.05,1,2),gamma=1/c(5,10,30),N=763) -> params1
+
+x <- trajectory(closed.sir,params=t(params1),as=TRUE,times=seq(0,50))
+
+ggplot(data=x,mapping=aes(x=time,y=I,group=traj))+
+    geom_line()
+
+ggplot(data=x,mapping=aes(x=time,y=I,group=traj))+
+    geom_line()+scale_y_log10()
+
+library(plyr)
+mutate(params1,traj=seq_along(Beta)) -> params1
+join(x,params1,by="traj") -> x
+
+ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
+                          color=factor(Beta),linetype=factor(1/gamma)))+
+  geom_line()+scale_y_log10()+
+  labs(linetype=expression("IP"==1/gamma),color=expression(beta))
+
+open.sir.ode <- Csnippet("
+  DS = -Beta*S*I/N+mu*(N-S);
+  DI = Beta*S*I/N-gamma*I-mu*I;
+  DR = gamma*I-mu*R;
+")
+
+init <- Csnippet("
+  S = S_0;
+  I = I_0;
+  R = N-S_0-I_0;
+")
+
+pomp(data=data.frame(time=seq(0,20,by=1/52),cases=NA),
+     times="time",t0=-1/52,
+     skeleton=open.sir.ode,
+     skeleton.type="vectorfield",
+     initializer=init,
+     statenames=c("S","I","R"),
+     paramnames=c("Beta","gamma","mu","S_0","I_0","N")
+) -> open.sir
+
+params <- c(mu=1/50,Beta=400,gamma=13,
+            N=100000,S_0=100000/12,I_0=100)
+
+x <- trajectory(open.sir,params=params,as=TRUE)
+
+ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
+ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
+
+seasonal.sir.ode <- Csnippet("
+  double Beta = beta0*(1+beta1*cos(2*M_PI*t));
+  DS = -Beta*S*I/N+mu*(N-S);
+  DI = Beta*S*I/N-gamma*I-mu*I;
+  DR = gamma*I-mu*R;
+")
+
+pomp(open.sir,
+     skeleton=seasonal.sir.ode,
+     skeleton.type="vectorfield",
+     initializer=init,
+     statenames=c("S","I","R"),
+     paramnames=c("beta0","beta1","gamma","mu","N","S_0","I_0")
+     ) -> seas.sir
+
+params <- c(mu=1/50,beta0=400,beta1=0.15,gamma=26,
+            N=1e5,S_0=7000,I_0=50)
+
+trajectory(seas.sir,params=params,as=TRUE) -> x
+ggplot(x,mapping=aes(x=time,y=I))+geom_path()
+ggplot(x,mapping=aes(x=S,y=I))+geom_path()
+
+niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
+ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
+  geom_line()+geom_point()
+pomp(data=subset(niamey,community=="A",select=-community),
+     times="biweek",t=0,
+     skeleton=closed.sir.ode,
+     skeleton.type="vectorfield",
+     initializer=init,
+     statenames=c("S","I","R"),
+     paramnames=c("Beta","gamma","N","S_0","I_0")) -> niameyA
+                
+sse <- function (params) {
+  x <- trajectory(niameyA,params=params)
+  discrep <- x["I",,]-obs(niameyA)
+  sum(discrep^2)
 }
-
-params <- c(beta=400,gamma=365/13)
-times <- seq(from=0,to=60/365,by=1/365/4) # returns a sequence
-xstart <- c(S=0.999,I=0.001,R=0.000)     # initial conditions
-require(deSolve)
-
-out <- as.data.frame(
-                     ode(
-                         func=closed.sir.model,
-                         y=xstart,
-                         times=times,
-                         parms=params
-                         )
-                     )
-plot(I~time,data=out,type='l')
-
-betavals <- c(20,50,500)
-ips <- c(5,10,30)
-gammavals <- 365/ips
-
-## set some plot parameters
-op <- par(mgp=c(2,1,0),mar=c(3,3,1,1),mfrow=c(3,3))
-
-for (beta in betavals) {
-  for (gamma in gammavals) {
-    params <- c(beta=beta,gamma=gamma)
-    out <- as.data.frame(
-                         ode(
-                             func=closed.sir.model,
-                             y=xstart,
-                             times=times,
-                             parms=params
-                             )
-                         )    
-    title <- bquote(list(beta==.(beta),"IP"==.(365/gamma)~"da"))
-    plot(I~time,data=out,type='l',main=title)
-  }
+params <- c(Beta=NA,gamma=1,
+            N=50000,S_0=10000,I_0=10)
+f <- function (Beta) {
+  params["Beta"] <- Beta
+  sse(params)
 }
-par(op)      # restore old settings
-
-
-open.sir.model <- function (t, x, params) {
-  beta <- params["beta"]
-  mu <- params["mu"]
-  gamma <- params["gamma"]
-  dSdt <- mu*(1-x[1])-beta*x[1]*x[2]
-  dIdt <- beta*x[1]*x[2]-(mu+gamma)*x[2]
-  dRdt <- gamma*x[2]-mu*x[3]
-  list(c(dSdt,dIdt,dRdt))
-}
-
-
-params <- c(mu=1/50,beta=400,gamma=365/13)
-
-
-times <- seq(from=0,to=25,by=1/365)
-out <- as.data.frame(
-                     ode(
-                         func=open.sir.model,
-                         y=xstart,
-                         times=times,
-                         parms=params
-                         )
-                     )
-
-op <- par(fig=c(0,1,0,1),mfrow=c(2,2),
-          mar=c(3,3,1,1),mgp=c(2,1,0))
-plot(S~time,data=out,type='l',log='y')
-plot(I~time,data=out,type='l',log='y')
-plot(R~time,data=out,type='l',log='y')
-plot(I~S,data=out,log='xy',pch='.',cex=0.5)
-par(op)                               
-seas.sir.model <- function (t, x, params) {
-  beta0 <- params["beta0"]
-  beta1 <- params["beta1"]
-  mu <- params["mu"]
-  gamma <- params["gamma"]
-  beta <- beta0*(1+beta1*cos(2*pi*t))
-  dSdt <- mu*(1-x[1])-beta*x[1]*x[2]
-  dIdt <- beta*x[1]*x[2]-(mu+gamma)*x[2]
-  dRdt <- gamma*x[2]-mu*x[3]
-  list(c(dSdt,dIdt,dRdt))
-}
-
-params <- c(mu=1/50,beta0=400,beta1=0.15,gamma=365/13)
-xstart <- c(S=0.07,I=0.00039,R=0.92961)
-times <- seq(from=0,to=30,by=7/365)
-out <- as.data.frame(
-                     ode(
-                         func=seas.sir.model,
-                         y=xstart,
-                         times=times,
-                         parms=params
-                         )
-                     )
-
-op <- par(fig=c(0,1,0,1),mfrow=c(2,2),
-          mar=c(3,3,1,1),mgp=c(2,1,0))
-plot(S~time,data=out,type='l',log='y')
-plot(I~time,data=out,type='l',log='y')
-plot(R~time,data=out,type='l',log='y')
-plot(I~S,data=out,log='xy',pch='.',cex=0.5)
-par(op) 
-# niamey <- read.csv("http://kingaa.github.io/parest/niamey.csv",comment.char="#")
-niamey <- read.csv("niamey.csv",comment.char="#")
-plot(measles~biweek,data=niamey,type='n')
-lines(measles~biweek,data=subset(niamey,community=="A"),col=1)
-lines(measles~biweek,data=subset(niamey,community=="B"),col=2)
-lines(measles~biweek,data=subset(niamey,community=="C"),col=3)
-legend("topleft",col=1:3,lty=1,bty='n',
-       legend=paste("community",c("A","B","C")))
-require(deSolve)
-
-closed.sir.model <- function (t, x, params) {
-  X <- x[1]
-  Y <- x[2]
-  Z <- x[3]
-
-  beta <- params["beta"]
-  gamma <- params["gamma"]
-  pop <- params["popsize"]
-
-  dXdt <- -beta*X*Y/pop
-  dYdt <- beta*X*Y/pop-gamma*Y
-  dZdt <- gamma*Y
-
-  list(c(dXdt,dYdt,dZdt))
-}
-prediction <- function (params, times) {
-  xstart <- params[c("X.0","Y.0","Z.0")]
-  out <- ode(
-             func=closed.sir.model,
-             y=xstart,
-             times=times,
-             parms=params
-             )
-  out[,3]     # return the number of infectives
-}
-sse <- function (params, data) {
-  times <- c(0,data$biweek/26)          # convert to years
-  pred <- prediction(params,times)
-  discrep <- pred[-1]-data$measles
-  sum(discrep^2)                        # sum of squared errors
-}
-dat <- subset(niamey,community=="A")
-params <- c(X.0=10000,Y.0=10,Z.0=39990,popsize=50000,
-            gamma=365/13,beta=NA)
-f <- function (beta) {
-  params["beta"] <- beta
-  sse(params,dat)
-}
-beta <- seq(from=0,to=1000,by=5)
+beta <- seq(from=30,to=40,by=0.5)
 SSE <- sapply(beta,f)
 beta.hat <- beta[which.min(SSE)]
 plot(beta,SSE,type='l')
 abline(v=beta.hat,lty=2)
-plot.window(c(0,1),c(0,1))
-text(0.05,0.9,"A")
-params["beta"] <- beta.hat
-plot(measles~biweek,data=dat)
-lines(dat$biweek,prediction(params,dat$biweek/26))
-xdat <- subset(niamey,community=="A")
-params <- c(X.0=NA,Y.0=10,Z.0=1,popsize=50000,
-            gamma=365/13,beta=NA)
-f <- function (beta, X.0) {
-  params["beta"] <- beta
-  params["X.0"] <- X.0 
-  sse(params,dat)
-  }
-grid <- expand.grid(beta=seq(from=100,to=300,length=50),
-                    X.0=seq(from=4000,to=20000,length=50))
-grid$SSE <- with(grid,mapply(f,beta,X.0))
-library(lattice)
-contourplot(sqrt(SSE)~beta+X.0,data=grid,cuts=30)
+
+params["Beta"] <- beta.hat
+coef(niameyA) <- params
+x <- trajectory(niameyA,as.data.frame=TRUE)
+dat <- join(as.data.frame(niameyA),x,by='time')
+ggplot(dat,aes(x=time))+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=I),color='red')
+beta <- seq(from=0,to=40,by=0.5)
+SSE <- sapply(beta,f)
+plot(beta,SSE,type='l')
+beta.hat <- beta[which.min(SSE)]
+abline(v=beta.hat,lty=2)
+coef(niameyA,"Beta") <- beta.hat
+x <- trajectory(niameyA,as.data.frame=TRUE)
+dat <- join(as.data.frame(niameyA),x,by='time')
+ggplot(dat,aes(x=time))+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=I),color='red')
+grid <- expand.grid(Beta=seq(from=0,to=20,length=50),
+                    S_0=seq(from=4000,to=20000,length=50),
+                    N=50000,gamma=1,I_0=10)
+x <- trajectory(niameyA,params=t(grid),as.data.frame=TRUE)
+library(plyr)
+join(x,as.data.frame(niameyA),by="time") -> x
+ddply(x,~traj,summarize,sse=sum((measles-I)^2)) -> x
+cbind(grid,x) -> grid
+
+ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
+         geom_tile()+geom_contour(bins=30)+
+    labs(fill=expression(sqrt(SSE)),x=expression(beta),y=expression(S(0)))
 ## ?optim
-dat <- subset(niamey,community=="A")
-params <- c(X.0=NA,Y.0=NA,Z.0=1,popsize=50000,
-            gamma=365/13,beta=NA)
+coef(niameyA) <- params
 f <- function (par) {
-  params[c("X.0","Y.0","beta")] <- par
-  sse(params,dat)
+  params[c("S_0","I_0","Beta")] <- par
+  sse(params)
 }
-optim(fn=f,par=c(10000,10,220)) -> fit
+optim(fn=f,par=c(10000,10,8)) -> fit
 fit
-## dat <- subset(niamey,community=="A")
-## f <- function (par) {
-##   par <- as.numeric(par)
-##   params <- c(X.0=exp(par[1]),Y.0=exp(par[2]),Z.0=1,popsize=50000,
-##               gamma=par[4],beta=exp(par[3]))
-##   sse(params,dat)
-## }
-## optim(fn=f,par=log(c(10000,10,220,13/365))) -> fit
-## fit
 p <- 0.3
 n <- 50
 k <- seq(0,50,by=1)
@@ -267,7 +213,7 @@ plot(p,dbinom(x=k1,size=n1,prob=p,log=TRUE),
      ylim=c(-10,-2),ylab="log-likelihood",
      type='l')
 abline(h=dbinom(x=k1,size=n1,prob=k1/n1,log=TRUE)-
-       0.5*qchisq(p=0.95,df=1),col='red')
+         0.5*qchisq(p=0.95,df=1),col='red')
 abline(v=k1/n1,col='blue')
 k2 <- 243
 n2 <- 782
@@ -276,7 +222,7 @@ plot(p,dbinom(x=k2,size=n2,prob=p,log=TRUE),
      ylim=c(-10,-2),ylab="log-likelihood",
      type='l')
 abline(h=dbinom(x=k2,size=n2,prob=k2/n2,log=TRUE)-
-       0.5*qchisq(p=0.95,df=1),col='red')
+         0.5*qchisq(p=0.95,df=1),col='red')
 abline(v=k2/n2,col='blue')
 n <- c(13,484,3200)
 k <- c(4,217,1118)
@@ -288,188 +234,134 @@ ll.fn <- function (p) {
 p <- seq(0,1,by=0.001)
 loglik <- sapply(p,ll.fn)
 plot(p,loglik,type='l',ylim=max(loglik)+c(-10,0))
-require(deSolve)
-
-closed.sir.model <- function (t, x, params) {
-  inc <- params["b"]*x[1]*x[2]          # incidence
-  list(c(-inc,inc-params["gamma"]*x[2]))
-}
-prediction <- function (params, times) {
-  out <- ode(
-             func=closed.sir.model,
-             y=params[c("X.0","Y.0")],
-             times=c(0,times),
-             parms=params
-             )
-## return the Y variable only
-## and discard Y(0)
-  out[-1,3]
-}
-sse <- function (params, data) {
-  times <- data$biweek/26               # convert to years
-  pred <- prediction(params,times)
-  discrep <- pred-data$measles
-  sum(discrep^2)                        # sum of squared errors
-}
-loglik <- function (params, data) {
-  times <- data$biweek/26
-  pred <- prediction(params,times)
-  sum(dnorm(x=data$measles,mean=pred,sd=params["sigma"],log=TRUE))
+pomp(data=niameyA,
+     skeleton=Csnippet("
+  double incidence;
+  incidence = b*S*I;
+  DS = -incidence;
+  DI = incidence-gamma*I;"),
+     initializer=Csnippet("
+  S = S_0;
+  I = I_0;"),
+     paramnames=c("b","gamma","S_0","I_0"),
+     statenames=c("S","I")) -> niameyA
+     
+dat <- as.data.frame(niameyA)
+loglik <- function (params) {
+    x <- trajectory(niameyA,params=params)
+    prediction <- x["I",,]
+    sum(dnorm(x=dat$measles,mean=prediction,
+              sd=params["sigma"],log=TRUE))
 }
 dat <- subset(niamey,community=="A")
-params <- c(X.0=10000,Y.0=10,gamma=365/13,b=NA,sigma=1)
+params <- c(S_0=10000,I_0=10,gamma=1,b=NA,sigma=1)
 
 f <- function (b) {
   par <- params
   par["b"] <- b
-  loglik(par,dat)
+  loglik(par)
 }
 
-b <- seq(from=0,to=0.02,by=0.0001)
+b <- seq(from=0,to=0.001,by=0.00002)
 ll <- sapply(b,f)
-plot(b,-ll,type='l',ylab=expression(-log(L)))
+plot(b,ll,type='l',ylab=expression(log(L)))
 b.hat <- b[which.max(ll)]
 abline(v=b.hat,lty=2)
-poisson.loglik <- function (params, data) {
-  times <- data$biweek/26
-  pred <- prediction(params,times)
-  sum(dpois(x=data$measles,lambda=params["p"]*pred[-1],log=TRUE))
+poisson.loglik <- function (params) {
+    x <- trajectory(niameyA,params=params)
+    prediction <- x["I",,]
+    sum(dpois(x=dat$measles,lambda=params["p"]*prediction,log=TRUE))
 }
-dat <- subset(niamey,community=="A")
-params <- c(X.0=20000,Y.0=1,gamma=365/13,b=NA,p=0.2)
 
-## objective function (-log(L))
+params <- c(S_0=20000,I_0=1,gamma=1,b=NA,p=0.2)
+
 f <- function (log.b) {
   params[c("b")] <- exp(log.b) # un-transform 'b'
-  -poisson.loglik(params,dat)
+  -poisson.loglik(params)
 }
-require(bbmle)
-guess <- list(log.b=log(0.01))
+library(bbmle)
+guess <- list(log.b=log(0.0003))
 
-fit0 <- mle2(f,start=guess)
-fit0
-
-fit <-  mle2(f,start=as.list(coef(fit0)))
+fit <- mle2(f,start=guess)
 fit
 prof.b <- profile(fit)
 plot(prof.b)
-dat <- subset(niamey,community=="A")
-params <- c(X.0=20000,Y.0=1,gamma=365/13,b=NA,p=NA)
-
-logit <- function (p) log(p/(1-p))      # the logit transform
-expit <- function (x) 1/(1+exp(-x))    # inverse logit
+logit <- function (p) log(p/(1-p))    # the logit transform
+expit <- function (x) 1/(1+exp(-x))   # inverse logit
 
 f <- function (log.b, logit.p) {
   par <- params
   par[c("b","p")] <- c(exp(log.b),expit(logit.p))
-  -poisson.loglik(par,dat)
+  -poisson.loglik(par)
 }
 
-guess <- list(log.b=log(0.005),logit.p=logit(0.2))
-fit0 <- mle2(f,start=guess); fit0
-fit <-  mle2(f,start=as.list(coef(fit0))); fit
-
-## now untransform the parameters:
-mle <- with(
-            as.list(coef(fit)),
-            c(
-              b=exp(log.b),
-              p=expit(logit.p)
-              )
-            )
-mle
+guess <- list(log.b=log(0.0001),logit.p=logit(0.2))
+fit <- mle2(f,start=guess); fit
+mle <- with(as.list(coef(fit)),c(b=exp(log.b),p=expit(logit.p))); mle
 prof2 <- profile(fit)
 plot(prof2)
-ci <- confint(prof2)
-ci
-ci[1,] <- exp(ci[1,])
-ci[2,] <- expit(ci[2,])
-rownames(ci) <- c("b","p")
-ci
-dat <- subset(niamey,community=="A")
-
-## this time the objective function has to 
-## take a vector argument
 f <- function (pars) {
   par <- params
   par[c("b","p")] <- as.numeric(pars)
-  poisson.loglik(par,dat)
+  poisson.loglik(par)
 }
 
-b <- seq(from=0.001,to=0.005,length=50)
+b <- seq(from=0.00001,to=0.0002,length=50)
 p <- seq(0,1,length=50)
 grid <- expand.grid(b=b,p=p)
 grid$loglik <- apply(grid,1,f)
 grid <- subset(grid,is.finite(loglik))
-require(lattice)
-contourplot(loglik~b+p,data=grid,cuts=20)
-b <- seq(from=0.00245,to=0.00255,length=50)
-p <- seq(0.44,0.49,length=50)
+ggplot(grid,aes(x=b,y=p,z=loglik,fill=loglik))+
+  geom_tile()+geom_contour(binwidth=2000)
+b <- seq(from=0.0000975,to=0.0000993,length=50)
+p <- seq(0.36,0.41,length=50)
 grid <- expand.grid(b=b,p=p)
 grid$loglik <- apply(grid,1,f)
 grid <- subset(grid,is.finite(loglik))
-require(lattice)
-contourplot(loglik~b+p,data=grid,cuts=20)
+ggplot(grid,aes(x=b,y=p,z=loglik,fill=loglik))+
+  geom_tile()+geom_contour(binwidth=1)
 params[c("b","p")] <- mle
-times <- c(dat$biweek/26)
-model.pred <- prediction(params,times)
+coef(niameyA) <- params
+model.pred <- trajectory(niameyA)["I",,]
 
-nsim <- 1000
-simdat <- replicate(
-                    n=nsim,
-                    rpois(n=length(model.pred),
-                          lambda=params["p"]*model.pred)
-                    )
-quants <- t(apply(simdat,1,quantile,probs=c(0.025,0.5,0.975)))
-matplot(times,quants,col="blue",lty=c(1,2,1),type='l') 
-points(measles~times,data=dat,type='b',col='red')
-loglik <- function (params, data) {
-  times <- data$biweek/26
-  pred <- prediction(params,times)
-  sum(dnbinom(x=data$measles,
-              mu=params["p"]*pred[-1],size=1/params["theta"],
+raply(2000,rpois(n=length(model.pred),lambda=params["p"]*model.pred)) -> simdat
+aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
+ggplot(data=cbind(dat,quantiles),mapping=aes(x=biweek))+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=`50%`),color='red')+
+  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)
+negbin.loglik <- function (params) {
+  x <- trajectory(niameyA,params=params)
+  prediction <- x["I",,]
+  sum(dnbinom(x=dat$measles,
+              mu=params["p"]*prediction,size=1/params["theta"],
               log=TRUE))
 }
 
 f <- function (log.b, logit.p, log.theta) {
   par <- params
-  par[c("b","p","theta")] <- c(exp(log.b),
-                               expit(logit.p),
-                               exp(log.theta))
-  -loglik(par,dat)
+  par[c("b","p","theta")] <- unname(c(exp(log.b),
+                                      expit(logit.p),
+                                      exp(log.theta)))
+  -negbin.loglik(par)
 }
 
-guess <- list(log.b=log(params["b"]),
-              logit.p=logit(params["p"]),
-              log.theta=log(1))
-fit0 <- mle2(f,start=guess)
-fit <-  mle2(f,start=as.list(coef(fit0)))
-fit
+guess <- list(log.b=log(0.0001),logit.p=logit(0.4),log.theta=0)
+fit <- mle2(f,start=guess); fit
 
-prof3 <- profile(fit)
-plot(prof3)
-
-mle <- with(
-            as.list(coef(fit)),
-            c(
-              b=exp(log.b),
-              p=expit(logit.p),
-              theta=exp(log.theta)
-              )
-            )
+mle <- with(as.list(coef(fit)),
+            c(b=exp(log.b),p=expit(logit.p),theta=exp(log.theta)))
 
 params[c("b","p","theta")] <- mle
-times <- c(dat$biweek/26)
-model.pred <- prediction(params,times)
+coef(niameyA) <- params
+model.pred <- trajectory(niameyA)["I",,]
 
-nsim <- 1000
-simdat <- replicate(
-                    n=nsim,
-                    rnbinom(n=length(model.pred),
-                            mu=params["p"]*model.pred,
-                            size=1/params["theta"])
-                    )
-quants <- t(apply(simdat,1,quantile,probs=c(0.025,0.5,0.975)))
-matplot(times,quants,col="blue",lty=c(1,2,1),type='l') 
-lines(times,simdat[,1],col='black')
-points(measles~times,data=dat,type='b',col='red')
+raply(2000,rnbinom(n=length(model.pred),
+                   mu=params["p"]*model.pred,
+                   size=1/params["theta"])) -> simdat
+aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
+ggplot(data=cbind(dat,quantiles),mapping=aes(x=biweek))+
+  geom_line(aes(y=measles),color='black')+
+  geom_line(aes(y=`50%`),color='red')+
+  geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)
+
