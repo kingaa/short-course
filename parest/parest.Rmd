@@ -247,8 +247,6 @@ If we're thinking of a disease something like measles, and measuring time in yea
 ```{r set-closed-params}
 params <- c(Beta=1,gamma=1/13,N=763)
 ```
-
-#### Exercise
 What is the infectious period of this disease?
 What is $R_0$ in this case?
 
@@ -263,7 +261,7 @@ ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 
 ```
 
-#### Exercise
+#### Exercise: conversion of units
 Suppose that you'd rather measure time in years.
 Modify the parameters accordingly and verify your modifications.
 
@@ -296,12 +294,12 @@ ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
 The ability to numerically integrate ODE is essential, but its power is limited.
 The next exercise demonstrates the importance of being able to analyze the equations as well.
 
-#### Exercise
+#### Exercise: exploring the model's dynamical repertoire
 For each of the above parameter combinations, describe the system's behavior.
 Compute $R_0$ for each parameter combination and relate it to the behavior of the system.
 
 
-#### Exercise
+#### Exercise: final size
 Use `trajectory` to study the dependence of the epidemic's **final size**, $f$, on $R_0$.
 Compare your results with the predictions of the final size equation
 $$R_0=-\frac{\log{(1-f)}}{f},$$
@@ -364,19 +362,19 @@ ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
 
 ```
 
-#### Exercise
+#### Exercise: exploring the model's dynamical repertoire
 Explore the dynamics of the system for different values of the $\beta$ and $\gamma$ parameters by simulating and plotting trajectories as time series and in phase space (e.g., $I$ vs. $S$).
 Use the same values of $\beta$ and $\gamma$ we looked at above.
 How does the value of $R_0$ affect the results?
 
-#### Exercise
+#### Exercise: host lifespan
 Under the assumptions of this model, the average host lifespan is $1/\mu$.  
 Explore how host lifespan affects the dynamics by integrating the differential equations for lifespans of 20 and 200 years.
 
 The compartmental modeling strategy can be put to use in modeling a tremendous range of infections.
 The following exercises make some first steps in this direction.
 
-#### Challenge
+#### Challenge: SIRS model
 The SIR model assumes lifelong sterilizing immunity following infection.
 For many infections, immunity is not permanent.
 Make a compartment diagram for an SIRS model, in which individuals lose their immunity after some time.
@@ -384,7 +382,7 @@ Write the corresponding differential equations and modify the above codes to stu
 Compare the SIR and SIRS dynamics for the parameters $\mu=1/50$, $\gamma=365/13$, $\beta=400$ and assuming that, in the SIRS model, immunity lasts for 10 years.
 
 
-#### Challenge
+#### Challenge: SEIR model
 Make a diagram, write the equations, and study the dynamics of the SEIR model for the dynamics of an infection with a latent period.
 Compare the dynamics of SIR and SEIR models for the parameters $\mu=1/50$, $\gamma=365/5$, $\beta=1000$ and assuming that, in the SEIR model, the latent period has duration 8 days.
 
@@ -424,7 +422,7 @@ ggplot(x,mapping=aes(x=S,y=I))+geom_path()
 
 ```
 
-#### Exercise
+#### Exercise: exploration
 Explore the dynamics of the seasonally forced SIR model for increasing amplitude $\beta_1$.
 Be sure to distinguish between transient and asymptotic dynamics.
 
@@ -518,7 +516,7 @@ ggplot(dat,aes(x=time))+
 ```
 
 
-#### Exercise
+#### Exercise: least-squares estimation of $R_0$
 Use this method to obtain estimates of $R_0$ for measles from each of the three communities in Niamey.
 You may again assume that the infectious period is two weeks.
 
@@ -546,11 +544,11 @@ ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
     labs(fill=expression(sqrt(SSE)),x=expression(beta),y=expression(S(0)))
 ```
 
-#### Exercise
+#### Exercise: interpreting the shape of the likelihood surface
 Discuss the shape of this surface: 
 what does it tell us about the uncertainty in the model's parameters?
 
-#### Challenge
+#### Challenge: SEIR model estimation
 Repeat the estimation using a closed SEIR model.
 Assume that the infectious period is 5&nbsp;da and the latent period is 8&nbsp;da.
 How and why does your estimate of $R_0$ differ from that you obtained using the SIR model?
@@ -583,18 +581,18 @@ optim(fn=f,par=c(10000,10,8)) -> fit
 fit
 ```
 
-#### Exercise
+#### Exercise: rescaling the data
 In the foregoing, we've estimated parameters by minimizing the sum of squared differences between model-predicted number of cases and the data.
 What would happen if we tried to minimize the squared error on the log scale, i.e., to minimize $(\log(\mathrm{model})-\log(\mathrm{data}))^2$?
 What would happen if we minimized the squared error on the square-root scale, i.e., $(\sqrt{\mathrm{model}}-\sqrt{\mathrm{data}})^2$?
 What's the "correct" scale to choose?
 
-#### Challenge
+#### Challenge: four-parameter optimization
 Try to estimate all four parameters at once.
 Start your algorithm from several places to check that they all converge to the same place.
 You may find it useful to restart the optimizer to verify its convergence.
 
-#### Challenge
+#### Challenge: interpreting local optima
 The above plot of SSE against $\beta$ shows a second local minimum of the SSE at a much higher value of $\beta$.
 Why is this?
 
@@ -679,7 +677,7 @@ In the above two plots, the likelihood is a function of the model parameter $p$.
 Vertical lines show the maximum likelihood estimate (MLE) of $p$.
 Horizontal lines show the critical likelihoods for the likelihood ratio test at the 95% confidence level.
 
-#### Exercise
+#### Exercise: interpreting the likelihood
 How do the two curves just plotted differ from one another?
 What features of the data are responsible for the differences?
 
@@ -779,7 +777,7 @@ and
 $$\log\mathcal{L} = -\tfrac{1}{2}\,\left(\frac{1}{\sigma^2}\,\sum_{t}\!(y_t-Y_t)^2+\log{(\sigma^2)}+\log{(2\pi)}\right)$$
 So MLE and least-squares are equivalent if the errors are normal with constant variance!
 
-#### Exercise
+#### Exercise: log-normal errors
 Suppose, alternatively, that the errors are log-normal with constant variance.
 Under what definition of SSE will least-squares and maximum likelihood give the same parameter estimates?
 
@@ -988,19 +986,19 @@ Essentially, the deterministic SIR model, as we've written it, cannot capture th
 In order to fit the data, the optimization algorithm has expanded the error variance, to the point of absurdity.
 The typical model realization (in blue) does not much resemble the data.
 
-#### Challenge
+#### Challenge: three-parameter estimation
 Try to estimate $p$, $b$, and $S(0)$ simultaneously.
 
-#### Challenge
+#### Challenge: binomial errors
 Reformulate the problem using the binomial error model.
 Modify the parameter estimation codes appropriately, estimate the parameters, and comment on the results.
 
-#### Challenge
+#### Challenge: modifying the mean-variance relationship
 Reformulate the problem using a normal error model in which the variance is proportional to the mean:
 $$y_t\;\sim\;\dist{Normal}{p\,I_t,\sigma\,\sqrt{I_t}}.$$
 Modify the parameter estimation codes appropriately, estimate the parameters (including both $p$ and $\sigma$), and comment on the results.
 
-#### Challenge
+#### Challenge: incidence
 We've been treating the Niamey data as if they were direct---though inaccurate---measurements of the prevalence.
 Actually, these are incidence data: they are measures of unique infections.
 It would be more appropriate to model these data by adding another equation
