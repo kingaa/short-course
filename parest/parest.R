@@ -6,38 +6,6 @@ options(stringsAsFactors=FALSE)
 library(ggplot2)
 theme_set(theme_bw())
 set.seed(1173489184)
-f <- seq(0,1,length=100)
-R0 <- -log(1-f)/f
-plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
-url <- "http://kingaa.github.io/short-course/stochsim/bsflu_data.txt"
-bsflu <- read.table(url,header=TRUE)
-plot(B~day,data=bsflu,type='b',bty='l',
-     main='boarding school influenza outbreak',
-     xlab='day',ylab='Influenza cases')
-plot(B~day,data=bsflu,type='b',log='y',bty='l',
-     xlab='day',ylab='Influenza cases')
-fit <- lm(log(B)~day,data=subset(bsflu,day<=4))
-summary(fit)
-coef(fit)
-slope <- coef(fit)[2]; slope
-coef(summary(fit))
-slope.se <- coef(summary(fit))[2,2]
-2.5*slope.se
-fitfn <- function (interval) {
-  fit <- lm(log(B)~day,data=subset(bsflu,day<=interval))
-  slope <- coef(summary(fit))[2,1]
-  slope.se <- coef(summary(fit))[2,2]
-  c(interval=interval,R0.hat=slope*2.5+1,R0.se=slope.se*2.5)
-}
-ldply(2:10,fitfn) -> ests
-ggplot(ests,mapping=aes(x=interval,y=R0.hat,
-                        ymin=R0.hat-2*R0.se,
-                        ymax=R0.hat+2*R0.se))+
-  geom_point()+geom_errorbar(width=0.2)+
-  labs(x="length of initial phase",y=expression("estimated"~R[0]))
-## niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
-## ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
-##   geom_line()+geom_point()
 library(pomp)
 
 closed.sir.ode <- Csnippet("
@@ -64,24 +32,23 @@ x <- trajectory(closed.sir,params=params,as.data.frame=TRUE)
 
 ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 
-expand.grid(Beta=c(0.05,1,2),gamma=1/c(5,10,30),N=763) -> params1
+expand.grid(Beta=c(0.05,1,2),gamma=1/c(1,2,4,8),N=763) -> params1
 
 x <- trajectory(closed.sir,params=t(params1),as=TRUE,times=seq(0,50))
 
-ggplot(data=x,mapping=aes(x=time,y=I,group=traj))+
-    geom_line()
+## ggplot(data=x,mapping=aes(x=time,y=I,group=traj))+geom_line()
 
-ggplot(data=x,mapping=aes(x=time,y=I,group=traj))+
-    geom_line()+scale_y_log10()
+## ggplot(data=x,mapping=aes(x=time,y=I,group=traj))+geom_line()+scale_y_log10()
 
 library(plyr)
 mutate(params1,traj=seq_along(Beta)) -> params1
 join(x,params1,by="traj") -> x
 
 ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
-                          color=factor(Beta),linetype=factor(1/gamma)))+
-  geom_line()+scale_y_log10()+
-  labs(linetype=expression("IP"==1/gamma),color=expression(beta))
+                          linetype=factor(Beta),color=factor(1/gamma)))+
+    geom_line()+scale_y_log10(limits=c(1e-3,NA))+
+    labs(x="time (da)",color=expression("IP"==1/gamma),
+         linetype=expression(beta))
 
 open.sir.ode <- Csnippet("
   DS = -Beta*S*I/N+mu*(N-S);
@@ -134,6 +101,38 @@ trajectory(seas.sir,params=params,as=TRUE) -> x
 ggplot(x,mapping=aes(x=time,y=I))+geom_path()
 ggplot(x,mapping=aes(x=S,y=I))+geom_path()
 
+f <- seq(0,1,length=100)
+R0 <- -log(1-f)/f
+plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
+url <- "http://kingaa.github.io/short-course/stochsim/bsflu_data.txt"
+bsflu <- read.table(url,header=TRUE)
+plot(B~day,data=bsflu,type='b',bty='l',
+     main='boarding school influenza outbreak',
+     xlab='day',ylab='Influenza cases')
+plot(B~day,data=bsflu,type='b',log='y',bty='l',
+     xlab='day',ylab='Influenza cases')
+fit <- lm(log(B)~day,data=subset(bsflu,day<=4))
+summary(fit)
+coef(fit)
+slope <- coef(fit)[2]; slope
+coef(summary(fit))
+slope.se <- coef(summary(fit))[2,2]
+2.5*slope.se
+fitfn <- function (interval) {
+  fit <- lm(log(B)~day,data=subset(bsflu,day<=interval))
+  slope <- coef(summary(fit))[2,1]
+  slope.se <- coef(summary(fit))[2,2]
+  c(interval=interval,R0.hat=slope*2.5+1,R0.se=slope.se*2.5)
+}
+ldply(2:10,fitfn) -> ests
+ggplot(ests,mapping=aes(x=interval,y=R0.hat,
+                        ymin=R0.hat-2*R0.se,
+                        ymax=R0.hat+2*R0.se))+
+  geom_point()+geom_errorbar(width=0.2)+
+  labs(x="length of initial phase",y=expression("estimated"~R[0]))
+## niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
+## ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
+##   geom_line()+geom_point()
 niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
 ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
   geom_line()+geom_point()
