@@ -112,6 +112,14 @@ The **pomp** package is described and illustrated in
 
 - A. A. King, D. Nguyen, and E. L. Ionides (2016) Statistical Inference for Partially Observed Markov Processes via the R Package pomp. *J.&nbsp;Stat.&nbsp;Soft.*, **69**:&nbsp;1--43. [DOI:&nbsp;10.18637/jss.v069.i12](http://dx.doi.org/10.18637/jss.v069.i12)
 
+### Preparing for the course
+
+Students should do the following **before the first day of the course**:
+
+1. Follow the [instructions to prepare your laptop by installing **R**, **RStudio**, and the needed **R** packages](http://kingaa.github.io/short-course/prep/preparation.html).
+1. If you are not proficient in **R**, work through the [**R** tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial).
+If you are proficient in **R**, look through the tutorial nevertheless.
+
 ## Schedule of Topics
 
 1. [Ecological and epidemiological dynamics; introduction to **R** and **pomp**](./intro/intro.html)
