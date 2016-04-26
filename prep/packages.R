@@ -2,8 +2,6 @@
 print(R.version.string)
 stopifnot(getRversion()>="3.2.1")
 
-op <- options(warn=2)
-
 ## get list of packages to install
 pkglist <- scan(
   what=character(0),
@@ -34,8 +32,10 @@ xtable
 
 pkglist <- setdiff(pkglist,rownames(installed.packages()))
 
-if (length(pkglist)>0) install.packages(pkglist)
-
+lib <- Sys.getenv("R_LIBS_USER")
+dir.create(lib,recursive=TRUE)
+op <- options(warn=2)
+if (length(pkglist)>0) install.packages(pkglist,lib=lib)
 options(op)
 
 cat("all packages installed successfully!\n")
