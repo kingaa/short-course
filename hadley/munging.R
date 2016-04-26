@@ -15,17 +15,22 @@ x <- data.frame(a=letters[1:10],b=runif(10),c=sample(LETTERS[1:3],10,replace=TRU
 arrange(x,a,b,c)
 arrange(x,b,c,a)
 arrange(x,c,b,a)
+count(x,~c)
+count(x,~a+c)
 count(x,vars=c('a','c'))
 summarize(x,mean=mean(b),sd=sd(b),top=c[1])
 
 ## energy <- read.csv("http://kingaa.github.io/short-course/hadley/energy_production.csv",comment="#")
 energy <- read.csv("./energy_production.csv",comment="#")
 summarize(energy,tot=sum(TJ),n=length(TJ))
+summarize(energy,range(year))
+summarize(energy,min(year),max(year),interval=diff(range(year)))
 x <- mutate(x,d=2*b,c=tolower(c),e=b+d,a=NULL); x
 subset(x,d>1.2)
 subset(x,select=c(b,c))
 subset(x,select=-c(d))
 subset(x,d>1.2,select=-e)
+subset(energy,year>2010,select=c(source,TJ))
 x <- expand.grid(a=1:3,b=1:5)
 y <- expand.grid(a=1:2,b=1:5,c=factor(c("F","G")))
 m1 <- merge(x,y); m1

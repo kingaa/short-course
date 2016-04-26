@@ -1,4 +1,4 @@
-MODULES = prep intro stochsim parest pfilter mif polio ebola measles salix
+MODULES = prep intro stochsim parest pfilter mif polio ebola measles salix hadley
 INSTALLDIR = $(CURDIR)/www
 
 default: index.html modules
