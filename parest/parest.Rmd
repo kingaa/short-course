@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Inference: Parameter Estimation"
-author: "Aaron A. King, with contributions from Ben Bolker, John Drake, Pej Rohani, and David Smith"
+author: "Aaron A. King"
 output:
   html_document:
     toc: yes
@@ -18,7 +18,8 @@ csl: ../ecology.csl
 \newcommand\lik{\mathscr{L}}
 \newcommand\loglik{\ell}
 
-[Licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
+This lesson is based on notes developed over the years and contains contributions originally made by Ben Bolker, John Drake, Pej Rohani, and David Smith.
+It is [licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
 Please share and remix noncommercially, mentioning its origin.  
 ![CC-BY_NC](../graphics/cc-by-nc.png)
 
@@ -127,7 +128,8 @@ init <- Csnippet("
   R = 0;
   ")
 
-pomp(data=bsflu,times="day",t0=0,
+pomp(data=data.frame(time=1:50,data=NA),
+     times="time",t0=0,
      skeleton=closed.sir.ode,
      skeleton.type="vectorfield",
      initializer=init,

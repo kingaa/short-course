@@ -20,7 +20,8 @@ init <- Csnippet("
   R = 0;
   ")
 
-pomp(data=bsflu,times="day",t0=0,
+pomp(data=data.frame(time=1:50,data=NA),
+     times="time",t0=0,
      skeleton=closed.sir.ode,
      skeleton.type="vectorfield",
      initializer=init,
