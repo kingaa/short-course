@@ -61,11 +61,13 @@ Have a look at [these instructions](http://kingaa.github.io/mac-fortran.html) an
 #### Windows users:
 
 You will need the ability to compile C code and dynamically link it into an **R** session.
-To do this, you’ll need to install the `Rtools` suite.
+To do this, you’ll need to install the **Rtools** suite.
 Download the latest frozen version (http://cran.r-project.org/bin/windows/Rtools) and install it.
+
+When installing **Rtools**, it is sufficient to choose the “Package authoring installation” option.
+Also during the installation, tick the “edit system PATH” box.
+
 I had some problems with the unfrozen version (**Rtools33**) but none with the last frozen version (**Rtools32**).
 I also had some difficulties initially with the latest version of **Rstudio** but these went away when I installed version 0.98.1103 (downloaded from [here](https://support.rstudio.com/hc/en-us/articles/206569407-Older-Versions-of-RStudio-Desktop)) and now I am having no problems with version **Rstudio** version 0.99.447.
-
-If you use some other operating system, let me know!
 
 ------------------------------
