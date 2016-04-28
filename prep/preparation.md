@@ -7,7 +7,7 @@ title: Software installation instructions
 Please read the appropriate sections below, which give specific instructions for installing and testing the software we will be using.
 First follow the instructions for "all users", then those for your specific operating system.
 
-If you run into problems, send a note to kingaaictp@gmail.com with a detailed description of the problem you've encountered.
+**NB:** If you run into problems, send a note to kingaaictp@gmail.com with a detailed description of the problem you've encountered.
 In this message, be **certain** to include:
 
 - the operating system you’re running,
@@ -24,7 +24,7 @@ In **R**, you can run `Sys.info()` to get a printout of the operating system and
 You’ll need at least version 3.2.1 of **R**.
 The latest version is 3.2.5, so if you need to update, go ahead and install version 3.2.5.
 Source code and binaries are available on CRAN (http://cran.r-project.org).
-Install the latest version of **Rstudio** (http://www.rstudio.com/products/rstudio/download/).  
+Install the latest version of **Rstudio** from [rstudio.com](http://www.rstudio.com/products/rstudio/download/).
 
 Once you’ve installed these, open a session in **R** or **Rstudio** and run the following:
 
@@ -59,7 +59,7 @@ Linux distributions typically include this by default but it is not impossible t
 ### MacOSX users:
 
 So that you can compile C code and dynamically link it into an **R** session, you will need to make sure you have the Xcode app installed before running the second script above.
-This is free and can be installed via the App Store or downloaded from https://developer.apple.com/xcode/downloads/.
+This is free and can be installed via the App Store or downloaded from [developer.apple.com](https://developer.apple.com/xcode/downloads/).
 
 If you have trouble trying to load **pomp** in an **R** session, or to install it from source, receiving the error,
 ```
@@ -72,12 +72,16 @@ Have a look at [these instructions](http://kingaa.github.io/mac-fortran.html) an
 
 You will need the ability to compile C code and dynamically link it into an **R** session.
 To do this, you’ll need to install the **Rtools** suite.
-Download the latest frozen version (http://cran.r-project.org/bin/windows/Rtools) and install it.
+Download the latest version [from CRAN](http://cran.r-project.org/bin/windows/Rtools) and install it.
 
 When installing **Rtools**, it is sufficient to choose the “Package authoring installation” option.
 Also during the installation, tick the “edit system PATH” box.
 
-I had some problems with the unfrozen version (**Rtools33**) but none with the last frozen version (**Rtools32**).
-I also had some difficulties initially with the latest version of **Rstudio** but these went away when I installed version 0.98.1103 (downloaded from [here](https://support.rstudio.com/hc/en-us/articles/206569407-Older-Versions-of-RStudio-Desktop)) and now I am having no problems with version **Rstudio** version 0.99.447.
+Briefly, I had some problems with **Rtools33**, but none with the last frozen version (**Rtools32**).
+I also had some difficulties initially with the latest version of **Rstudio** but these went away when I installed version 0.98.1103 ([download here](https://support.rstudio.com/hc/en-us/articles/206569407-Older-Versions-of-RStudio-Desktop)) and now I am having no problems with version **Rstudio** version 0.99.447.
+
+------------------------------
+
+### [Back to course homepage](../).
 
 ------------------------------
