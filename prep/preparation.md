@@ -5,7 +5,7 @@ title: Software installation instructions
 ------------------------------
 
 Please read the appropriate sections below, which give specific instructions for installing and testing the software we will be using.
-First follow the instructions for "all users", then those for your specific operating system.
+First follow the instructions for "all users", then those for your specific operating system (OS).
 
 **NB:** If you run into problems, send a note to kingaaictp@gmail.com with a detailed description of the problem you've encountered.
 In this message, be **certain** to include:
@@ -59,20 +59,28 @@ Linux distributions typically include this by default but it is not impossible t
 ### MacOSX users:
 
 So that you can compile C code and dynamically link it into an **R** session, you will need to make sure you have the Xcode app installed before running the second script above.
-This is free and can be installed via the App Store or downloaded from [developer.apple.com](https://developer.apple.com/xcode/downloads/).
+This is gratis and can be installed via the App Store or downloaded from [developer.apple.com](https://developer.apple.com/xcode/downloads/).
 
-If you have trouble trying to load **pomp** in an **R** session, or to install it from source, receiving the error,
+If the `pompTest.R` script fails because you cannot load **pomp**, try installing it from source.
+The easiest way to do this is to use the **devtools** package.
+Do
+```
+install.packages("devtools")
+library(devtools)
+install_git("kingaa/pomp")
+```
+If, while trying to install from source, you receive the error,
 ```
 make: gfortran-4.8: No such file or directory
 ```
-or one that otherwise refers to `gfortran`, then it is likely that you do not have the necessary version of gfortran installed.
-Have a look at [these instructions](http://kingaa.github.io/mac-fortran.html) and contact me if these don’t work for you.
+or one that otherwise refers to `gfortran`, then it is likely that you do not have the necessary version of **gfortran** installed.
+Have a look at [these instructions](http://kingaa.github.io/mac-fortran.html) and contact me at the address above if these don’t work for you.
 
 ### Windows users:
 
 You will need the ability to compile C code and dynamically link it into an **R** session.
 To do this, you’ll need to install the **Rtools** suite.
-Download the latest version [from CRAN](http://cran.r-project.org/bin/windows/Rtools) and install it.
+[Download the latest version from CRAN](http://cran.r-project.org/bin/windows/Rtools) and install it.
 
 When installing **Rtools**, it is sufficient to choose the “Package authoring installation” option.
 Also during the installation, tick the “edit system PATH” box.
@@ -82,6 +90,6 @@ I also had some difficulties initially with the latest version of **Rstudio** bu
 
 ------------------------------
 
-### [Back to course homepage](../).
+#### [Back to course homepage](../)
 
 ------------------------------
