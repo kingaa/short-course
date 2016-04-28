@@ -1,8 +1,8 @@
-INSTALLDIR=www
-
 default: intro.R intro.html parus.csv
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
-	install -D -m0600 $^ $(INSTALLDIR)
+	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

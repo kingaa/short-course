@@ -1,10 +1,11 @@
-INSTALLDIR = www
 TARGETS = mif.R mif.html box_search_global.rda box_search_local.rda \
 lik_local.rda pf.rda bsflu_params.csv 
 
 default: $(TARGETS)
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

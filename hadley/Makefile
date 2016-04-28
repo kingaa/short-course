@@ -1,9 +1,10 @@
-INSTALLDIR = www
 TARGETS = munging.R munging.html viz.R viz.html energy_production.csv
 
 default: $(TARGETS)
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

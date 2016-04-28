@@ -1,8 +1,8 @@
-INSTALLDIR=www
-
 default: stochsim.R stochsim.html bsflu_data.txt
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

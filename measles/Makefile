@@ -1,8 +1,8 @@
-INSTALLDIR=www
-
 default: measles.R measles.html measles-profile.R measles-profile.html sigmaSE-profile1.rds sigmaSE-profile2.rds
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

@@ -1,8 +1,8 @@
-INSTALLDIR=www
-
 default: contacts.html contacts.R contacts.csv contacts2.csv mif1.rda pfilter1.rda pfilter2.rda
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

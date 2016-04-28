@@ -1,8 +1,8 @@
-INSTALLDIR=www
-
 default: parest.R parest.html niamey.csv
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
-	install -D -m0600 $^ $(INSTALLDIR)
+	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

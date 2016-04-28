@@ -1,8 +1,8 @@
-INSTALLDIR=www
-
 default: ebola_data.csv ebola.html ebola-profiles.csv ebola.R
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

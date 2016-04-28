@@ -1,10 +1,10 @@
-INSTALLDIR=www
-
 default: polio.html polio_model.R polio.R profile_rho.R \
 	polio_params.csv polio_wisconsin.csv local_search.rda \
 	global_search.rda profile_rho.rds sims.rds	
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \

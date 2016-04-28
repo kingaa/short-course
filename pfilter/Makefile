@@ -1,8 +1,8 @@
-INSTALLDIR=www
-
 default: pfilter.R pfilter.html monteCarlo.html sir-grid1.rds
+ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)
+endif
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
