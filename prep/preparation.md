@@ -4,10 +4,21 @@ title: Software installation instructions
 
 ------------------------------
 
-Please read the appropriate sections below, install the software as needed, and run the test scripts.
-If you run into problems, send a note to kingaaictp@gmail.com with a detailed description of the problem you've encountered, including the OS you’re running, the versions of **R**, **Rstudio**, and **pomp** you’re attempting to install, what you’ve done, and what problems you’ve encountered.
+Please read the appropriate sections below, which give specific instructions for installing and testing the software we will be using.
+First follow the instructions for "all users", then those for your specific operating system.
 
-#### All users:
+If you run into problems, send a note to kingaaictp@gmail.com with a detailed description of the problem you've encountered.
+In this message, be **certain** to include:
+
+- the operating system you’re running,
+- the version numbers of **R**, **Rstudio**, and **pomp** you’re attempting to install,
+- what command you've executed, and
+- what error messages you've received.
+
+In particular, it is often easiest to send a screenshot or transcript showing the commands you've entered and the error messages you've received.
+In **R**, you can run `Sys.info()` to get a printout of the operating system and software version numbers.
+
+### All users:
 
 **R** and **Rstudio** are free and open-source.
 You’ll need at least version 3.2.1 of **R**.
@@ -23,11 +34,12 @@ Once you’ve installed these, open a session in **R** or **Rstudio** and run th
 > source("http://kingaa.github.io/scripts/pompTest.R")
 ```
 
-[The `>` is the command prompt; it’s not part of the command.
+[The `>` is the command prompt; it is not part of the command.
 Also, depending on your email client program, you may need to replace the quotation marks with plain keyboard double quotes.]
 
 The first command updates your installed packages.
-You may be prompted to specify a CRAN mirror: choose one geographically near you.
+You may be prompted to specify a CRAN mirror:
+choose one geographically near you.
 The second command runs a script on my website.
 It will install some needed packages if these are not already installed on your system.
 The third command will attempt to install **pomp**, the principal **R** package we’ll be using, and will check whether you can work with it.
@@ -39,26 +51,24 @@ If the final command fails, try the following:
 ```
 If this fails to give the "Hello world!" message, you will need to follow the instructions below that correspond to your OS.
 
-#### Linux and unix users:
+### Linux and unix users:
 
 If you have trouble with either script above, make sure you have the GNU compiler collection (GCC) installed on your computer.
 Linux distributions typically include this by default but it is not impossible that you have somehow avoided this.
 
-#### MacOSX users:
+### MacOSX users:
 
 So that you can compile C code and dynamically link it into an **R** session, you will need to make sure you have the Xcode app installed before running the second script above.
 This is free and can be installed via the App Store or downloaded from https://developer.apple.com/xcode/downloads/.
 
-If you have trouble trying to install `pomp` from source, receiving the error,
-
+If you have trouble trying to load **pomp** in an **R** session, or to install it from source, receiving the error,
 ```
 make: gfortran-4.8: No such file or directory
 ```
-
-then it is likely that you do not have the necessary version of gfortran installed.
+or one that otherwise refers to `gfortran`, then it is likely that you do not have the necessary version of gfortran installed.
 Have a look at [these instructions](http://kingaa.github.io/mac-fortran.html) and contact me if these don’t work for you.
 
-#### Windows users:
+### Windows users:
 
 You will need the ability to compile C code and dynamically link it into an **R** session.
 To do this, you’ll need to install the **Rtools** suite.
