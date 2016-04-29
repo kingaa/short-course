@@ -1,5 +1,5 @@
 ---
-title: "Introduction to Simulation-based Inference"
+title: "Introduction to Partially-Observed Markov Processes"
 author: "Aaron A. King and Edward L. Ionides"
 output:
   html_document:
@@ -105,6 +105,7 @@ The same issues arise for **epidemiological** modeling and inference via nonline
 1. To give students opportunities to work with such inference methods.
 1. To provide documented examples for student re-use.
 
+
 ### Questions and answers
 
 1. [What roles are played by asymptomatic infection and waning immunity in cholera epidemics?](http://dx.doi.org/10.1038/nature07084)
@@ -171,12 +172,6 @@ To think algorithmically, we define some function calls:
 ------------------------------
 
 ## The **pomp** package for POMP models
-
-### Objectives
-
-1. To introduce students to the **pomp** package
-1. To explain how the components of a POMP model are encoded in this package
-1. To give some experience in the use and manipulation of `pomp` objects
 
 ### Intro to **pomp**
 
