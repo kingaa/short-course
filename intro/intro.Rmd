@@ -4,6 +4,7 @@ author: "Aaron A. King and Edward L. Ionides"
 output:
   html_document:
     toc: yes
+    toc_depth: 4
 bibliography: ../course.bib
 csl: ../ecology.csl
 nocite: |
@@ -161,37 +162,6 @@ $$ f_{Y_{1:N}}(y^*_{1:N};\theta)=\int f_{X_{0:N},Y_{1:N}}(x_{0:N},y^*_{1:N};\the
 
 ------------------------------
 
-To think algorithmically, we define some function calls:
-
-* rprocess( ): a draw from $f_{X_n|X_{n-1}}(x_n| x_{n-1};\theta)$
-* dprocess( ): evaluation of $f_{X_n|X_{n-1}}(x_n| x_{n-1};\theta)$
-* rmeasure( ): a draw from $f_{Y_n|X_n}(y_n| x_n;\theta)$
-* dmeasure( ): evaluation of $f_{Y_n|X_n}(y_n| x_n;\theta)$
-<!--- * initializer( ): a draw from $f_{X_0}(x_0;\theta)$ -->
-
-------------------------------
-
-## The **pomp** package for POMP models
-
-### Intro to **pomp**
-
-* **pomp** is an  **R**  package for data analysis using partially observed Markov process (POMP) models.
-
-* Note the distinction: lower case **pomp** is a software package; 
-upper case POMP is a class of models.
-
-* **pomp** builds methodology for POMP models in terms of arbitrary user-specified `rprocess()`, `dprocess()`, `rmeasure()`, and `dmeasure()` functions.
- 
-* Following modern practice, most methodology in **pomp** is simulation-based, so does not require specification of `dprocess()`.
-
-* **pomp** has facilities to help construct `rprocess()`, `rmeasure()`, and `dmeasure()` functions for model classes of epidemiological interest.
-
-* **pomp** provides a forum for development, modification and sharing of models, methodology and data analysis workflows.
-
-The following diagrams show the structure of a POMP model schematically.
-
-*********************
-
 ### Another POMP model schematic
 
 showing dependence among model variables:
@@ -259,9 +229,44 @@ Moreover, the measurements, $Y_n$, depend only on the state at that time:
 $$\mathrm{Prob}[Y_n|X_0,\dots,X_{n},Y_1,\dots,Y_{n-1}]=\mathrm{Prob}[Y_n|X_{n}],$$
 for all $n=1,\dots,N$.
 
-*********************
+------------------------------
 
-## Example: the Ricker model
+To think algorithmically, we define some function calls:
+
+* `rprocess( )`: a draw from $f_{X_n|X_{n-1}}(x_n| x_{n-1};\theta)$
+* `dprocess( )`: evaluation of $f_{X_n|X_{n-1}}(x_n| x_{n-1};\theta)$
+* `rmeasure( )`: a draw from $f_{Y_n|X_n}(y_n| x_n;\theta)$
+* `dmeasure( )`: evaluation of $f_{Y_n|X_n}(y_n| x_n;\theta)$
+* `initializer( )`: a draw from $f_{X_0}(x_0;\theta)$
+
+### What does it mean for methodology to be __simulation-based__?
+
+* Simulating random processes is often much easier than evaluating their transition probabilities.
+* In other words, we may be able to write `rprocess()` but not `dprocess()`.
+*  __Simulation-based__ methods require the user to specify `rprocess()` but not `dprocess()`.
+* __Plug-and-play__, __likelihood-free__ and __equation-free__ are alternative terms for "simulation-based" methods.
+* Much development of simulation-based statistical methodology has occurred in the past decade.
+
+
+## The **pomp** package for POMP models
+
+* **pomp** is an  **R**  package for data analysis using partially observed Markov process (POMP) models.
+
+* Note the distinction: lower case **pomp** is a software package; 
+upper case POMP is a class of models.
+
+* **pomp** builds methodology for POMP models in terms of arbitrary user-specified `rprocess()`, `dprocess()`, `rmeasure()`, and `dmeasure()` functions.
+ 
+* Following modern practice, most methodology in **pomp** is simulation-based, so does not require specification of `dprocess()`.
+
+* **pomp** has facilities to help construct `rprocess()`, `rmeasure()`, and `dmeasure()` functions for model classes of epidemiological interest.
+
+* **pomp** provides a forum for development, modification and sharing of models, methodology and data analysis workflows.
+
+The following diagrams show the structure of a POMP model schematically.
+
+
+### Example: the Ricker model
 
 #### The deterministic Ricker map
 
@@ -415,7 +420,7 @@ library(pompExamples)
 pompExample()
 ```
 
-#### Inference algorithms in **pomp**
+### Inference algorithms in **pomp**
 
 **pomp** provides a wide range of inference algorithms.
 We'll learn about these in detail soon, but for now, let's just look at some of their general features.
@@ -451,7 +456,7 @@ logLik(pf)
 ```
 Here, the particle filtering has been performed with only `r unique(pf@Np)` particles.
 
-## Building a custom `pomp` object
+### Building a custom `pomp` object
 
 A real **pomp** data analysis begins with constructing one or more `pomp` objects to hold the data and the model or models under consideration.
 We'll illustrate this process a dataset of *Parus major* abundance in Wytham Wood, near Oxford [@McCleery1991].
@@ -583,11 +588,11 @@ In particular, we avoid "simulating a set of differential equations", preferring
 
 ## Exercises
 
-### Ricker model parameters
+#### Exercise: Ricker model parameters
 Fiddle with the parameters to try and make the simulations look more like the data.
 This will help you build some intuition for what the various parameters do.
 
-### Reformulating the Ricker model
+#### Exercise: Reformulating the Ricker model
 Reparameterize the Ricker model so that the scaling of $N$ is explicit:
 $$N_{t+1} = r\,N_{t}\,\exp\left(-\frac{N_{t}}{K}+\varepsilon_t\right).$$
 
@@ -598,7 +603,7 @@ $$\mathrm{pop}_t \sim \dist{Negbin}{\phi\,N_t,k},$$
 i.e., $\mathrm{pop}_t$ is negative-binomially distributed with mean $\phi\,N_t$ and clumping parameter $k$.
 See `?NegBinomial` for documentation on the negative binomial distribution and [the **R** Extensions Manual section on distribution functions](http://cran.r-project.org/doc/manuals/r-release/R-exts.html#Distribution-functions) for information on how to access these in C.
 
-### Beverton-Holt
+#### Exercise: Beverton-Holt
 Construct a `pomp` object for the *Parus major* data and the stochastic Beverton-Holt model
 $$N_{t+1} = \frac{a\,N_t}{1+b\,N_t}\,\varepsilon_t,$$
 where $a$ and $b$ are parameters and
@@ -606,16 +611,6 @@ $$\varepsilon_t \sim \dist{Lognormal}{-\tfrac{1}{2}\sigma^2,\sigma}.$$
 Assume the same measurement model as before.
 
 ------------------------------
-
-## What does it mean for methodology to be __simulation-based__?
-
-* Oftentimes, simulating random processes is easier than evaluating their transition probabilities.
-* In other words, we may be able to write rprocess() but not dprocess().
-*  __Simulation-based__ methods require the user to specify rprocess() but not dprocess().
-* __Plug-and-play__, __likelihood-free__ and __equation-free__ are alternative terms for simulation-based.
-* Much development of simulation-based statistical methodology has occurred in the past decade.
-
---------------------------
 
 ## [Back to course homepage](http://kingaa.github.io/short-course)
 ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/intro/intro.R)
