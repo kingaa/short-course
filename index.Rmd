@@ -82,6 +82,11 @@ Students will learn how to formulate questions as models and answer the question
 The course will be taught using a mixture of lectures and computational laboratory exercises.
 Students are expected to complete assigned readings before class meetings, keep up with assigned homework, participate fully in discussions, and work on course activities during class meetings.
 
+### Final examination
+
+The examination is scheduled for session 10 on 20 May.
+It will have both a written and a computational component, both of which will be similar to the exercises.
+
 ### Course website
 
 Materials and readings will be posted on the [course website](http://kingaa.github.io/short-course).
@@ -120,22 +125,36 @@ Students should do the following **before the first day of the course**:
 1. If you are not proficient in **R**, work through the [**R** tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial).
 If you are proficient in **R**, look through the tutorial nevertheless.
 
-## Schedule of Topics
+## Tentative Schedule
 
-1. [Introduction to partially observed Markov processes](./intro/intro.html)
-1. [Introduction to inference: parameter estimation](./parest/parest.html)
-1. [Simulation of stochastic dynamic models.](./stochsim/stochsim.html)
-1. [Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)
-1. [Iterated filtering: theory and practice](./mif/mif.html)
-1. [Case study: the persistence of polio.](./polio/polio.html)
-1. [Case study: measles and extra-demographic stochasticity.](./measles/measles.html)
-1. [Case study: Ebola and forecasting](./ebola/ebola.html)
+```{r sched1,echo=FALSE}
+begin.date <- as.Date("2016-05-09")
+data.frame(date=begin.date-3+cumsum(c(rep(c(3,1,1,1,1),times=2)))) -> dates
+
+read.csv(colClasses=c(Date="Date"),comment.char="#",
+         text='
+Date,Topic
+2016-05-09,"[Introduction to partially observed Markov processes](./intro/intro.html)"
+2016-05-10,"[Introduction to inference: parameter estimation](./parest/parest.html)"
+2016-05-11,"[Simulation of stochastic dynamic models.](./stochsim/stochsim.html)"
+2016-05-12,"[Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)"
+2016-05-13,"[Iterated filtering: theory and practice](./mif/mif.html)"
+2016-05-16,"[Case study: the persistence of polio.](./polio/polio.html)"
+2016-05-17,"[Case study: measles and extra-demographic stochasticity.](./measles/measles.html)"
+2016-05-18,"[Case study: Ebola and forecasting](./ebola/ebola.html)"
+2016-05-19,Clinic
+2016-05-20,Examination
+') %>%
+  mutate(Topic=mapvalues(as.character(Topic),NA,""),
+         Date=format(Date,"%b %e")) %>% 
+  kable()
+```
 
 ----------------------
 
-[**pomp** homepage](http://kingaa.github.io/pomp)  
-
 [Source code for these notes](http://github.com/kingaa/short-course/)  
+
+[**pomp** homepage](http://kingaa.github.io/pomp)  
 
 ----------------------
 
