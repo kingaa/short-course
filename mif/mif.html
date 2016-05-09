@@ -7,7 +7,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
-<meta name="viewport" content="width=device-width, initial-scale=1">
+
 
 <meta name="author" content="Edward Ionides and Aaron A. King" />
 
@@ -39,25 +39,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 
 
-
-</head>
-
-<body>
-
 <style type="text/css">
-.main-container {
-  max-width: 940px;
-  margin-left: auto;
-  margin-right: auto;
-}
-code {
-  color: inherit;
-  background-color: rgba(0, 0, 0, 0.04);
-}
-img {
-  max-width:100%;
-  height: auto;
-}
 h1 {
   font-size: 34px;
 }
@@ -78,6 +60,30 @@ h5 {
 }
 h6 {
   font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type="text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -108,7 +114,8 @@ $(document).ready(function () {
 <div class="fluid-row" id="header">
 
 
-<h1 class="title">Iterated filtering: Principles and practice</h1>
+
+<h1 class="title toc-ignore">Iterated filtering: Principles and practice</h1>
 <h4 class="author"><em>Edward Ionides and Aaron A. King</em></h4>
 
 </div>
@@ -153,7 +160,7 @@ $(document).ready(function () {
 <hr />
 <div id="objectives" class="section level2">
 <h2>Objectives</h2>
-<p>This tutorial is part of a series given as a <a href="http://kingaa.github.io/short-course">short course</a> given at the <a href="http://sismid.uw.org">Summer Institute in Statistics and Modeling in Infectious Diseases</a>. It covers likelihood estimation via the method of iterated filtering. It presupposes familiarity with building partially observed Markov process (POMP) objects in the <strong>R</strong> package <strong>pomp</strong> <span class="citation">(King et al. 2016)</span>. <strong>pomp</strong> is available from <a href="http://cran.r-project.org/web/packages/pomp">CRAN</a> and <a href="http://kingaa.github.io/pomp">github</a>. The code here runs <strong>pomp</strong> version 1.4.7.2 on <strong>R</strong> version 3.2.4. This tutorial follows on from the topic of carrying out particle filtering (also known as sequential Monte Carlo) via <code>pfilter</code> in <strong>pomp</strong>. We have the following goals:</p>
+<p>This tutorial is part of a series given as a <a href="http://kingaa.github.io/short-course">short course</a> given at the <a href="http://sismid.uw.org">Summer Institute in Statistics and Modeling in Infectious Diseases</a>. It covers likelihood estimation via the method of iterated filtering. It presupposes familiarity with building partially observed Markov process (POMP) objects in the <strong>R</strong> package <strong>pomp</strong> <span class="citation">(King et al. 2016)</span>. <strong>pomp</strong> is available from <a href="http://cran.r-project.org/web/packages/pomp">CRAN</a> and <a href="http://kingaa.github.io/pomp">github</a>. The code here runs <strong>pomp</strong> version 1.4.8.1 on <strong>R</strong> version 3.2.4. This tutorial follows on from the topic of carrying out particle filtering (also known as sequential Monte Carlo) via <code>pfilter</code> in <strong>pomp</strong>. We have the following goals:</p>
 <ol style="list-style-type: decimal">
 <li><p>Review the available options for inference on POMP models, to put iterated filtering in context.</p></li>
 <li><p>Understand how iterated filtering algorithms carry out repeated particle filtering operations, with randomly perturbed parameter values, in order to maximize the likelihood.</p></li>

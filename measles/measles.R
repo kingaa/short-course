@@ -1,5 +1,165 @@
+#' ---
+#' title: "Case study: Measles in large and small towns"
+#' author: "Aaron A. King"
+#' output:
+#'   html_document:
+#'     toc: yes
+#'     toc_depth: 3
+#' bibliography: ../course.bib
+#' csl: ../ecology.csl
+#' 
+#' ---
+#' 
+#' \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+#' \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+#' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+#' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+#' \newcommand\dlta[1]{{\Delta}{#1}}
+#' \newcommand\scinot[2]{$#1 \times 10^{#2}$\xspace}
+#' \newcommand{\mortality}{m}
+#' \newcommand{\birth}{b}
+#' \newcommand{\loglik}{\ell}
+#' \newcommand{\immigration}{\iota}
+#' \newcommand{\amplitude}{a}
+#' \newcommand{\cohort}{c}
+#' \newcommand{\R}{\textsf{R}}
+#' \newcommand{\Rzero}{{R_0}}
+#' 
+#' [Licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
+#' Please share and remix noncommercially, mentioning its origin.  
+#' ![CC-BY_NC](../graphics/cc-by-nc.png)
+#' 
+#' Produced in **R** version `r getRversion()` using **pomp** version `r packageVersion("pomp")`.
+#' 
+## ----ncpu,include=FALSE,purl=TRUE,cache=FALSE----------------------------
 ncpu <- as.integer(Sys.getenv("PBS_NP"))
 if (is.na(ncpu)) ncpu <- 40
+
+#' 
+#' ----------------------------------
+#' 
+#' ## Objectives
+#' 
+#' 1. display a published case study using plug-and-play methods with non-trivial model complexities
+#' 1. demonstrate the use of profile likelihood in scientific inference
+#' 1. discuss the interpretation of parameter estimates
+#' 1. emphasize the need to allow for extra sources of stochasticity in modeling
+#' 
+#' ----------------------------------
+#' 
+#' ## Measles revisited
+#' 
+#' ### Motivation: challenges in inference from disease dynamics
+#' 
+#' - Understanding, forecasting, managing epidemiological systems increasingly depends on models
+#' - Dynamic models can be used to test causal hypotheses
+#' - Real epidemiological systems:
+#'     - are nonlinear
+#'     - are stochastic
+#'     - are nonstationary
+#' 	  - evolve in continuous time
+#' 	  - have hidden variables
+#' 	  - can be measured only with (large) error
+#' - Dynamics of infectious disease outbreaks illustrate this well
+#' 
+#' 
+#' ----------------------------------
+#' 
+#' ### Outline
+#' 
+#' - revisit classic measles data set
+#' - ask questions about:
+#'     - measles extinction and recolonization
+#'     - transmission rates
+#'     - seasonality
+#'     - resupply of susceptibles
+#' - use a model that 
+#'     1. expresses our current understanding of measles dynamics
+#'     1. cannot be fit by existing likelihood-based methods
+#' - examine data from large and small towns using the same model
+#' - does our perspective on this disease change?
+#' - what bigger lessons can we learn regarding inference for dynamical systems?
+#' 
+#' ----------------------------------
+#' 
+#' ### He, Ionides, & King, *J. R. Soc. Interface* (2010)
+#' 
+#' #### Data sets
+#' 
+#'   - Twenty towns 
+#' 	- population sizes: 2k--3.4M
+#' 	- Weekly case reports, 1950--1963
+#' 	- Annual birth records and population sizes, 1944--1963
+#' 
+#'  
+#' 
+#' ---------------------------------------
+#' 
+#' 
+#' #### Continuous-time Markov process model
+#' 
+#' 
+#' ![model diagram](./model_diagram.png)
+#' 
+#' - $B(t) = \text{birth rate, from data}$
+#' - $N(t) = \text{population size, from data}$
+#' - overdispersed binomial measurement model: $\mathrm{cases}_t\,\vert\,I{\to}R=z_t \sim \dist{Normal}{\rho\,z_t,\rho\,(1-\rho)\,z_t+(\psi\,\rho\,z_t)^2}$
+#' 
+#' - entry into susceptible class:
+#' $$\mu_{BS}(t) = (1-c)\,B(t-\tau)+c\,\delta(t-t_0)\,\int_{t-1}^{t}\,B(t-\tau-s)\,ds$$
+#' 
+#' - force of infection
+#' $$\mu_{SE}(t) = \tfrac{\beta(t)}{N(t)}\,(I+\iota)\,\zeta(t)$$
+#' 
+#' - $c = \text{cohort effect}$  
+#' - $\tau = \text{school-entry delay}$  
+#' - $\beta(t) = \text{school-term transmission}$  
+#' - $\iota = \text{imported infections}$
+#' - $\zeta(t) = \text{white noise with intensity}\,\sigma_{SE}$
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' #### Fitting procedure
+#' 
+#' - a large Latin-hypercube design was used to initiate searches
+#' - iterated filtering to maximize the likelihood
+#' - point estimates of all parameters for 20 cities
+#' - profile likelihoods to quantify uncertainty in London and Hastings
+#' 
+#' ---------------------------------------
+#' 
+#' 
+#' #### Imported infections
+#' 
+#' $$\mu_{SE}=\frac{\beta(t)}{N(t)}\,(I+\iota)\,\zeta(t)$$
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' 
+#' #### Seasonality
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' ### Notable findings
+#' 
+#' #### Cohort effect
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' #### $R_0$
+#' 
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' #### Birth delay
+#' 
+#' 
+## ----mles,include=FALSE--------------------------------------------------
 read.csv(text="
 town,loglik,loglik.sd,mu,delay,sigma,gamma,rho,R0,amplitude,alpha,iota,cohort,psi,S_0,E_0,I_0,R_0,sigmaSE
 Bedwellty,-1125.1,0.14,0.02,4,57.9,146,0.311,24.7,0.16,0.937,0.0396,0.351,0.951,0.0396,2.64e-05,2.45e-05,0.96,0.0611
@@ -23,6 +183,48 @@ Nottingham,-2703.5,0.53,0.02,4,70.2,115,0.609,22.6,0.157,0.982,0.17,0.34,0.258,0
 Oswestry,-696.1,0.49,0.02,4,37.3,168,0.631,52.9,0.339,1.04,0.0298,0.263,0.476,0.0218,1.56e-05,1.61e-05,0.978,0.0699
 Sheffield,-2810.7,0.21,0.02,4,54.3,62.2,0.649,33.1,0.313,1.02,0.853,0.225,0.175,0.0291,6.04e-05,8.86e-05,0.971,0.0428
 ",stringsAsFactors=FALSE) -> mles
+
+#' 
+#' ---------------------------------------
+#' 
+#' #### Reporting rate
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' #### Predicted vs observed critical community size
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' #### Parameter estimates
+#' 
+#' 
+#' $r = \mathrm{cor}(\log{\hat\theta},\log{N_{1950}})$
+#' 
+#' ---------------------------------------
+#' 
+#' #### Extrademographic stochasticity
+#' 
+#' 
+#' $$\mu_{SE}=\frac{\beta(t)}{N(t)}\,(I+\iota)\,\zeta(t)$$
+#' 
+#' 
+#' 
+#' ---------------------------------------
+#' 
+#' 
+#' ## Practicum
+#' 
+#' ### Objectives
+#' 
+#' 1. Demonstrate how further extra-demographic stochasticity can be modeled
+#' 1. Demonstrate the use of covariates in **pomp**
+#' 
+#' ### Preliminaries
+#' 
+#' We'll load the packages we'll need, and set the random seed, to allow reproducibility.
+## ----prelims,cache=FALSE-------------------------------------------------
 set.seed(594709947L)
 library(ggplot2)
 theme_set(theme_bw())
@@ -31,32 +233,65 @@ library(reshape2)
 library(magrittr)
 library(pomp)
 stopifnot(packageVersion("pomp")>="1.4.5")
+
+#' 
+#' ### Data and covariates
+#' 
+#' Now we'll load the data and covariates.
+#' The data are measles reports from 20 cities in England and Wales.
+#' We also have information on the population sizes and birth-rates in these cities;
+#' we'll treat these variables as covariates.
+#' 
+## ----load-data-----------------------------------------------------------
 daturl <- "http://kingaa.github.io/pomp/vignettes/twentycities.rda"
 datfile <- file.path(tempdir(),"twentycities.rda")
 download.file(daturl,destfile=datfile,mode="wb")
 load(datfile)
+
+## ----plot-data-----------------------------------------------------------
 measles %>% 
   mutate(year=as.integer(format(date,"%Y"))) %>%
   subset(town=="London" & year>=1950 & year<1964) %>%
   mutate(time=(julian(date,origin=as.Date("1950-01-01")))/365.25+1950) %>%
   subset(time>1950 & time<1964, select=c(time,cases)) -> dat
 demog %>% subset(town=="London",select=-town) -> demog
+
+#' 
+#' Let's plot the data and covariates.
+#' 
+## ----data-plot-----------------------------------------------------------
 dat %>% ggplot(aes(x=time,y=cases))+geom_line()
 demog %>% melt(id="year") %>%
   ggplot(aes(x=year,y=value))+geom_point()+
   facet_wrap(~variable,ncol=1,scales="free_y")
+
+#' 
+#' 
+## ----prep-covariates-----------------------------------------------------
 demog %>% 
   summarize(
     time=seq(from=min(year),to=max(year),by=1/12),
     pop=predict(smooth.spline(x=year,y=pop),x=time)$y,
     birthrate=predict(smooth.spline(x=year+0.5,y=births),x=time-4)$y
     ) -> covar
+
+## ----covarplot-----------------------------------------------------------
 plot(pop~time,data=covar,type='l')
 points(pop~year,data=demog)
 plot(birthrate~time,data=covar,type='l')
 points(births~year,data=demog)
 plot(birthrate~I(time-4),data=covar,type='l')
 points(births~I(year+0.5),data=demog)
+
+#' 
+#' ### The partially observed Markov process model
+#' 
+#' #### The (unobserved) process model
+#' 
+#' Let's evaluate the hypothesis that these data were generated by an SEIR model.
+#' The SEIR model is a compartmental model that, diagrammatically, looks as follows.
+#' 
+## ----seir-diagram,echo=FALSE,cache=FALSE,eval=FALSE----------------------
 ## library(DiagrammeR)
 ## DiagrammeR("digraph SEIR {
 ##   graph [rankdir=TD, overlap=false, fontsize = 10]
@@ -73,6 +308,20 @@ points(births~I(year+0.5),data=demog)
 ##   b->S
 ##   {S E I R}->d
 ##    }",type="grViz",engine="dot",height=300,width=800)
+
+#' 
+#' ![model diagram](./model_diagram.png)
+#' 
+#' $b = \text{births}$  
+#' $S = \text{susceptibles}$  
+#' $E = \text{exposed, incubating}$  
+#' $I = \text{infectious}$  
+#' $R = \text{recovered}$  
+#' 
+#' We require a simulator for this model.
+#' The following implements a simulator.
+#' 
+## ----rprocess------------------------------------------------------------
 rproc <- Csnippet("
   double beta, br, seas, foi, dw, births;
   double rate[6], trans[6];
@@ -119,6 +368,15 @@ rproc <- Csnippet("
   W += (dw - dt)/sigmaSE;  // standardized i.i.d. white noise
   C += trans[4];           // true incidence
 ")
+
+#' 
+#' In the above, $C$ represents the true incidence, i.e., the number of new infections occurring over an interval.
+#' Since recognized measles infections are quarantined, we argue that most infection occurs before case recognition so that true incidence is a measure of the number of individuals progressing from the I to the R compartment in a given interval.
+#' 
+#' We complete the process model definition by specifying the distribution of initial unobserved states.
+#' The following codes assume that the fraction of the population in each of the four compartments is known.
+#' 
+## ----initializer---------------------------------------------------------
 initlz <- Csnippet("
   double m = pop/(S_0+E_0+I_0+R_0);
   S = nearbyint(m*S_0);
@@ -128,6 +386,23 @@ initlz <- Csnippet("
   W = 0;
   C = 0;
 ")
+
+#' 
+#' 
+#' #### The measurement model
+#' 
+#' We'll model both under-reporting and measurement error.
+#' We want $\mathbb{E}[\text{cases}|C] = \rho\,C$, where $C$ is the true incidence and $0<\rho<1$ is the reporting efficiency.
+#' We'll also assume that $\mathrm{Var}[\text{cases}|C] = \rho\,(1-\rho)\,C + (\psi\,\rho\,C)^2$, where $\psi$ quantifies overdispersion.
+#' Note that when $\psi=0$, the variance-mean relation is that of the binomial distribution.
+#' To be specific, we'll choose
+#' $\text{cases|C} \sim f(\cdot|\rho,\psi,C)$,
+#' where $$f(c|\rho,\psi,C) = \Phi(c+\tfrac{1}{2},\rho\,C,\rho\,(1-\rho)\,C+(\psi\,\rho\,C)^2)-\Phi(c-\tfrac{1}{2},\rho\,C,\rho\,(1-\rho)\,C+(\psi\,\rho\,C)^2),$$
+#' where $\Phi(x,\mu,\sigma^2)$ is the c.d.f. of the normal distribution with mean $\mu$ and variance $\sigma^2$.
+#' 
+#' The following computes $\mathbb{P}[\text{cases}|C]$.
+#' 
+## ----dmeasure------------------------------------------------------------
 dmeas <- Csnippet("
   double m = rho*C;
   double v = m*(1.0-rho+psi*psi*m);
@@ -138,6 +413,11 @@ dmeas <- Csnippet("
     lik = pnorm(cases+0.5,m,sqrt(v)+tol,1,0)+tol;
   }
 ")
+
+#' 
+#' The following codes simulate $\text{cases} | C$.
+#' 
+## ----rmeasure------------------------------------------------------------
 rmeas <- Csnippet("
   double m = rho*C;
   double v = m*(1.0-rho+psi*psi*m);
@@ -149,6 +429,13 @@ rmeas <- Csnippet("
     cases = 0.0;
   }
 ")
+
+#' 
+#' #### Constructing the `pomp` object
+#' 
+#' We put all the model components together with the data in a call to `pomp`:
+#' 
+## ----pomp-construction---------------------------------------------------
 dat %>% 
   pomp(t0=with(dat,2*time[1]-time[2]),
        time="time",
@@ -164,11 +451,22 @@ dat %>%
                     "rho","sigmaSE","psi","cohort","amplitude",
                     "S_0","E_0","I_0","R_0")
        ) -> m1
+
+#' 
+#' The following codes plot the data and covariates together.
+#' 
+## ----plot-pomp-----------------------------------------------------------
 m1 %>% as.data.frame() %>% 
   melt(id="time") %>%
   ggplot(aes(x=time,y=value))+
   geom_line()+
   facet_grid(variable~.,scales="free_y")
+
+#' 
+#' @He2010 estimated the parameters of this model.
+#' The full set is included in the *R* code accompanying this document, where they are read into a data frame called `mles`.
+#' 
+## ----mle-----------------------------------------------------------------
 mles %>% subset(town=="London") -> mle
 paramnames <- c("R0","mu","sigma","gamma","alpha","iota",
                 "rho","sigmaSE","psi","cohort","amplitude",
@@ -176,6 +474,11 @@ paramnames <- c("R0","mu","sigma","gamma","alpha","iota",
 mle %>% extract(paramnames) %>% unlist() -> theta
 mle %>% subset(select=-c(S_0,E_0,I_0,R_0)) %>%
   knitr::kable(row.names=FALSE)
+
+#' 
+#' Verify that we get the same likelihood as @He2010.
+#' 
+## ----pfilter1------------------------------------------------------------
 library(foreach)
 library(doParallel)
 
@@ -190,11 +493,18 @@ foreach(i=1:4,
   pfilter(m1,Np=10000,params=theta)
 } -> pfs
 logmeanexp(sapply(pfs,logLik),se=TRUE)
+
+#' 
+#' Simulations at the MLE.
+#' 
+## ----sims1,fig.height=8--------------------------------------------------
 m1 %>% 
   simulate(params=theta,nsim=9,as.data.frame=TRUE,include.data=TRUE) %>%
   ggplot(aes(x=time,y=cases,group=sim,color=(sim=="data")))+
   guides(color=FALSE)+
   geom_line()+facet_wrap(~sim,ncol=2)
+
+## ----sims2---------------------------------------------------------------
 m1 %>% 
   simulate(params=theta,nsim=100,as.data.frame=TRUE,include.data=TRUE) %>%
   subset(select=c(time,sim,cases)) %>%
@@ -206,6 +516,15 @@ m1 %>%
   dcast(time+data~p,value.var='q') %>%
   ggplot(aes(x=time,y=med,color=data,fill=data,ymin=lo,ymax=hi))+
   geom_ribbon(alpha=0.2)
+
+#' 
+#' #### Parameter transformations
+#' 
+#' The parameters are constrained to be positive, and some of them are constrained to lie between $0$ and $1$.
+#' We can turn the likelihood maximization problem into an unconstrained maximization problem by transforming the parameters.
+#' The following Csnippets implement such a transformation and its inverse.
+#' 
+## ----transforms----------------------------------------------------------
 toEst <- Csnippet("
   Tmu = log(mu);
   Tsigma = log(sigma);
@@ -243,3 +562,40 @@ pomp(m1,toEstimationScale=toEst,
      paramnames=c("R0","mu","sigma","gamma","alpha","iota",
                   "rho","sigmaSE","psi","cohort","amplitude",
                   "S_0","E_0","I_0","R_0")) -> m1
+
+#' 
+#' ## Constructing a likelihood profile
+#' 
+#' [The linked document shows how a likelihood profile can be constructed using IF2](./measles-profile.html).
+#' 
+#' ## Exercises
+#' 
+#' ### Reformulate the model
+#' 
+#' Modify the @He2010 model to remove the cohort effect.
+#' Run simulations and compute likelihoods to convince yourself that the resulting codes agree with the original ones for `cohort = 0`.
+#' 
+#' Now modify the transmission seasonality to use a sinusoidal form.
+#' How many parameters must you use?
+#' Fixing the other parameters at their MLE values, compute and visualize a profile likelihood over these parameters.
+#' 
+#' ### Extrademographic stochasticity
+#' 
+#' Set the extrademographic stochasticity parameter $\sigma_{SE}=0$, set $\alpha=1$, and fix $\rho$ and $\iota$ at their MLE values, then maximize the likelihood over the remaining parameters. 
+#' How do your results compare with those at the MLE? 
+#' Compare likelihoods but also use simulations to diagnose differences between the models.
+#' 
+#' 
+#' 
+#' --------------------------
+#' 
+#' ## [Back to course homepage](http://kingaa.github.io/short-course)
+#' ## **R** codes for this document
+#' 
+#' - [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
+#' - [Profile likelihood computation for this example](./measles-profile.html)
+#' - [**R** code for the profile likelihood computation](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles-profile.R)
+#' 
+#' ----------------------
+#' 
+#' ## References

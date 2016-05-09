@@ -15,7 +15,7 @@ endif
 	Rscript --vanilla -e "rmarkdown::render(\"$*.md\",output_format=\"html_document\")"
 
 %.R: %.Rmd
-	Rscript --vanilla -e "knitr::purl(\"$*.Rmd\",output=\"$*.R\",documentation=0)"
+	Rscript --vanilla -e "knitr::purl(\"$*.Rmd\",output=\"$*.R\",documentation=2)"
 
 clean:
 	$(RM) *.o *.so *.log *.aux *.out *.nav *.snm *.toc *.bak

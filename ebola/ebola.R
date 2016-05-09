@@ -1,3 +1,32 @@
+#' ---
+#' title: "Case study: Forecasting Ebola"
+#' author: "Aaron A. King, Matthieu Domenech de Cell&egrave;s, Felicia M. G. Magpantay, and Pejman Rohani"
+#' output:
+#'   html_document:
+#'     toc: yes
+#' bibliography: ../course.bib
+#' csl: ../ecology.csl
+#' ---
+#' 
+#' \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+#' \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+#' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+#' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+#' \newcommand\dlta[1]{{\Delta}{#1}}
+#' \newcommand\scinot[2]{$#1 \times 10^{#2}$\xspace}
+#' 
+#' ------------------------------------
+#' 
+#' 
+#' [Licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
+#' Please share and remix noncommercially, mentioning its origin.  
+#' ![CC-BY_NC](../graphics/cc-by-nc.png)
+#' 
+#' Produced in **R** version `r getRversion()` using **pomp** version `r packageVersion("pomp")`.
+#' 
+#' ------------------------------------
+#' 
+#' 
 ## ----prelims,include=FALSE,cache=FALSE-----------------------------------
 options(
   keep.source=TRUE,
@@ -14,6 +43,28 @@ library(magrittr)
 library(pomp)
 stopifnot(packageVersion("pomp")>="1.4.7")
 
+#' 
+#' ## Objectives
+#' 
+#' 1. To demonstrate the use of diagnostic probes for model criticism
+#' 1. To teach some forecasting methods based on POMP models
+#' 
+#' These objectives will be achieved using a recent study [@King2015], all codes for which are available on [datadryad.org](http://dx.doi.org/10.5061/dryad.r5f30).
+#' 
+#' 
+#' ## Model and data
+#' 
+#' ### An emerging infectious disease outbreak
+#' 
+#' Let's situate ourselves at the beginning of October 2014.
+#' The WHO situation report contained data on the number of cases in each of Guinea, Sierra Leone, and Liberia.
+#' Key questions included:
+#' 
+#' 1. How fast will the outbreak unfold?
+#' 1. How large will it ultimately prove?
+#' 1. What interventions will be most effective?
+#' 
+#' Download the data from the WHO Situation Report of 1 October 2014:
 ## ----get-data------------------------------------------------------------
 base_url <- "http://kingaa.github.io/short-course/"
 read.csv(paste0(base_url,"ebola/ebola_data.csv"),stringsAsFactors=FALSE,
@@ -21,15 +72,36 @@ read.csv(paste0(base_url,"ebola/ebola_data.csv"),stringsAsFactors=FALSE,
 sapply(dat,class)
 head(dat)
 
+#' 
+#' Supplementing these data are population estimates for the three countries.
+#' 
 ## ----popsizes------------------------------------------------------------
 ## Population sizes in Guinea, Liberia, and Sierra Leone (census 2014)
 populations <- c(Guinea=10628972,Liberia=4092310,SierraLeone=6190280)
 
+#' 
 ## ----plot-data-----------------------------------------------------------
 dat %>%
   ggplot(aes(x=date,y=cases,group=country,color=country))+
   geom_line()
 
+#' 
+#' 
+#' ### An SEIR model with gamma-distributed latent and infectious periods
+#' 
+#' Many of the early modeling efforts used variants on the simple SEIR model.
+#' Here, we'll focus on a variant that attempts a more accurate description of the duration of the latent period.
+#' Specifically, this model assumes that the amount of time an infection remains latent is
+#' $$\mathrm{LP} \sim \dist{Gamma}{m,\frac{1}{m\,\alpha}},$$
+#' where $m$ is an integer.
+#' This means that the latent period has expectation $1/\alpha$ and variance $1/(m\,\alpha)$.
+#' In this document, we'll fix $m=3$.
+#' 
+#' We implement Gamma distributions using the so-called *linear chain trick*.
+#' 
+#' 
+#' ### Process model simulator
+#' 
 ## ----rproc---------------------------------------------------------------
 rSim <- Csnippet('
   double lambda, beta;
@@ -73,6 +145,12 @@ rInit <- Csnippet("
   N_IR = 0;
 ")
 
+#' 
+#' 
+#' ### Deterministic skeleton
+#' 
+#' The deterministic skeleton is an ODE.
+#' 
 ## ----skel----------------------------------------------------------------
 skel <- Csnippet('
   double lambda, beta;
@@ -93,6 +171,11 @@ skel <- Csnippet('
   DN_IR = gamma * I;
 ')
 
+#' 
+#' ###  Measurement model: overdispersed count data
+#' 
+#' $C_t | H_t$ is negative binomial with $\expect{C_t|H_t} = \rho\,H_t$ and $\var{C_t|H_t} = \rho\,H_t\,(1+k\,\rho\,H_t)$.
+#' 
 ## ----measmodel-----------------------------------------------------------
 dObs <- Csnippet('
   double f;
@@ -110,6 +193,9 @@ rObs <- Csnippet('
     cases = rpois(rho*N_EI);
   }')
 
+#' 
+#' ### Parameter transformations
+#' 
 ## ----partrans------------------------------------------------------------
 toEst <- Csnippet('
   const double *IC = &S_0;
@@ -129,6 +215,9 @@ fromEst <- Csnippet('
   from_log_barycentric(TIC,IC,4);
 ')
 
+#' 
+#' The following function constructs a `pomp` object to hold the data for any one of the countries.
+#' 
 ## ----pomp-construction---------------------------------------------------
 ebolaModel <- function (country=c("Guinea", "SierraLeone", "Liberia"),
                         timestep = 0.1, nstageE = 3) {
@@ -165,10 +254,23 @@ ebolaModel("Guinea") -> gin
 ebolaModel("SierraLeone") -> sle
 ebolaModel("Liberia") -> lbr
 
+#' 
+#' 
+#' ## Parameter estimates
+#' 
+#' @King2015 estimated parameters for this model for each country.
+#' A large Latin hypercube design was used to initiate a large number of iterated filtering runs.
+#' Profile likelihoods were computed for each country against the parameters $k$ (the measurement model overdispersion) and $R_0$ (the basic reproductive ratio).
+#' Full details are given [on the datadryad.org site](http://dx.doi.org/10.5061/dryad.r5f30).
+#' The following loads the results of these calculations.
+#' 
 ## ----load-profile--------------------------------------------------------
 options(stringsAsFactors=FALSE)
 profs <- read.csv(paste0(base_url,"/ebola/ebola-profiles.csv"))
 
+#' 
+#' The following plots the profile likelihoods.
+#' The horizontal line represents the critical value of the likelihood ratio test for $p=0.01$.
 ## ----profiles-plots,results='hide'---------------------------------------
 library(reshape2)
 library(plyr)
@@ -187,6 +289,25 @@ profs %>%
   facet_grid(country~profile,scales='free')+
   labs(y=expression(l))
 
+#' 
+#' ## Diagnostics
+#' 
+#' Parameter estimation is the process of finding the parameters that are "best", in some sense, for a given model, from among the set of those that make sense for that model.
+#' Model selection, likewise, aims at identifying the "best" model, in some sense, from among a set of candidates.
+#' One can do both of these things more or less well, but no matter how carefully they are done, the best of a bad set of models is still bad.
+#' 
+#' Lets' investigate the model here, at its maximum-likelihood parameters, to see if we can identify problems.
+#' The guiding principle in this is that, if the model is "good", then the data are a plausible realization of that model.
+#' Therefore, we can compare the data directly against model simulations.
+#' Moreover, we can quantify the agreement between simulations and data in any way we like.
+#' Any statistic, or set of statistics, that can be applied to the data can also be applied to simulations.
+#' Shortcomings of the model should manifest themselves as discrepancies between the model-predicted distribution of such statistics and their value on the data.
+#' 
+#' **pomp** provides tools to facilitate this process.
+#' Specifically, the `probe` function applies a set of user-specified *probes* or summary statistics, to the model and the data, and quantifies the degree of disagreement in several ways.
+#' 
+#' Let's see how this is done using the model for the Guinean outbreak.
+#' 
 ## ----diagnostics1--------------------------------------------------------
 library(pomp)
 library(plyr)
@@ -210,6 +331,12 @@ simulate(gin,nsim=20,as.data.frame=TRUE,include.data=TRUE) %>%
   scale_color_manual(values=c(no=gray(0.6),yes='red'))+
   scale_alpha_manual(values=c(no=0.5,yes=1))
 
+#' 
+#' The simulations appear to be growing a bit more quickly than the data.
+#' Let's try to quantify this.
+#' First, we'll write a function that estimates the exponential growth rate by linear regression.
+#' Then, we'll apply it to the data and to 500 simulations.
+#' 
 ## ----diagnostics-growth-rate---------------------------------------------
 growth.rate <- function (y) {
   cases <- y["cases",]
@@ -218,6 +345,11 @@ growth.rate <- function (y) {
 }
 probe(gin,probes=list(r=growth.rate),nsim=500) %>% plot()
 
+#' 
+#' Do these results bear out our suspicion that the model and data differ in terms of growth rate?
+#' 
+#' The simulations also appear to be more highly variable around the trend than do the data.
+#' 
 ## ----diagnostics-growth-rate-and-sd--------------------------------------
 growth.rate.plus <- function (y) {
   cases <- y["cases",]
@@ -227,6 +359,11 @@ growth.rate.plus <- function (y) {
 probe(gin,probes=list(growth.rate.plus),
       nsim=500) %>% plot()
 
+#' 
+#' Let's also look more carefully at the distribution of values about the trend using the 1st and 3rd quantiles.
+#' Also, it looks like the data are less jagged than the simulations.
+#' We can quantify this using the autocorrelation function (ACF).
+#' 
 ## ----diagnostics2,fig.height=6-------------------------------------------
 log1p.detrend <- function (y) {
   cases <- y["cases",]
@@ -241,6 +378,28 @@ probe(gin,probes=list(
             transform=log1p.detrend)
 ),nsim=500) %>% plot()
 
+#' 
+#' ### Exercise: the SEIR model for the Sierra Leone outbreak
+#' 
+#' Apply probes to investigate the extent to which the model is an adequate description of the data from the Sierra Leone outbreak.
+#' Have a look at the probes provided with **pomp**: `?basic.probes`.
+#' Try also to come up with some informative probes of your own.
+#' Discuss the implications of your findings.
+#' 
+#' ## Forecasting
+#' 
+#' Up to now, we've primarily focused on using POMP models to answer scientific questions.
+#' Of course, we can also use them to make forecasts.
+#' The key issues are to do with quantifying the forecast uncertainty.
+#' This arises from four sources:
+#' 
+#' 1. measurement error
+#' 1. process noise
+#' 1. parametric uncertainty
+#' 1. structural uncertainty
+#' 
+#' Here, we'll explore how we can account for the first three of these in making forecasts for the Sierra Leone outbreak.
+#' 
 ## ----forecasts-----------------------------------------------------------
 library(pomp)
 library(plyr)
@@ -343,6 +502,7 @@ sims %>% ddply(~time+period,summarize,prob=c(0.025,0.5,0.975),
   dcast(period+time~prob,value.var='quantile') %>%
   mutate(date=min(dat$date)+7*(time-1)) -> simq
 
+#' 
 ## ----forecast-plots------------------------------------------------------
 simq %>% ggplot(aes(x=date))+
   geom_ribbon(aes(ymin=lower,ymax=upper,fill=period),alpha=0.3,color=NA)+
@@ -351,3 +511,12 @@ simq %>% ggplot(aes(x=date))+
              mapping=aes(x=date,y=cases),color='black')+
   labs(y="cases")
 
+#' 
+#' --------------------------
+#' 
+#' ## [Back to course homepage](http://kingaa.github.io/short-course)
+#' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/ebola/ebola.R)
+#' 
+#' ----------------------
+#' 
+#' ## References
