@@ -98,7 +98,8 @@ set.seed(2028866059L)
 #' 
 #' showing causal relations.
 #'    
-#' ![pomp_schematic1](pomp_schematic1.png)
+#' ![](pomp_schematic1.png)
+#' 
 #' 
 #' **The key perspective to keep in mind is that the model is to be viewed as the process that generated the data.**
 #' 

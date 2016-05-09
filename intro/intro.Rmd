@@ -132,7 +132,26 @@ The same issues arise for **epidemiological** modeling and inference via nonline
 
 showing causal relations.
    
-![pomp_schematic1](pomp_schematic1.png)
+![](pomp_schematic1.png)
+
+```{r ssdiag1,echo=FALSE,purl=FALSE,fig.height=3,fig.width=6,fig.show='hide'}
+library(grid)
+library(gridExtra)
+vp <- viewport(x=unit(0.5,"npc"),y=unit(0.54,"npc"),
+               width=unit(0.96,"npc"),height=unit(0.96,"npc"))
+pushViewport(vp)
+
+grid.ellipse(x=0.5,y=0.2,angle=0,ar=2.5,size=20,gp=gpar(lwd=2,col='black'))
+grid.text(x=0.5,y=0.2,label="state process",gp=gpar(fontsize=16,fontface='bold'))
+
+grid.ellipse(x=0.2,y=0.7,angle=0,ar=2.5,size=18,gp=gpar(lwd=2,col='black'))
+grid.text(x=0.2,y=0.7,label="measurement\n process",gp=gpar(fontsize=16,fontface='bold'))
+
+grid.ellipse(x=0.7,y=0.8,angle=0,ar=1.5,size=16,gp=gpar(lwd=2,col='black'))
+grid.text(x=0.7,y=0.8,label="data",gp=gpar(fontsize=16,fontface='bold'))
+
+popViewport()
+```
 
 **The key perspective to keep in mind is that the model is to be viewed as the process that generated the data.**
 
