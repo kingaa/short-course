@@ -74,11 +74,12 @@ Numerical integration is one of the most important tools we have for the analysi
 
 ### The SIR model
 
-The classical SIR compartmental model divides a population of hosts into three classes: susceptible, infected, recovered.
-The model describes how the fraction of a population in each of these classes changes with time.
-Alternatively, the model can track the number of individuals in each class.
-Births are modeled as flows from "elsewhere" into the susceptible class; deaths are modeled as flows from the S, I, or R compartment into "elsewhere".
-If $S$, $I$, and $R$ refer to the fractions of indivduals in each compartment, then these **state variables** change according to the following system of differential equations:
+The classical SIR compartmental model divides a population of hosts into three classes:
+susceptible, infected, recovered.
+The model describes how the portion of the population in each of these classes changes with time.
+Births are modeled as flows from "elsewhere" into the susceptible class;
+deaths are modeled as flows from the S, I, or R compartment into "elsewhere".
+If $S$, $I$, and $R$ refer to the numbers of individuals in each compartment, then these **state variables** change according to the following system of differential equations:
 $$\begin{aligned}
 \frac{dS}{dt} &= B-\lambda\,S-\mu\,S\\
 \frac{dI}{dt} &= \lambda\,S-\gamma\,I-\mu\,I\\
@@ -139,7 +140,7 @@ pomp(data=data.frame(time=1:50,data=NA),
 
 Now we can call `trajectory` to compute trajectories of the model.
 To do this, we'll need some values of the parameters.
-If we're thinking of a disease something like measles, and measuring time in years, we might use something like:
+If we're thinking of a disease something like measles, and measuring time in days, we might use something like:
 ```{r set-closed-params}
 params <- c(Beta=1,gamma=1/13,N=763)
 ```
@@ -158,6 +159,7 @@ ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 ```
 
 #### Exercise: conversion of units
+
 Suppose that you'd rather measure time in years.
 Modify the parameters accordingly and verify your modifications.
 
