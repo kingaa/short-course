@@ -194,13 +194,13 @@ The next exercise demonstrates the importance of being able to analyze the equat
 
 #### Exercise: exploring the model's dynamical repertoire
 For each of the above parameter combinations, describe the system's behavior.
-Compute $R_0$ for each parameter combination and relate it to the behavior of the system.
 
 
 ### The basic reproduction number
 
 A dimensionless quantity of central importance in epidemiology is the so-called *basic reproduction number*, $R_0$, which is the expected number of new infections engendered by a single infected individual introduced into a fully susceptible population.
 In this case, $R_0=\frac{\beta}{\gamma}$, i.e., the product of the transmission rate and the infectious period.
+Compute $R_0$ for each of the parameter combinations you examined in the exercise above and relate it to the behavior of the system.
 
 ### The epidemic final size
 
