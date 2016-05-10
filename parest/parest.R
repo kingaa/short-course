@@ -66,10 +66,9 @@ set.seed(1173489184)
 #' \end{aligned}$$
 #' Here, $B$ is the crude birth rate (births per unit time), $\mu$ is the death rate and $\gamma$ is the recovery rate.
 #' We'll assume that the force of infection, $\lambda$, has the form
-#' $$\lambda = \beta\,I$$
+#' $$\lambda = \beta\,\frac{I}{N},$$
 #' so that the risk of infection a susceptible faces is proportional to the *prevalence* (the fraction of the population that is infected).
 #' This is known as the assumption of frequency-dependent transmission.
-#' Notice that we allow for the possibility of a contact rate, $\beta(t)$, that varies in time.
 #' 
 #' ### Integration of ordinary differential equations using **pomp**
 #' 
@@ -86,8 +85,8 @@ set.seed(1173489184)
 #' Let's study the SIR model for a closed population, i.e., one in which we can neglect births and deaths.
 #' Recall that the differential equations for the closed epidemic are
 #' $$\begin{aligned}
-#' \frac{dS}{dt} &= -\beta\,S\,I\\
-#' \frac{dI}{dt} &= \beta\,S\,I-\gamma\,I\\
+#' \frac{dS}{dt} &= -\frac{\beta\,S\,I}{N}\\
+#' \frac{dI}{dt} &= \frac{\beta\,S\,I}{N}-\gamma\,I\\
 #' \frac{dR}{dt} &= \gamma\,I
 #' \end{aligned}$$
 #' To incorporate these deterministic equations into a `pomp` object, we supply them to the `pomp` function via the `skeleton` argument as a `Csnippet`.
@@ -125,7 +124,6 @@ pomp(data=data.frame(time=1:50,data=NA),
 params <- c(Beta=1,gamma=1/13,N=763)
 
 #' What is the infectious period of this disease?
-#' What is $R_0$ in this case?
 #' 
 #' Next, we compute a model trajectory with the `trajectory` command and store the result in a data-frame:
 ## ----solve-closed-sir----------------------------------------------------
@@ -134,6 +132,7 @@ x <- trajectory(closed.sir,params=params,as.data.frame=TRUE)
 
 #' and plot the results using the commands:
 ## ----epi-curve-plot,eval=T-----------------------------------------------
+library(ggplot2)
 ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 
 
@@ -158,6 +157,7 @@ library(plyr)
 mutate(params1,traj=seq_along(Beta)) -> params1
 join(x,params1,by="traj") -> x
 
+library(ggplot2)
 ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
                           linetype=factor(Beta),color=factor(1/gamma)))+
     geom_line()+scale_y_log10(limits=c(1e-3,NA))+
@@ -175,11 +175,36 @@ ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
 #' Compute $R_0$ for each parameter combination and relate it to the behavior of the system.
 #' 
 #' 
+#' ### The basic reproduction number
+#' 
+#' A dimensionless quantity of central importance in epidemiology is the so-called *basic reproduction number*, $R_0$, which is the expected number of new infections engendered by a single infected individual introduced into a fully susceptible population.
+#' In this case, $R_0=\frac{\beta}{\gamma}$, i.e., the product of the transmission rate and the infectious period.
+#' 
+#' ### The epidemic final size
+#' 
+#' For a simple, closed SIR outbreak, we can derive an expression that determines the *final size* of the outbreak, i.e., the total number of hosts ultimately infected.
+#' To do this, note that if 
+#' $\frac{dS}{dt}=-\frac{\beta S I}{N}$ and
+#' $\frac{dI}{dt}=\frac{\beta S I}{N}-\gamma\,I$, then
+#' $\frac{dI}{dS}=-1+\frac{N}{R_0\,S},$ which we integrate to yield
+#' $$S(0)-S(\infty)+\frac{N}{R_0}\,\log{\frac{S(\infty)}{S(0)}}=I(\infty)-I(0)=0.$$
+#' If $S(0)=N$, then $N-S(\infty)$ is the final size of the outbreak and the fraction ultimately infected is $f=\frac{R(\infty)}{N}=1-\frac{S(\infty)}{N}$.
+#' In terms of the latter, we have
+#' $$R_0=-\frac{\log{(1-f)}}{f}.$$
+#' 
+#' The following shows the relationship between final size and $R_0$:
+## ----final-size,echo=F---------------------------------------------------
+f <- seq(0,1,length=100)
+R0 <- -log(1-f)/f
+plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
+
+#' 
 #' #### Exercise: final size
-#' Use `trajectory` to study the dependence of the epidemic's **final size**, $f$, on $R_0$.
+#' 
+#' Use `trajectory` to study the dependence of $f$ on $R_0$.
 #' Compare your results with the predictions of the final size equation
 #' $$R_0=-\frac{\log{(1-f)}}{f},$$
-#' the solution of which is [plotted below](#estimating-r_0-from-the-final-size).
+#' the solution of which is [plotted above](#the-epidemic-final-size).
 #' 
 #' ### SIR dynamics in an open population
 #' 
@@ -232,6 +257,7 @@ x <- trajectory(open.sir,params=params,as=TRUE)
 #' We can plot each of the state variables against time, and $I$ against $S$:
 #' 
 ## ----open-epi-plot,eval=T,fig.show='hold'--------------------------------
+library(ggplot2)
 ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
 
@@ -292,6 +318,8 @@ params <- c(mu=1/50,beta0=400,beta1=0.15,gamma=26,
             N=1e5,S_0=7000,I_0=50)
 
 trajectory(seas.sir,params=params,as=TRUE) -> x
+
+library(ggplot2)
 ggplot(x,mapping=aes(x=time,y=I))+geom_path()
 ggplot(x,mapping=aes(x=S,y=I))+geom_path()
 
@@ -310,22 +338,7 @@ ggplot(x,mapping=aes(x=S,y=I))+geom_path()
 #' 
 #' ### Estimating $R_0$ from the final size
 #' 
-#' For a simple, closed SIR outbreak, we can derive an expression that determines the *final size* of the outbreak, i.e., the total number of hosts infected.
-#' To do this, note that if 
-#' $\frac{dS}{dt}=-\frac{\beta S I}{N}$ and
-#' $\frac{dI}{dt}=\frac{\beta S I}{N}-\gamma\,I$, then
-#' $\frac{dI}{dS}=-1+\frac{N}{R_0\,S},$ which we integrate to yield
-#' $$S(0)-S(\infty)+\frac{N}{R_0}\,\log{\frac{S(\infty)}{S(0)}}=I(\infty)-I(0)=0.$$
-#' If $S(0)=N$, then $N-S(\infty)$ is the final size of the outbreak and the fraction ultimately infected is $f=1-\frac{S(\infty)}{N}$.
-#' In terms of the latter, we have
-#' $$R_0=-\frac{\log{(1-f)}}{f}.$$
-#' 
-#' The following shows the relationship between final size and $R_0$:
-## ----final-size,echo=F---------------------------------------------------
-f <- seq(0,1,length=100)
-R0 <- -log(1-f)/f
-plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
-
+#' If we know the final size of an outbreak and the total population size, we can use the relationship derived above to estimate $R_0$.
 #' 
 #' ### Estimating $R_0$ in an invasion
 #' 
@@ -388,7 +401,11 @@ fitfn <- function (interval) {
   slope.se <- coef(summary(fit))[2,2]
   c(interval=interval,R0.hat=slope*2.5+1,R0.se=slope.se*2.5)
 }
+
+library(plyr)
 ldply(2:10,fitfn) -> ests
+
+library(ggplot2)
 ggplot(ests,mapping=aes(x=interval,y=R0.hat,
                         ymin=R0.hat-2*R0.se,
                         ymax=R0.hat+2*R0.se))+
@@ -449,7 +466,7 @@ sse <- function (params) {
 #' Now we set up a function that will calculate the sum of the squared differences (or errors) between the data and the model predictions.
 #' 
 #' To get a sense of what this gives us, let's explore varying some parameters and computing the SSE for community "A" of the Niamey data set.
-#' To begin with, we'll assume we know that $\gamma=1$ and that the initial numbers of susceptibles, infectives, and recovereds, $X_0, Y_0, Z_0$ were 10000, 10, and 20000, respectively.
+#' To begin with, we'll assume we know that $\gamma=1$ and that the initial numbers of susceptibles, infectives, and recovereds, $S(0)$, $I(0)$, $R(0)$ were 10000, 10, and 20000, respectively.
 #' We'll write a little function that will plug a value of $\beta$ into the parameter vector and compute the SSE.
 ## ----sse-calc1,cache=T---------------------------------------------------
 params <- c(Beta=NA,gamma=1,
@@ -524,6 +541,7 @@ cbind(grid,x) -> grid
 #' 
 #' We can visualize this as a surface:
 ## ----sse-plot2,echo=F----------------------------------------------------
+library(ggplot2)
 ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
          geom_tile()+geom_contour(bins=30)+
     labs(fill=expression(sqrt(SSE)),x=expression(beta),y=expression(S(0)))
@@ -900,6 +918,7 @@ params[c("b","p")] <- mle
 coef(niameyA) <- params
 model.pred <- trajectory(niameyA)["I",,]
 
+library(plyr)
 raply(2000,rpois(n=length(model.pred),lambda=params["p"]*model.pred)) -> simdat
 aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
 
@@ -951,6 +970,7 @@ params[c("b","p","theta")] <- mle
 coef(niameyA) <- params
 model.pred <- trajectory(niameyA)["I",,]
 
+library(plyr)
 raply(2000,rnbinom(n=length(model.pred),
                    mu=params["p"]*model.pred,
                    size=1/params["theta"])) -> simdat
