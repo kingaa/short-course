@@ -87,10 +87,6 @@ Students are expected to complete assigned readings before class meetings, keep 
 The examination is scheduled for session 10 on 20 May.
 It will have both a written and a computational component, both of which will be similar to the exercises.
 
-### Course website
-
-Materials and readings will be posted on the [course website](http://kingaa.github.io/short-course).
-
 ### Computing in **R**
 
 We will make extensive use of the open-source **R** statistical computing environment and the **pomp** package for inference based on partially-observed Markov process models.
