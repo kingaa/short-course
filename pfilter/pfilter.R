@@ -48,7 +48,7 @@ set.seed(594709947)
 #' 1. To give students experience visualizing and exploring likelihood surfaces using the particle filter for computation of the likelihood
 #' 1. Understand the basic techniques of likelihood-based inference
 #' 2. Describe how to apply these techniques in situations where the likelihood cannot be written down explicitly but can be evaluated and maximized via Monte Carlo methods.
-#' 3. Gain some experience at carrying out likelihood-based inferences for dynamic models using simulation-based statistical methodology in the R package 'pomp'.
+#' 3. Gain some experience at carrying out likelihood-based inferences for dynamic models using simulation-based statistical methodology in the **R** package **pomp**.
 #' 
 #' 
 #' ## Theory of the particle filter
@@ -240,7 +240,7 @@ ell <- apply(ell,1,sum); summary(exp(ell)); logmeanexp(ell,se=TRUE)
 #' 
 #' Here, we'll get some practical experience with the particle filter, and the likelihood function, in the context of our influenza-outbreak case study.
 #' 
-#' In `pomp`, the basic particle filter is implemented in the command `pfilter`.
+#' In **pomp**, the basic particle filter is implemented in the command `pfilter`.
 #' We must choose the number of particles to use by setting the `Np` argument.
 #' 
 ## ----sir-pfilter-1,results='markup',cache=T------------------------------

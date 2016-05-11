@@ -171,7 +171,7 @@ $(document).ready(function () {
 <li>To give students experience visualizing and exploring likelihood surfaces using the particle filter for computation of the likelihood</li>
 <li>Understand the basic techniques of likelihood-based inference</li>
 <li>Describe how to apply these techniques in situations where the likelihood cannot be written down explicitly but can be evaluated and maximized via Monte Carlo methods.</li>
-<li>Gain some experience at carrying out likelihood-based inferences for dynamic models using simulation-based statistical methodology in the R package ‘pomp’.</li>
+<li>Gain some experience at carrying out likelihood-based inferences for dynamic models using simulation-based statistical methodology in the <strong>R</strong> package <strong>pomp</strong>.</li>
 </ol>
 </div>
 <div id="theory-of-the-particle-filter" class="section level2">
@@ -290,7 +290,7 @@ dim(ell)</code></pre>
 <div id="sequential-monte-carlo-in-pomp" class="section level2">
 <h2>Sequential Monte Carlo in <strong>pomp</strong></h2>
 <p>Here, we’ll get some practical experience with the particle filter, and the likelihood function, in the context of our influenza-outbreak case study.</p>
-<p>In <code>pomp</code>, the basic particle filter is implemented in the command <code>pfilter</code>. We must choose the number of particles to use by setting the <code>Np</code> argument.</p>
+<p>In <strong>pomp</strong>, the basic particle filter is implemented in the command <code>pfilter</code>. We must choose the number of particles to use by setting the <code>Np</code> argument.</p>
 <pre class="r"><code>pf &lt;- pfilter(sir,Np=5000,params=c(Beta=2,gamma=1,rho=0.8,N=2600))
 logLik(pf)</code></pre>
 <pre><code>## [1] -87.60138</code></pre>
