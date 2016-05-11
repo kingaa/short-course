@@ -173,14 +173,15 @@ ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
 #' The next exercise demonstrates the importance of being able to analyze the equations as well.
 #' 
 #' #### Exercise: exploring the model's dynamical repertoire
-#' For each of the above parameter combinations, describe the system's behavior.
+#' For each of the above parameter combinations, notice that either an epidemic occurs or the infection fades out.
+#' Can you predict this behavior from a knowledge of the parameters without numerically integrating the equations?
 #' 
 #' 
 #' ### The basic reproduction number
 #' 
 #' A dimensionless quantity of central importance in epidemiology is the so-called *basic reproduction number*, $R_0$, which is the expected number of new infections engendered by a single infected individual introduced into a fully susceptible population.
 #' In this case, $R_0=\frac{\beta}{\gamma}$, i.e., the product of the transmission rate and the infectious period.
-#' Compute $R_0$ for each of the parameter combinations you examined in the exercise above and relate it to the behavior of the system.
+#' Compute $R_0$ for each of the parameter combinations you examined in the exercise above and relate it to the presence or absence of an epidemic.
 #' 
 #' ### The epidemic final size
 #' 
@@ -603,13 +604,13 @@ fit
 #' 
 #' Many other optimization algorithms exist.
 #' `optim` implements several of these (see `?optim`).
-#' Other functions and packages you might look into include:
-#' `constrOptim`, `optimx`, `nlm`, `nlminb`, `nloptr` (from the `nloptr` package), and `subplex` (from the `subplex` package).
+#' Other options worth looking into include
+#' `constrOptim`, `nlm`, and `nlminb`, and the **subplex** and **nloptr** packages.
 #' 
 #' ## The likelihood
 #' 
 #' We have seen that fitting mechanistic models to data is a powerful and general approach to estimating parameters.
-#' We saw too that least-squares fitting, is a straightforward way to do this.
+#' We saw too that least-squares fitting is a straightforward way to do this.
 #' However, several issues arose.
 #' First, there was an element of arbitrariness in the choice of discrepancy measure.
 #' Second, although we could fairly easily obtain point estimates of model parameters using least-squares, it was not clear how we could obtain concomitant estimates of parameter uncertainty (e.g., confidence intervals).
@@ -661,8 +662,6 @@ p <- seq(0,1,by=0.001)
 plot(p,dbinom(x=k1,size=n1,prob=p,log=TRUE),
      ylim=c(-10,-2),ylab="log-likelihood",
      type='l')
-abline(h=dbinom(x=k1,size=n1,prob=k1/n1,log=TRUE)-
-         0.5*qchisq(p=0.95,df=1),col='red')
 abline(v=k1/n1,col='blue')
 
 #' 
@@ -673,14 +672,12 @@ p <- seq(0,1,by=0.001)
 plot(p,dbinom(x=k2,size=n2,prob=p,log=TRUE),
      ylim=c(-10,-2),ylab="log-likelihood",
      type='l')
-abline(h=dbinom(x=k2,size=n2,prob=k2/n2,log=TRUE)-
-         0.5*qchisq(p=0.95,df=1),col='red')
 abline(v=k2/n2,col='blue')
 
 #' 
 #' In the above two plots, the likelihood is a function of the model parameter $p$.
 #' Vertical lines show the maximum likelihood estimate (MLE) of $p$.
-#' Horizontal lines show the critical likelihoods for the likelihood ratio test at the 95% confidence level.
+#' <!-- Horizontal lines show the critical likelihoods for the likelihood ratio test at the 95% confidence level. -->
 #' 
 #' #### Exercise: interpreting the likelihood
 #' How do the two curves just plotted differ from one another?
@@ -692,7 +689,7 @@ abline(v=k2/n2,col='blue')
 #' If these samples are *independent*, then
 #' $$\prob{D|H} = \prob{D_1|H}\times\prob{D_2|H}\times\prob{D_3|H},$$
 #' which means that the likelihood of the full data set is the product of the likelihoods from each of the samples.
-#' In other words, the likelihood gives a general recipe for combining data from different studies.
+#' In other words, the likelihood gives a general recipe for combining data from independent studies.
 #' We'd compute the likelihood as follows:
 ## ----binom-lik2,results='markup'-----------------------------------------
 n <- c(13,484,3200)
