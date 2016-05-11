@@ -818,7 +818,7 @@ ggplot(data=cbind(dat,quantiles,typical=simdat[typ,]),
 #' It appears that we will need an error model that has the potential for more variability than does the Poisson.
 #' The negative binomial distribution is such a distribution.
 #' Let's explore the alternative assumption that $y_t$ is negative-binomially distributed with mean $p\,I_t$, as before, but larger variance, $p\,I_t\,(1+\theta\,p\,I_t)$, i.e.,
-#' $$y_t\;\sim\;\dist{Negbin}{\mathrm{mu}=p\,I_t,\;\mathrm{size}=\frac{1}{\theta}}$$
+#' $$y_t\;\sim\;\dist{Negbin}{\mathrm{mean}=p\,I_t,\;\mathrm{size}=\frac{1}{\theta}}$$
 #' 
 ## ----negbin-fit,warning=FALSE--------------------------------------------
 negbin.loglik <- function (params) {
