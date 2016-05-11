@@ -217,13 +217,7 @@ set.seed(2028866059L)
 #' It is a container that holds real or simulated data and a POMP model, possibly together with other information such as model parameters, that may be needed to do things with the model and data.
 #' 
 #' Let's see what can be done with a `pomp` object.
-#' First, if we haven't already, we must install **pomp** and **pompExamples**.
-#' Run the following to do so.
-## ----install-pomp,eval=FALSE---------------------------------------------
-## install.packages(c("pomp","pompExamples"),repos="http://kingaa.github.io")
-
-#' 
-#' Now we'll load some packages, including **pomp**.
+#' First, we'll load some packages, including **pomp**.
 ## ----prelims,cache=F-----------------------------------------------------
 library(ggplot2)
 library(plyr)
