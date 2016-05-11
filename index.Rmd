@@ -131,14 +131,14 @@ read.csv(colClasses=c(Date="Date"),comment.char="#",
          text='
 Date,Topic
 2016-05-09,"[Introduction to partially observed Markov processes](./intro/intro.html)"
-2016-05-10,"[Introduction to inference: parameter estimation](./parest/parest.html)"
-2016-05-11,"[Simulation of stochastic dynamic models.](./stochsim/stochsim.html)"
-2016-05-12,"[Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)"
-2016-05-13,"[Iterated filtering: theory and practice](./mif/mif.html)"
-2016-05-16,"[Case study: the persistence of polio.](./polio/polio.html)"
-2016-05-17,"[Case study: measles and extra-demographic stochasticity.](./measles/measles.html)"
-2016-05-18,"[Case study: Ebola and forecasting](./ebola/ebola.html)"
-2016-05-19,Clinic
+2016-05-10,"[Introduction to inference: parameter estimation I](./parest/parest.html)"
+2016-05-11,"[Introduction to inference: parameter estimation II](./parest/parest.html)"
+2016-05-12,"[Simulation of stochastic dynamic models.](./stochsim/stochsim.html)"
+2016-05-13,"[Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)"
+2016-05-16,"[Iterated filtering: theory and practice](./mif/mif.html)"
+2016-05-17,"[Case study: the persistence of polio.](./polio/polio.html)"
+2016-05-18,"[Case study: measles and extra-demographic stochasticity.](./measles/measles.html)"
+2016-05-19,"[Case study: Ebola and forecasting](./ebola/ebola.html)"
 2016-05-20,Examination
 ') %>%
   mutate(Topic=mapvalues(as.character(Topic),NA,""),

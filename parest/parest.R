@@ -320,10 +320,6 @@ ggplot(x,mapping=aes(x=S,y=I))+geom_path()
 #' 
 #' We can plot the 1977 boarding school influenza data [@Anonymous1978] in this way to see if this is the case.
 #' 
-## ----bbs-flu-------------------------------------------------------------
-url <- "http://kingaa.github.io/short-course/stochsim/bsflu_data.txt"
-bsflu <- read.table(url,header=TRUE)
-
 #' 
 #' 
 #' Plotted on a log scale, the linearity of the first several data points is indeed striking.

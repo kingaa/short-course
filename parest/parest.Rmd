@@ -362,7 +362,7 @@ which implies that a semi-log plot of $I$ vs $t$ should be approximately linear 
 
 We can plot the 1977 boarding school influenza data [@Anonymous1978] in this way to see if this is the case.
 
-```{r bbs-flu}
+```{r bbs-flu,purl=FALSE}
 url <- "http://kingaa.github.io/short-course/stochsim/bsflu_data.txt"
 bsflu <- read.table(url,header=TRUE)
 ```
