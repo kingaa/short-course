@@ -1,0 +1,160 @@
+---
+title: "A brief introduction to the likelihood"
+author: "Aaron A. King"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 4
+bibliography: ../course.bib
+csl: ../ecology.csl
+
+---
+
+\newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+\newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+\newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+\newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+\newcommand\dlta[1]{{\Delta}{#1}}
+\newcommand\lik{\mathscr{L}}
+\newcommand\loglik{\ell}
+
+This lesson is [licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
+Please share and remix noncommercially, mentioning its origin.  
+![CC-BY_NC](../graphics/cc-by-nc.png)
+
+```{r knitr-opts,include=FALSE,purl=FALSE,cache=FALSE}
+library(knitr)
+prefix <- "lik"
+opts_chunk$set(
+  progress=TRUE,message=FALSE,
+  prompt=FALSE,tidy=FALSE,highlight=TRUE,
+  strip.white=TRUE,
+  echo=TRUE,
+  cache=TRUE,
+  cache.extra=rand_seed,
+  fig.path=paste0("figure/",prefix,"-"),
+  cache.path=paste0("cache/",prefix,"-"),
+  fig.align='center',
+  fig.height=4,fig.width=6.83,
+  dpi=100,
+  dev='png',
+  dev.args=list(bg='transparent')
+)
+options(keep.source=TRUE,encoding="UTF-8")
+```
+```{r prelims,include=FALSE,cache=FALSE}
+library(plyr)
+library(reshape2)
+options(stringsAsFactors=FALSE)
+library(ggplot2)
+theme_set(theme_bw())
+set.seed(1173489184)
+```
+
+## The likelihood
+
+We have seen that fitting mechanistic models to data is a powerful and general approach to estimating parameters.
+We saw too that least-squares fitting is a straightforward way to do this.
+However, several issues arose.
+First, there was an element of arbitrariness in the choice of discrepancy measure.
+Second, although we could fairly easily obtain point estimates of model parameters using least-squares, it was not clear how we could obtain concomitant estimates of parameter uncertainty (e.g., confidence intervals).
+Finally, we began to see that there are limits to our ability to estimate parameters.
+In this lab, we'll explore these issues, and see that likelihood offers an attractive resolution to the first and second of these, but that the third is a fundamental challenge.
+
+Likelihood has many advantages:  
+
+1. fidelity to model  
+2. a deep and general theory  
+3. a sound theoretical basis for confidence intervals and model selection  
+4. statistical efficiency  
+
+and some disadvantages: 
+
+1. fidelity to model  
+1. fragility (lack of robustness)  
+
+## Definition
+
+Likelihood is the *probability of a given set of data $D$ having occurred under a particular hypothesis $H$*: 
+$$\mathcal{L}(H,D)=\prob{D|H}$$
+
+A simple example: suppose $n$ individuals participate in a serological survey and $k$ of these individuals are found to be seropositive.
+One parameter of interest is the true fraction, $p$, of the population that has seroconverted.
+Assuming the sample was drawn at random and the population is large, then the probability of the data ($m$ of $n$ individuals seropositive) given the hypothesis that the true probability is $p$ is
+$$\prob{D|H} = \binom{n}{k}\,p^k\,(1-p)^{n-k}.$$
+
+If the true seroprevalence was, say, $p=0.3$, what does the probability of observing $k$ seropositives in a sample of size $n=50$ look like?
+
+```{r binom-prob-plot}
+p <- 0.3
+n <- 50
+k <- seq(0,50,by=1)
+prob <- dbinom(x=k,size=n,prob=p) 
+plot(k,prob,type='h',lwd=5,lend=1,
+     ylab="probability")
+```
+
+The likelihood is a function of the unknown parameters.
+In this case, if we assume $n$ is known, then the likelihood is a function of $p$ alone:
+$$\mathcal{L}(p) = \binom{n}{k}\,p^k\,(1-p)^{n-k}$$
+Typically the logarithm of this function is more interesting than $\mathcal{L}$ itself.
+Looking at this function for each of two different surveys:
+```{r binom-lik-plot1}
+k1 <- 18
+n1 <- 50
+p <- seq(0,1,by=0.001)
+plot(p,dbinom(x=k1,size=n1,prob=p,log=TRUE),
+     ylim=c(-10,-2),ylab="log-likelihood",
+     type='l')
+abline(v=k1/n1,col='blue')
+```
+
+```{r binom-lik-plot2}
+k2 <- 243
+n2 <- 782
+p <- seq(0,1,by=0.001)
+plot(p,dbinom(x=k2,size=n2,prob=p,log=TRUE),
+     ylim=c(-10,-2),ylab="log-likelihood",
+     type='l')
+abline(v=k2/n2,col='blue')
+```
+
+In the above two plots, the likelihood is a function of the model parameter $p$.
+Vertical lines show the maximum likelihood estimate (MLE) of $p$.
+<!-- Horizontal lines show the critical likelihoods for the likelihood ratio test at the 95% confidence level. -->
+
+--------------------------
+
+#### Exercise: interpreting the likelihood
+How do the two curves just plotted differ from one another?
+What features of the data are responsible for the differences?
+
+--------------------------
+
+## From data points to data sets
+
+Let's suppose we have three samples, $D_1, D_2, D_3$, taken by three different researchers, for the same large population.
+If these samples are *independent*, then
+$$\prob{D|H} = \prob{D_1|H}\times\prob{D_2|H}\times\prob{D_3|H},$$
+which means that the likelihood of the full data set is the product of the likelihoods from each of the samples.
+In other words, the likelihood gives a general recipe for combining data from independent studies.
+We'd compute the likelihood as follows:
+```{r binom-lik2,results='markup'}
+n <- c(13,484,3200)
+k <- c(4,217,1118)
+dbinom(x=k,size=n,prob=0.2,log=TRUE)
+sum(dbinom(x=k,size=n,prob=0.2,log=TRUE))
+ll.fn <- function (p) {
+  sum(dbinom(x=k,size=n,prob=p,log=TRUE))
+}
+p <- seq(0,1,by=0.001)
+loglik <- sapply(p,ll.fn)
+plot(p,loglik,type='l',ylim=max(loglik)+c(-10,0))
+```
+
+--------------------------
+
+## [Back to course homepage](http://kingaa.github.io/short-course)
+## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/parest/likelihood.R)
+
+## References

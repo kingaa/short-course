@@ -66,15 +66,12 @@ In order to fairly compare competing models, we must first try to find out what 
 Practically speaking, this means that we have to find the values of the models' parameters that give the closest correspondence between model predictions and data.
 Parameter estimation can be challenging even when we are fairly confident in the ability of a single model to explain the dynamics.
 
-## Working with ordinary differential equation models (ODE) in **pomp**
-
-Here we begin our study of computational techniques for studying epidemiological models. 
-In this session we introduce the numerical solution (or integration) of nonlinear differential equations using the sophisticated solvers incorporated into **pomp**.
-Numerical integration is one of the most important tools we have for the analysis of epidemiological models.
-
 ### The SIR model
 
-The classical SIR compartmental model divides a population of hosts into three classes:
+As a simple example for use in this lesson, we'll focus on the classical SIR model [@Kermack1921].
+This model's simplicity allows us to postpone many of the complexities that will arise as we grapple with real data.
+However, it enjoys the feature that many complexities can be incorporated as modifications and extensions of the model.
+The model divides a population of hosts into three classes:
 susceptible, infected, recovered.
 The model describes how the portion of the population in each of these classes changes with time.
 Births are modeled as flows from "elsewhere" into the susceptible class;
@@ -91,280 +88,21 @@ $$\lambda = \beta\,\frac{I}{N},$$
 so that the risk of infection a susceptible faces is proportional to the *prevalence* (the fraction of the population that is infected).
 This is known as the assumption of frequency-dependent transmission.
 
-### Integration of ordinary differential equations using **pomp**
+### Data from an outbreak of measles in Niamey
 
-Like almost all ecological and epidemiological models, one can't solve these equations analytically.
-However, we can compute the **trajectories** of a continuous-time model such as this one by integrating the equations numerically.
-Doing this accurately involves a lot of calculation, and there are smart ways and not-so-smart ways of going about it.
-This very common problem has been very thoroughly studied by numerical analysts for generations so that, when the equations are smooth, well-behaved functions, excellent numerical integration algorithms are readily available to compute approximate solutions to high precision.
-In particular, **R** has several sophisticated ODE solvers which (for many problems) will give highly accurate solutions.
-These are harnessed by **pomp**.
-These algorithms are flexible, automatically perform checks, and give informative errors and warnings.
+Biweekly data for outbreaks of measles in three communities within Niamey, Niger [@Grais2006] are provided on the course website.
+To download and plot the data, do, e.g.,
 
-### SIR for a closed epidemic
-
-Let's study the SIR model for a closed population, i.e., one in which we can neglect births and deaths.
-Recall that the differential equations for the closed epidemic are
-$$\begin{aligned}
-\frac{dS}{dt} &= -\frac{\beta\,S\,I}{N}\\
-\frac{dI}{dt} &= \frac{\beta\,S\,I}{N}-\gamma\,I\\
-\frac{dR}{dt} &= \gamma\,I
-\end{aligned}$$
-To incorporate these deterministic equations into a `pomp` object, we supply them to the `pomp` function via the `skeleton` argument as a `Csnippet`.
-We must also provide a `Csnippet` to initialize the state variables $S$, $I$, and $R$.
-For example:
-```{r closed-sir-model-defn-three}
-library(pomp)
-
-closed.sir.ode <- Csnippet("
-  DS = -Beta*S*I/N;
-  DI = Beta*S*I/N-gamma*I;
-  DR = gamma*I;
-")
-
-init1 <- Csnippet("
-  S = N-1;
-  I = 1;
-  R = 0;
-  ")
-
-pomp(data=data.frame(time=1:50,data=NA),
-     times="time",t0=0,
-     skeleton=closed.sir.ode,
-     skeleton.type="vectorfield",
-     initializer=init1,
-     statenames=c("S","I","R"),
-     paramnames=c("Beta","gamma","N")) -> closed.sir
-
+```{r niamey-data,warning=FALSE}
+niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
+ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
+  geom_line()+geom_point()
 ```
 
-Now we can call `trajectory` to compute trajectories of the model.
-To do this, we'll need some values of the parameters.
-If we're thinking of a disease something like measles, and measuring time in days, we might use something like:
-```{r set-closed-params}
-params1 <- c(Beta=1,gamma=1/13,N=763)
-```
-What is the infectious period of this disease?
+### Integrating differential equations with **pomp**
 
-Next, we compute a model trajectory with the `trajectory` command and store the result in a data-frame:
-```{r solve-closed-sir}
-x <- trajectory(closed.sir,params=params1,as.data.frame=TRUE)
-
-```
-and plot the results using the commands:
-```{r epi-curve-plot,eval=T}
-library(ggplot2)
-ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
-
-```
-
---------------------------
-
-#### Exercise: conversion of units
-
-Suppose that you'd rather measure time in years.
-Modify the parameters accordingly and verify your modifications.
-
---------------------------
-
-Let's study how the epidemic curve depends on the transmission rate, $\beta$, and the infectious period.
-In particular, we'll investigate how the epidemic curve changes as we vary $\beta$ from 0.05 to 2 and the infectious period from 1 to 8 days.
-
-```{r nine-curves,echo=FALSE,warning=FALSE,purl=FALSE}
-expand.grid(Beta=c(0.05,1,2),gamma=1/c(1,2,4,8),N=763) -> params2
-
-x <- trajectory(closed.sir,params=t(params2),as=TRUE,times=seq(0,50))
-
-library(plyr)
-mutate(params2,traj=seq_along(Beta)) -> params2
-join(x,params2,by="traj") -> x
-
-library(ggplot2)
-ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
-                          linetype=factor(Beta),color=factor(1/gamma)))+
-  geom_line()+scale_y_log10(limits=c(1e-3,NA))+
-  labs(x="time (da)",color=expression("IP"==1/gamma),
-       linetype=expression(beta))
-
-```
-
-The ability to numerically integrate ODE is essential, but its power is limited.
-The next exercise demonstrates the importance of being able to analyze the equations as well.
-
---------------------------
-
-#### Exercise: exploring the model's dynamical repertoire
-For each of the above parameter combinations, notice that either an epidemic occurs or the infection fades out.
-Can you predict this behavior from a knowledge of the parameters without numerically integrating the equations?
-
---------------------------
-
-### The basic reproduction number
-
-A dimensionless quantity of central importance in epidemiology is the so-called *basic reproduction number*, $R_0$, which is the expected number of new infections engendered by a single infected individual introduced into a fully susceptible population.
-In this case, $R_0=\frac{\beta}{\gamma}$, i.e., the product of the transmission rate and the infectious period.
-Compute $R_0$ for each of the parameter combinations you examined in the exercise above and relate it to the presence or absence of an epidemic.
-
-### The epidemic final size
-
-For a simple, closed SIR outbreak, we can derive an expression that determines the *final size* of the outbreak, i.e., the total number of hosts ultimately infected.
-To do this, note that if 
-$\frac{dS}{dt}=-\frac{\beta S I}{N}$ and
-$\frac{dI}{dt}=\frac{\beta S I}{N}-\gamma\,I$, then
-$\frac{dI}{dS}=-1+\frac{N}{R_0\,S},$ which we integrate to yield
-$$S(0)-S(\infty)+\frac{N}{R_0}\,\log{\frac{S(\infty)}{S(0)}}=I(\infty)-I(0)=0.$$
-If $S(0)=N$, then $N-S(\infty)$ is the final size of the outbreak and the fraction ultimately infected is $f=\frac{R(\infty)}{N}=1-\frac{S(\infty)}{N}$.
-In terms of the latter, we have
-$$R_0=-\frac{\log{(1-f)}}{f}.$$
-
-The following shows the relationship between final size and $R_0$:
-```{r final-size,echo=F,purl=FALSE}
-f <- seq(0,1,length=100)
-R0 <- -log(1-f)/f
-plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
-```
-
---------------------------
-
-#### Exercise: final size
-
-Use `trajectory` to study the dependence of $f$ on $R_0$.
-Compare your results with the predictions of the final size equation
-$$R_0=-\frac{\log{(1-f)}}{f},$$
-the solution of which is [plotted above](#the-epidemic-final-size).
-
---------------------------
-
-### SIR dynamics in an open population
-
-Over a sufficiently short time scale, the assumption that the population is closed is reasonable.
-To capture the dynamics over the longer term, we'll need to account for births and deaths, i.e., allow the population to be an **open** one.
-As we've seen, if we further assume that the birth rate equals the death rate, then the SIR equations become
-$$\begin{aligned}
-\frac{dS}{dt} &= \mu\,N -\beta\,S\,I-\mu\,S\\
-\frac{dI}{dt} &= \beta\,S\,I-\gamma\,I-\mu\,I\\
-\frac{dR}{dt} &= \gamma\,I-\mu\,R\\
-\end{aligned}$$
-
-We must modify the ODE function accordingly:
-```{r open-sir-model-defn}
-open.sir.ode <- Csnippet("
-  DS = -Beta*S*I/N+mu*(N-S);
-  DI = Beta*S*I/N-gamma*I-mu*I;
-  DR = gamma*I-mu*R;
-")
-
-init2 <- Csnippet("
-  S = S_0;
-  I = I_0;
-  R = N-S_0-I_0;
-")
-
-pomp(data=data.frame(time=seq(0,20,by=1/52),cases=NA),
-     times="time",t0=-1/52,
-     skeleton=open.sir.ode,
-     skeleton.type="vectorfield",
-     initializer=init2,
-     statenames=c("S","I","R"),
-     paramnames=c("Beta","gamma","mu","S_0","I_0","N")
-) -> open.sir
-```
-
-We'll need to specify a birth/death rate in addition to the two parameters we specified before:
-```{r set-open-params}
-params <- c(mu=1/50,Beta=400,gamma=13,
-            N=100000,S_0=100000/12,I_0=100)
-```
-We integrate the equations as before:
-```{r solve-open-sir}
-x <- trajectory(open.sir,params=params,as=TRUE)
-```
-
-We can plot each of the state variables against time, and $I$ against $S$:
-
-```{r open-epi-plot,eval=TRUE,fig.show='hold'}
-library(ggplot2)
-ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
-ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
-```
-
---------------------------
-
-#### Exercise: exploring the model's dynamical repertoire
-Explore the dynamics of the system for different values of the $\beta$ and $\gamma$ parameters by simulating and plotting trajectories as time series and in phase space (e.g., $I$ vs. $S$).
-Use the same values of $\beta$ and $\gamma$ we looked at above.
-How does the value of $R_0$ affect the results?
-
---------------------------
-
-#### Exercise: host lifespan
-Under the assumptions of this model, the average host lifespan is $1/\mu$.  
-Explore how host lifespan affects the dynamics by integrating the differential equations for lifespans of 20 and 200 years.
-
-The compartmental modeling strategy can be put to use in modeling a tremendous range of infections.
-The following exercises make some first steps in this direction.
-
---------------------------
-
-#### Exercise: SIRS model
-The SIR model assumes lifelong sterilizing immunity following infection.
-For many infections, immunity is not permanent.
-Make a compartment diagram for an SIRS model, in which individuals lose their immunity after some time.
-Write the corresponding differential equations and modify the above codes to study its dynamics.
-Compare the SIR and SIRS dynamics for the parameters $\mu=1/50$, $\gamma=365/13$, $\beta=400$ and assuming that, in the SIRS model, immunity lasts for 10 years.
-
---------------------------
-
-#### Exercise: SEIR model
-Make a diagram, write the equations, and study the dynamics of the SEIR model for the dynamics of an infection with a latent period.
-Compare the dynamics of SIR and SEIR models for the parameters $\mu=1/50$, $\gamma=365/5$, $\beta=1000$ and assuming that, in the SEIR model, the latent period has duration 8 days.
-
---------------------------
-
-### Nonautonomous equations
-
-#### SIR with seasonal transmission
-
-The simple SIR model always predicts damped oscillations towards an equilibrium (or pathogen extinction if $R_0$ is too small). 
-This is at odds with the recurrent outbreaks seen in many real pathogens. 
-Sustained oscillations require some additional drivers in the model. 
-An important driver in childhood infections of humans (e.g., measles) is seasonality in contact rates because of aggregation of children the during school term. 
-We can analyze the consequences of this by assuming sinusoidal forcing on $\beta$ according to $\beta(t)=\beta_0\,(1+\beta_1\cos(2\,\pi\,t))$. 
-We can modify the code presented above to solve the equations for a seasonally forced epidemic.
-```{r seas-sir,cache=TRUE}
-seasonal.sir.ode <- Csnippet("
-  double Beta = beta0*(1+beta1*cos(2*M_PI*t));
-  DS = -Beta*S*I/N+mu*(N-S);
-  DI = Beta*S*I/N-gamma*I-mu*I;
-  DR = gamma*I-mu*R;
-")
-
-pomp(open.sir,
-     skeleton=seasonal.sir.ode,
-     skeleton.type="vectorfield",
-     initializer=init2,
-     statenames=c("S","I","R"),
-     paramnames=c("beta0","beta1","gamma","mu","N","S_0","I_0")
-) -> seas.sir
-
-params3 <- c(mu=1/50,beta0=400,beta1=0.15,gamma=26,
-             N=1e5,S_0=7000,I_0=50)
-
-trajectory(seas.sir,params=params3,as=TRUE) -> x
-
-library(ggplot2)
-ggplot(x,mapping=aes(x=time,y=I))+geom_path()
-ggplot(x,mapping=aes(x=S,y=I))+geom_path()
-```
-
---------------------------
-
-#### Exercise: exploration
-Explore the dynamics of the seasonally forced SIR model for increasing amplitude $\beta_1$.
-Be sure to distinguish between transient and asymptotic dynamics.
-
---------------------------
-
+Although focused on stochastic models, **pomp** provides facilities for dealing with the important special case of deterministic dynamics.
+The ["Working with ODE models" tutorial](./odes.html) shows how deterministic models are implemented and solved.
 
 ## Feature-based parameter estimation
 
@@ -374,55 +112,49 @@ Here, we give some examples of this approach in the specific context of a single
 
 ### Estimating $R_0$ from the final size
 
-If we know the final size of an outbreak and the total population size, we can use the relationship derived above to estimate $R_0$.
+If we know the final size of an outbreak and the total population size, we can use the [final size equation](./odes.html#the-epidemic-final-size) to estimate $R_0$.
 
 ### Estimating $R_0$ in an invasion
 
-During the early stages of an SIR outbreak, the number of infected individuals $I$ is approximately 
-$$I\;\approx\;I_0\,e^{(R_0-1)\,(\gamma+\mu)\,t}$$
+During the early stages of an SIR outbreak, the number of infected individuals $I$ at time $t$ is approximately 
+$$I(t)\;\approx\;I_0\,e^{(R_0-1)\,(\gamma+\mu)\,t}$$
 where $I_0$ is the (small) number of infectives at time $0$, $\frac{1}{\gamma}$ is the infectious period, and $\frac{1}{\mu}$ is the host lifespan.
 Taking logs of both sides, we get
 $$\log{I}\;\approx\;\log{I_0}+(R_0-1)\,(\gamma+\mu)\,t,$$
 which implies that a semi-log plot of $I$ vs $t$ should be approximately linear with a slope proportional to $R_0-1$ and the recovery rate.
 
-We can plot the 1977 boarding school influenza data [@Anonymous1978] in this way to see if this is the case.
+Let us plot the Niamey measles data [@Grais2006] from community "A" in this way to see if this is the case.
 
-```{r bbs-flu,purl=FALSE}
-url <- "http://kingaa.github.io/short-course/stochsim/bsflu_data.txt"
-bsflu <- read.table(url,header=TRUE)
-```
-
-```{r bsflu-log,purl=FALSE}
-plot(B~day,data=bsflu,type='b',bty='l',
-     main='boarding school influenza outbreak',
-     xlab='day',ylab='Influenza cases')
-
-plot(B~day,data=bsflu,type='b',log='y',bty='l',
-     xlab='day',ylab='Influenza cases')
+```{r measles-log,purl=TRUE,echo=FALSE}
+ggplot(data=subset(niamey,community=="A"),
+       mapping=aes(x=biweek,y=measles))+
+  geom_point()+geom_line()+
+  scale_y_log10()+
+  labs(y="measles cases")
 ``` 
 
-Plotted on a log scale, the linearity of the first several data points is indeed striking.
+Plotted on a log scale, the linearity of the first several data points is evident.
 This suggests that we can obtain a cheap and cheerful estimate of $R_0$ by a simple linear regression:
-```{r bbs-flu-lm,echo=T,results='markup',purl=FALSE}
-fit1 <- lm(log(B)~day,data=subset(bsflu,day<=4))
+```{r measles-lm,echo=T,results='markup',purl=TRUE}
+fit1 <- lm(log(measles)~biweek,data=subset(niamey,biweek<=8&community=="A"))
 summary(fit1)
 coef(fit1)
 slope <- coef(fit1)[2]; slope
 ``` 
-Now, we know that influenza's infectious period is about 2.5&nbsp;da.
+Now, we know that measles' infectious period is about 2&nbsp;wk.
 Moreover, since this is far shorter than an average human life ($\mu\ll\gamma$), we can neglect $\mu$ in our estimating equation.
 Thus our estimate of $R_0$ is 
-$$\hat{R_{0}}\;=\;\mathrm{slope}/\gamma+1\;\approx\;{`r signif(slope,2)`}\times{2.5}+1\;\approx\;{`r signif(slope*2.5+1,2)`}.$$
+$$\hat{R_{0}}\;=\;\mathrm{slope}/\gamma+1\;\approx\;{`r signif(slope,2)`}\times{1}+1\;\approx\;{`r signif(slope*1+1,2)`}.$$
 
 Our strategy in this case has been to redefine the problem so that it fits a standard form, i.e., we showed how to rearrange the model so that the relevant quantity ($R_0$) could be obtained from linear regression. 
 This means that all the usual diagnostics associated with linear regression are also available to check the fit of the model.
 We can get a rough estimate of the uncertainty in our estimate by looking at the standard errors in our estimator.
-```{r bbs-flu-se,purl=FALSE}
+```{r measles-se,purl=TRUE}
 coef(summary(fit1))
 slope.se <- coef(summary(fit1))[2,2]
-2.5*slope.se
+1*slope.se
 ```
-So we reckon we've got an error of $\pm{`r signif(2.5*slope.se,1)`}$ in our estimate of $R_0$, i.e., we feel pretty confident that ${`r signif((slope-2*slope.se)*2.5+1,3)`}<R_{0}<{`r signif((slope+2*slope.se)*2.5+1,3)`}$.
+So we reckon we've got an error of $\pm{`r signif(1*slope.se,1)`}$ in our estimate of $R_0$, i.e., we feel pretty confident that ${`r signif((slope-2*slope.se)*1+1,3)`}<R_{0}<{`r signif((slope+2*slope.se)*1+1,3)`}$.
 
 A defect of this method is that it uses only a small amount of the data to compute an important quantity.
 Moreover, we have to make a subjective judgement as to how much of the data to use.
@@ -431,16 +163,16 @@ Let's see how our estimates of $R_0$ depend on what we choose to be the "initial
 Below, we estimate $R_0$ and its standard error using the first 2, 3, 4, ..., 10 data points.
 We then plot these estimates with their uncertainties to show this precision-accuracy tradeoff.
 
-```{r inv-R0-est,echo=F,purl=FALSE}
+```{r inv-R0-est,echo=F,purl=TRUE,warning=FALSE}
 fitfn <- function (interval) {
-  fit <- lm(log(B)~day,data=subset(bsflu,day<=interval))
+  fit <- lm(log(measles)~biweek,data=subset(niamey,community=="A"&biweek<=interval))
   slope <- coef(summary(fit))[2,1]
   slope.se <- coef(summary(fit))[2,2]
-  c(interval=interval,R0.hat=slope*2.5+1,R0.se=slope.se*2.5)
+  c(interval=interval,R0.hat=slope*1+1,R0.se=slope.se*1)
 }
 
 library(plyr)
-ldply(2:10,fitfn) -> ests
+ldply(2:14,fitfn) -> ests
 
 library(ggplot2)
 ggplot(ests,mapping=aes(x=interval,y=R0.hat,
@@ -452,14 +184,7 @@ ggplot(ests,mapping=aes(x=interval,y=R0.hat,
 
 --------------------------
 
-#### Exercise: measles in Niamey
-
-Biweekly data for outbreaks of measles in three communities within Niamey, Niger [@Grais2006] are provided on the course website.
-To download and plot the data, do, e.g.,
-
-```{r niamey-data}
-niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
-```
+#### Exercise: estimating $R_0$ for measles in Niamey
 
 Use both the final-size and the invasion rate methods to obtain estimates of $R_0$ for measles using the data from each of the communities of Niamey, assuming that the infectious period is approximately two weeks.
 
@@ -469,47 +194,52 @@ Use both the final-size and the invasion rate methods to obtain estimates of $R_
 
 ### Least squares
 
-Now we move on to a much more general but considerably more complicated technique for estimating $R_0$. 
+We now move on to a much more general but considerably more complicated technique for estimating $R_0$. 
 The method of *least squares* gives us a way to quantify the discrepancy between the data and a model's predictions.
 We can then search over all possible values of a model's parameters to find the parameters that minimize this discrepancy.
 
-We'll illustrate this method using the Niamey data:
-```{r niamey-plot,warning=FALSE,purl=FALSE,echo=FALSE}
-ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
-  geom_line()+geom_point()
-```
-
+We'll illustrate this method using the Niamey data.
 Since this is a single outbreak, and the number of births and deaths into the population over the course of the outbreak is small relative to the size of the population, we can treat this outbreak as if it were occurring in a closed population.
 
 Thus far, we have only considered deterministic models.
-In the next lab, we will begin to think about more realistic models that begin to take into account some aspects of the stochastic nature of real epidemics.
+In the next lesson, we will begin to think about more realistic models that begin to take into account some aspects of the stochastic nature of real epidemics.
 For now, under the assumption that the epidemic is deterministic, parameter estimation is a matter of finding the model trajectory that gives the best fit to the data.
-The first thing we need is a function that computes a trajectory given parameters of the model.
-```{r closed-sir-predictions}
-pomp(data=subset(niamey,community=="A",select=-community),
-     times="biweek",t=0,
-     skeleton=closed.sir.ode,
-     skeleton.type="vectorfield",
-     initializer=init2,
-     statenames=c("S","I","R"),
-     paramnames=c("Beta","gamma","N","S_0","I_0")) -> niameyA
+The first thing we need is a `pomp` object encoding the model and the data.
 
-sse1 <- function (params) {
+```{r closed-sir-predictions}
+pomp(
+  data=subset(niamey,community=="A",select=-community),
+  times="biweek",t0=0,
+  skeleton=Csnippet("
+  DS = -Beta*S*I/N;
+  DI = Beta*S*I/N-gamma*I;
+  DR = gamma*I;"),
+  skeleton.type="vectorfield",
+  initializer=Csnippet("
+  S = S_0;
+  I = I_0;
+  R = N-S_0-I_0;"),
+  statenames=c("S","I","R"),
+  paramnames=c("Beta","gamma","N","S_0","I_0")) -> niameyA
+```
+
+Now we set up a function that will calculate the sum of the squared errors (SSE), or discrepancies between the data and the model predictions.
+
+```{r sse1}
+sse <- function (params) {
   x <- trajectory(niameyA,params=params)
   discrep <- x["I",,]-obs(niameyA)
   sum(discrep^2)
 }
 ```
 
-Now we set up a function that will calculate the sum of the squared differences (or errors) between the data and the model predictions.
-
-To get a sense of what this gives us, let's explore varying some parameters and computing the SSE for community "A" of the Niamey data set.
-To begin with, we'll assume we know that $\gamma=1$ and that the initial numbers of susceptibles, infectives, and recovereds, $S(0)$, $I(0)$, $R(0)$ were 10000, 10, and 20000, respectively.
+To get a sense of what this gives us, let's vary some parameters and computing the SSE for community "A" of the Niamey data set.
+To begin with, we'll assume we know that $\gamma=1$ and that the initial numbers of susceptibles, infectives, and recovereds, $S(0)$, $I(0)$, $R(0)$ are known to be 10000, 10, and 20000, respectively.
 We'll write a little function that will plug a value of $\beta$ into the parameter vector and compute the SSE.
 ```{r sse-calc1}
-f1 <- function (Beta) {
-  params <- c(Beta=Beta,gamma=1,N=50000,S_0=10000,I_0=10)
-  sse1(params)
+f1 <- function (beta) {
+  params <- c(Beta=beta,gamma=1,N=50000,S_0=10000,I_0=10)
+  sse(params)
 }
 beta <- seq(from=30,to=40,by=0.5)
 SSE <- sapply(beta,f1)
@@ -529,11 +259,10 @@ What does the SIR model predict at $\beta=\hat{\beta}$?
 We compute the model's trajectory to find out:
 
 ```{r sse-betahat}
-params4 <- c(Beta=beta.hat,gamma=1,N=50000,S_0=10000,I_0=10)
-coef(niameyA) <- params4
+coef(niameyA) <- c(Beta=beta.hat,gamma=1,N=50000,S_0=10000,I_0=10)
 x <- trajectory(niameyA,as.data.frame=TRUE)
-dat <- join(as.data.frame(niameyA),x,by='time')
-ggplot(dat,aes(x=time))+
+ggplot(data=join(as.data.frame(niameyA),x,by='time'),
+       mapping=aes(x=time))+
   geom_line(aes(y=measles),color='black')+
   geom_line(aes(y=I),color='red')
 ```
@@ -563,10 +292,28 @@ You may again assume that the infectious period is two weeks.
 
 --------------------------
 
+#### Exercise: interpreting local optima
+The above plot of SSE against $\beta$ shows a second local minimum of the SSE at a much higher value of $\beta$.
+Why is this?
+
+--------------------------
+
+#### Exercise: local vs global optima
+
+Discuss the following:
+
+- How do we interpret the existence of a local (but not global) optimum?
+- Under what circumstances can we be certain a unique global optimum exists?
+- What are strategies for increasing the chance that we find the global optimum?
+- When do we expect to find multiple local optima?
+
+--------------------------
+
 Clearly, this fit leaves much to be desired, but recall that we've here assumed that we know the correct values for all parameters but $\beta$.
 In particular, we've assumed we know the infectious period, and the initial conditions.
 [NB: the initial value of $R$ is entirely irrelevant.  Why?]
 Let's see what happens when we try to estimate two parameters at once.
+
 ```{r sse-calc2}
 grid <- expand.grid(Beta=seq(from=0,to=20,length=50),
                     S_0=seq(from=4000,to=20000,length=50),
@@ -619,15 +366,19 @@ We'll write an objective function to try to estimate $\beta$, $S_0$, and $I_0$ s
 For the moment, we'll continue to assume that the recovery rate $\gamma$ is known.
 ```{r sse-calc3,eval=T,cache=T,results='hide',warning=FALSE}
 f2 <- function (par) {
-  params <- c(Beta=NA,gamma=1,N=50000,S_0=NA,I_0=NA)
-  params[c("S_0","I_0","Beta")] <- par
-  sse1(params)
+  params <- c(Beta=par[3],gamma=1,N=50000,S_0=par[1],I_0=par[2])
+  sse(params)
 }
 optim(fn=f2,par=c(10000,10,8)) -> fit2
-```
-```{r sse-calc3-show}
 fit2
 ```
+
+--------------------------
+
+#### Exercise: four-parameter optimization
+Try to estimate all four parameters at once.
+Start your algorithm from several places to check that they all converge to the same place.
+You may find it useful to restart the optimizer to verify its convergence.
 
 --------------------------
 
@@ -639,128 +390,28 @@ What's the "correct" scale to choose?
 
 --------------------------
 
-#### Exercise: four-parameter optimization
-Try to estimate all four parameters at once.
-Start your algorithm from several places to check that they all converge to the same place.
-You may find it useful to restart the optimizer to verify its convergence.
-
---------------------------
-
-#### Exercise: interpreting local optima
-The above plot of SSE against $\beta$ shows a second local minimum of the SSE at a much higher value of $\beta$.
-Why is this?
-
---------------------------
-
 Many other optimization algorithms exist.
 `optim` implements several of these (see `?optim`).
 Other options worth looking into include
 `constrOptim`, `nlm`, and `nlminb`, and the **subplex** and **nloptr** packages.
 
-## The likelihood
+--------------------------
 
-We have seen that fitting mechanistic models to data is a powerful and general approach to estimating parameters.
-We saw too that least-squares fitting is a straightforward way to do this.
-However, several issues arose.
-First, there was an element of arbitrariness in the choice of discrepancy measure.
-Second, although we could fairly easily obtain point estimates of model parameters using least-squares, it was not clear how we could obtain concomitant estimates of parameter uncertainty (e.g., confidence intervals).
-Finally, we began to see that there are limits to our ability to estimate parameters.
-In this lab, we'll explore these issues, and see that likelihood offers an attractive resolution to the first and second of these, but that the third is a fundamental challenge.
+#### Exercise: alternative optimization algorithms
 
-Likelihood has many advantages:  
-
-1. fidelity to model  
-2. a deep and general theory  
-3. a sound theoretical basis for confidence intervals and model selection  
-4. statistical efficiency  
-
-and some disadvantages: 
-
-1. fidelity to model  
-1. fragility (lack of robustness)  
-
-### Definition of likelihood
-
-Likelihood is the *probability of a given set of data $D$ having occurred under a particular hypothesis $H$*: 
-$$\mathcal{L}(H,D)=\prob{D|H}$$
-
-A simple example: suppose $n$ individuals participate in a serological survey and $k$ of these individuals are found to be seropositive.
-One parameter of interest is the true fraction, $p$, of the population that has seroconverted.
-Assuming the sample was drawn at random and the population is large, then the probability of the data ($m$ of $n$ individuals seropositive) given the hypothesis that the true probability is $p$ is
-$$\prob{D|H} = \binom{n}{k}\,p^k\,(1-p)^{n-k}.$$
-
-If the true seroprevalence was, say, $p=0.3$, what does the probability of observing $k$ seropositives in a sample of size $n=50$ look like?
-
-```{r binom-prob-plot}
-p <- 0.3
-n <- 50
-k <- seq(0,50,by=1)
-prob <- dbinom(x=k,size=n,prob=p) 
-plot(k,prob,type='h',lwd=5,lend=1,
-     ylab="probability")
-```
-
-The likelihood is a function of the unknown parameters.
-In this case, if we assume $n$ is known, then the likelihood is a function of $p$ alone:
-$$\mathcal{L}(p) = \binom{n}{k}\,p^k\,(1-p)^{n-k}$$
-Typically the logarithm of this function is more interesting than $\mathcal{L}$ itself.
-Looking at this function for each of two different surveys:
-```{r binom-lik-plot1}
-k1 <- 18
-n1 <- 50
-p <- seq(0,1,by=0.001)
-plot(p,dbinom(x=k1,size=n1,prob=p,log=TRUE),
-     ylim=c(-10,-2),ylab="log-likelihood",
-     type='l')
-abline(v=k1/n1,col='blue')
-```
-
-```{r binom-lik-plot2}
-k2 <- 243
-n2 <- 782
-p <- seq(0,1,by=0.001)
-plot(p,dbinom(x=k2,size=n2,prob=p,log=TRUE),
-     ylim=c(-10,-2),ylab="log-likelihood",
-     type='l')
-abline(v=k2/n2,col='blue')
-```
-
-In the above two plots, the likelihood is a function of the model parameter $p$.
-Vertical lines show the maximum likelihood estimate (MLE) of $p$.
-<!-- Horizontal lines show the critical likelihoods for the likelihood ratio test at the 95% confidence level. -->
+1. Change the optimization algorithm used by `optim` via the `method` argument.
+  Investigate the effect on your parameter estimates.
+1. Try using one of the other optimizers mentioned above.
 
 --------------------------
 
-#### Exercise: interpreting the likelihood
-How do the two curves just plotted differ from one another?
-What features of the data are responsible for the differences?
+## Likelihood
 
---------------------------
-
-### From data points to data sets
-
-Let's suppose we have three samples, $D_1, D_2, D_3$, taken by three different researchers, for the same large population.
-If these samples are *independent*, then
-$$\prob{D|H} = \prob{D_1|H}\times\prob{D_2|H}\times\prob{D_3|H},$$
-which means that the likelihood of the full data set is the product of the likelihoods from each of the samples.
-In other words, the likelihood gives a general recipe for combining data from independent studies.
-We'd compute the likelihood as follows:
-```{r binom-lik2,results='markup'}
-n <- c(13,484,3200)
-k <- c(4,217,1118)
-dbinom(x=k,size=n,prob=0.2,log=TRUE)
-sum(dbinom(x=k,size=n,prob=0.2,log=TRUE))
-ll.fn <- function (p) {
-  sum(dbinom(x=k,size=n,prob=p,log=TRUE))
-}
-p <- seq(0,1,by=0.001)
-loglik <- sapply(p,ll.fn)
-plot(p,loglik,type='l',ylim=max(loglik)+c(-10,0))
-```
+The ["brief introduction to the likelihood"](./likelihood.html) lesson introduces this extremely important concept.
 
 ### Fitting SIR to an epidemic curve using likelihood
 
-Let us revisit the the case of measles in Niger.
+Let us revisit the the case of measles in Niamey.
 We'll simplify the model slightly to eliminate some unnecessary and wasteful elements.
 Our frequency-dependent SIR model, again, is
 $$\begin{aligned}
@@ -774,8 +425,11 @@ Notice that
 We can modify the **R** codes we used before to take account of this.
 
 ```{r closed-sir-model-defn-two}
-pomp(data=niameyA,
-     skeleton=Csnippet("
+pomp(
+  data=subset(niamey,community=="A",select=-community),
+  times="biweek",t0=0,
+  skeleton.type="vectorfield",
+  skeleton=Csnippet("
   double incidence;
   incidence = b*S*I;
   DS = -incidence;
@@ -784,7 +438,7 @@ pomp(data=niameyA,
   S = S_0;
   I = I_0;"),
   paramnames=c("b","gamma","S_0","I_0"),
-  statenames=c("S","I")) -> niameyA
+  statenames=c("S","I")) -> niameyA2
 ```
 
 Earlier, we used sum of squared error (SSE) as a measure of the discrepancy between model predictions and data.
@@ -793,15 +447,12 @@ Let's suppose that, when we record cases, we make errors that are normally distr
 Here's how we can compute the log likelihood of the data given the model and its parameters:
 
 ```{r closed-sir-normal-lik}
-dat <- as.data.frame(niameyA)
 loglik.normal <- function (params) {
-  x <- trajectory(niameyA,params=params)
-  prediction <- x["I",,]
-  sum(dnorm(x=dat$measles,mean=prediction,
+  x <- trajectory(niameyA2,params=params)
+  sum(dnorm(x=obs(niameyA2),mean=x["I",,],
             sd=params["sigma"],log=TRUE))
 }
 
-dat <- subset(niamey,community=="A")
 f3 <- function (b) {
   params <- c(S_0=10000,I_0=10,gamma=1,b=b,sigma=1)
   loglik.normal(params)
@@ -809,10 +460,7 @@ f3 <- function (b) {
 
 b <- seq(from=0,to=0.001,by=0.00002)
 ll <- sapply(b,f3)
-```
 
-We plot the results:
-```{r b-hat-plot,purl=FALSE}
 plot(b,ll,type='l',ylab=expression(log(L)))
 b.hat <- b[which.max(ll)]
 abline(v=b.hat,lty=2)
@@ -852,9 +500,8 @@ The latter leads to the following log-likelihood function
 
 ```{r poisson-lik}
 poisson.loglik <- function (params) {
-  x <- trajectory(niameyA,params=params)
-  prediction <- x["I",,]
-  sum(dpois(x=dat$measles,lambda=params["p"]*prediction,log=TRUE))
+  x <- trajectory(niameyA2,params=params)
+  sum(dpois(x=obs(niameyA2),lambda=params["p"]*x["I",,],log=TRUE))
 }
 ```
 
@@ -881,8 +528,7 @@ and using guesses $R_0\,\approx\,15$, $\mathrm{IP}\,\approx\,14$&nbsp;da, and $N
 
 ```{r bbmle-one}
 library(bbmle)
-guess <- list(log.b=log(0.0003))
-fit4 <- mle2(f4,start=guess); fit4
+fit4 <- mle2(f4,start=list(log.b=log(0.0003))); fit4
 ```
 
 We can get an idea about the uncertainty and in particular obtain confidence intervals using the *profile likelihood*.
@@ -908,8 +554,8 @@ f5 <- function (log.b, logit.p) {
   -poisson.loglik(params)
 }
 
-guess <- list(log.b=log(0.0001),logit.p=logit(0.2))
-fit5 <- mle2(f5,start=guess); fit5
+fit5 <- mle2(f5,start=list(log.b=log(0.0001),logit.p=logit(0.2)))
+fit5
 ```
 
 Now we must untransform the parameters:
@@ -927,16 +573,16 @@ Let's make a contour plot to visualize the likelihood surface.
 This time the objective function has to take a vector argument.
 
 ```{r contour2,purl=FALSE}
-f6 <- function (pars) {
-  params <- c(S_0=20000,I_0=1,gamma=1,b=NA,p=NA)
-  params[c("b","p")] <- pars
+f6 <- function (b, p) {
+  params <- c(S_0=20000,I_0=1,gamma=1,b=b,p=p)
   poisson.loglik(params)
 }
 
 b <- seq(from=0.00001,to=0.0002,length=50)
 p <- seq(0,1,length=50)
+library(plyr)
 grid <- expand.grid(b=b,p=p)
-grid$loglik <- apply(grid,1,f6)
+grid <- ddply(grid,~b+p,mutate,loglik=f6(b,p))
 grid <- subset(grid,is.finite(loglik))
 ggplot(grid,aes(x=b,y=p,z=loglik,fill=loglik))+
   geom_tile()+geom_contour(binwidth=2000)
@@ -949,7 +595,7 @@ Let's focus in on the region around the MLE.
 b <- seq(from=0.0000975,to=0.0000993,length=50)
 p <- seq(0.36,0.41,length=50)
 grid <- expand.grid(b=b,p=p)
-grid$loglik <- apply(grid,1,f6)
+grid <- ddply(grid,~b+p,mutate,loglik=f6(b,p))
 grid <- subset(grid,is.finite(loglik))
 ggplot(grid,aes(x=b,y=p,z=loglik,fill=loglik))+
   geom_tile()+geom_contour(binwidth=1)
@@ -959,22 +605,24 @@ Let's look at the model's predictions at the MLE.
 The model is a probability distribution, so we should look at a number of simulations.
 An important question is: are the data a plausible sample from the predicted probability distribution?
 ```{r predictions,warning=F}
-coef(niameyA) <- c(S_0=20000,I_0=1,gamma=1,mle1)
-model.pred <- trajectory(niameyA)["I",,]
+coef(niameyA2) <- c(S_0=20000,I_0=1,gamma=1,mle1)
+model.pred <- trajectory(niameyA2)["I",,]
 
 library(plyr)
-raply(2000,rpois(n=length(model.pred),lambda=coef(niameyA,"p")*model.pred)) -> simdat
+raply(2000,rpois(n=length(model.pred),lambda=coef(niameyA2,"p")*model.pred)) -> simdat
 aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
 
 typ <- sample(nrow(simdat),1)
 
-ggplot(data=cbind(dat,quantiles,typical=simdat[typ,]),
-       mapping=aes(x=biweek))+
+ggplot(data=cbind(as.data.frame(niameyA2),
+                  quantiles,
+                  typical=simdat[typ,]),
+       mapping=aes(x=time))+
   geom_line(aes(y=`50%`),color='red')+
   geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
   geom_line(aes(y=measles),color='black')+
-  geom_line(aes(y=typical),color='blue')
-
+  geom_line(aes(y=typical),color='blue')+
+  labs(y="cases",x="biweek")
 ```
 
 
@@ -989,9 +637,9 @@ $$y_t\;\sim\;\dist{Negbin}{\mathrm{mean}=p\,I_t,\;\mathrm{size}=\frac{1}{\theta}
 
 ```{r negbin-fit,warning=FALSE}
 negbin.loglik <- function (params) {
-  x <- trajectory(niameyA,params=params)
+  x <- trajectory(niameyA2,params=params)
   prediction <- x["I",,]
-  sum(dnbinom(x=dat$measles,
+  sum(dnbinom(x=obs(niameyA2),
               mu=params["p"]*prediction,size=1/params["theta"],
               log=TRUE))
 }
@@ -1012,19 +660,21 @@ mle3 <- with(as.list(coef(fit7)),
 ```
 
 ```{r negbin-fit-plot,purl=FALSE}
-coef(niameyA) <- c(S_0=20000,I_0=1,gamma=1,mle3)
-model.pred <- trajectory(niameyA)["I",,]
+coef(niameyA2) <- c(S_0=20000,I_0=1,gamma=1,mle3)
+model.pred <- trajectory(niameyA2)["I",,]
 
 library(plyr)
 raply(2000,rnbinom(n=length(model.pred),
-                   mu=coef(niameyA,"p")*model.pred,
-                   size=1/coef(niameyA,"theta"))) -> simdat
+                   mu=coef(niameyA2,"p")*model.pred,
+                   size=1/coef(niameyA2,"theta"))) -> simdat
 aaply(simdat,2,quantile,probs=c(0.025,0.5,0.975)) -> quantiles
 
 typ <- sample(nrow(simdat),1)
 
-ggplot(data=cbind(dat,quantiles,typical=simdat[typ,]),
-       mapping=aes(x=biweek))+
+ggplot(data=cbind(as.data.frame(niameyA2),
+                  quantiles,
+                  typical=simdat[typ,]),
+       mapping=aes(x=time))+
   geom_line(aes(y=`50%`),color='red')+
   geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
   geom_line(aes(y=measles),color='black')+

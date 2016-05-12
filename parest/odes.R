@@ -1,0 +1,335 @@
+#' ---
+#' title: "Working with ordinary differential equations in **pomp**"
+#' author: "Aaron A. King"
+#' output:
+#'   html_document:
+#'     toc: yes
+#'     toc_depth: 4
+#' bibliography: ../course.bib
+#' csl: ../ecology.csl
+#' 
+#' ---
+#' 
+#' \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+#' \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+#' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+#' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+#' \newcommand\dlta[1]{{\Delta}{#1}}
+#' \newcommand\lik{\mathscr{L}}
+#' \newcommand\loglik{\ell}
+#' 
+#' This lesson is based on notes developed over the years and contains contributions originally made by Ben Bolker, John Drake, Pej Rohani, and David Smith.
+#' It is [licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
+#' Please share and remix noncommercially, mentioning its origin.  
+#' ![CC-BY_NC](../graphics/cc-by-nc.png)
+#' 
+## ----prelims,include=FALSE,cache=FALSE-----------------------------------
+library(pomp)
+stopifnot(packageVersion("pomp")>"1.4.5")
+library(plyr)
+library(reshape2)
+options(stringsAsFactors=FALSE)
+library(ggplot2)
+theme_set(theme_bw())
+set.seed(1173489184)
+
+#' 
+#' 
+#' Here we begin our study of computational techniques for studying epidemiological models. 
+#' In this lesson we introduce the numerical solution (or integration) of nonlinear differential equations using the sophisticated solvers incorporated into **pomp**.
+#' Numerical integration is one of the most important tools we have for the analysis of epidemiological models.
+#' 
+#' ### The SIR model
+#' 
+#' The classical SIR compartmental model divides a population of hosts into three classes:
+#' susceptible, infected, recovered.
+#' The model describes how the portion of the population in each of these classes changes with time.
+#' Births are modeled as flows from "elsewhere" into the susceptible class;
+#' deaths are modeled as flows from the S, I, or R compartment into "elsewhere".
+#' If $S$, $I$, and $R$ refer to the numbers of individuals in each compartment, then these **state variables** change according to the following system of differential equations:
+#' $$\begin{aligned}
+#' \frac{dS}{dt} &= B-\lambda\,S-\mu\,S\\
+#' \frac{dI}{dt} &= \lambda\,S-\gamma\,I-\mu\,I\\
+#' \frac{dR}{dt} &= \gamma\,I-\mu\,R.\\
+#' \end{aligned}$$
+#' Here, $B$ is the crude birth rate (births per unit time), $\mu$ is the death rate and $\gamma$ is the recovery rate.
+#' We'll assume that the force of infection, $\lambda$, has the form
+#' $$\lambda = \beta\,\frac{I}{N},$$
+#' so that the risk of infection a susceptible faces is proportional to the *prevalence* (the fraction of the population that is infected).
+#' This is known as the assumption of frequency-dependent transmission.
+#' 
+#' ### Numerical integration of ordinary differential equations
+#' 
+#' Like almost all ecological and epidemiological models, one can't solve these equations analytically.
+#' However, we can compute the **trajectories** of a continuous-time model such as this one by integrating the equations numerically.
+#' Doing this accurately involves a lot of calculation, and there are smart ways and not-so-smart ways of going about it.
+#' This very common problem has been very thoroughly studied by numerical analysts for generations so that, when the equations are smooth, well-behaved functions, excellent numerical integration algorithms are readily available to compute approximate solutions to high precision.
+#' In particular, **R** has several sophisticated ODE solvers which (for many problems) will give highly accurate solutions.
+#' These are harnessed by **pomp**.
+#' These algorithms are flexible, automatically perform checks, and give informative errors and warnings.
+#' 
+#' ### SIR for a closed epidemic
+#' 
+#' Let's study the SIR model for a closed population, i.e., one in which we can neglect births and deaths.
+#' Recall that the differential equations for the closed epidemic are
+#' $$\begin{aligned}
+#' \frac{dS}{dt} &= -\frac{\beta\,S\,I}{N}\\
+#' \frac{dI}{dt} &= \frac{\beta\,S\,I}{N}-\gamma\,I\\
+#' \frac{dR}{dt} &= \gamma\,I
+#' \end{aligned}$$
+#' To incorporate these deterministic equations into a `pomp` object, we supply them to the `pomp` function via the `skeleton` argument as a `Csnippet`.
+#' We must also provide a `Csnippet` to initialize the state variables $S$, $I$, and $R$.
+#' For example:
+## ----closed-sir-model-defn-three-----------------------------------------
+library(pomp)
+
+closed.sir.ode <- Csnippet("
+  DS = -Beta*S*I/N;
+  DI = Beta*S*I/N-gamma*I;
+  DR = gamma*I;
+")
+
+init1 <- Csnippet("
+  S = N-1;
+  I = 1;
+  R = 0;
+  ")
+
+pomp(data=data.frame(time=1:50,data=NA),
+     times="time",t0=0,
+     skeleton=closed.sir.ode,
+     skeleton.type="vectorfield",
+     initializer=init1,
+     statenames=c("S","I","R"),
+     paramnames=c("Beta","gamma","N")) -> closed.sir
+
+#' 
+#' Now we can call `trajectory` to compute trajectories of the model.
+#' To do this, we'll need some values of the parameters.
+#' If we're thinking of a disease something like measles, and measuring time in days, we might use something like:
+## ----set-closed-params---------------------------------------------------
+params1 <- c(Beta=1,gamma=1/13,N=763)
+
+#' What is the infectious period of this disease?
+#' 
+#' Next, we compute a model trajectory with the `trajectory` command and store the result in a data-frame:
+## ----solve-closed-sir----------------------------------------------------
+x <- trajectory(closed.sir,params=params1,as.data.frame=TRUE)
+
+#' and plot the results using the commands:
+## ----epi-curve-plot,eval=T-----------------------------------------------
+library(ggplot2)
+ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
+
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: conversion of units
+#' 
+#' Suppose that you'd rather measure time in years.
+#' Modify the parameters accordingly and verify your modifications.
+#' 
+#' --------------------------
+#' 
+#' Let's study how the epidemic curve depends on the transmission rate, $\beta$, and the infectious period.
+#' In particular, we'll investigate how the epidemic curve changes as we vary $\beta$ from 0.05 to 2 and the infectious period from 1 to 8 days.
+#' 
+## ----nine-curves,echo=FALSE,warning=FALSE,purl=TRUE----------------------
+expand.grid(Beta=c(0.05,1,2),gamma=1/c(1,2,4,8),N=763) -> params2
+
+x <- trajectory(closed.sir,params=t(params2),as=TRUE,times=seq(0,50))
+
+library(plyr)
+mutate(params2,traj=seq_along(Beta)) -> params2
+join(x,params2,by="traj") -> x
+
+library(ggplot2)
+ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
+                          linetype=factor(Beta),color=factor(1/gamma)))+
+  geom_line()+scale_y_log10(limits=c(1e-3,NA))+
+  labs(x="time (da)",color=expression("IP"==1/gamma),
+       linetype=expression(beta))
+
+#' 
+#' The ability to numerically integrate ODE is essential, but its power is limited.
+#' The next exercise demonstrates the importance of being able to analyze the equations as well.
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: exploring the model's dynamical repertoire
+#' For each of the above parameter combinations, notice that either an epidemic occurs or the infection fades out.
+#' Can you predict this behavior from a knowledge of the parameters without numerically integrating the equations?
+#' 
+#' --------------------------
+#' 
+#' ### The basic reproduction number
+#' 
+#' A dimensionless quantity of central importance in epidemiology is the so-called *basic reproduction number*, $R_0$, which is the expected number of new infections engendered by a single infected individual introduced into a fully susceptible population.
+#' In this case, $R_0=\frac{\beta}{\gamma}$, i.e., the product of the transmission rate and the infectious period.
+#' Compute $R_0$ for each of the parameter combinations you examined in the exercise above and relate it to the presence or absence of an epidemic.
+#' 
+#' ### The epidemic final size
+#' 
+#' For a simple, closed SIR outbreak, we can derive an expression that determines the *final size* of the outbreak, i.e., the total number of hosts ultimately infected.
+#' To do this, note that if 
+#' $\frac{dS}{dt}=-\frac{\beta S I}{N}$ and
+#' $\frac{dI}{dt}=\frac{\beta S I}{N}-\gamma\,I$, then
+#' $\frac{dI}{dS}=-1+\frac{N}{R_0\,S},$ which we integrate to yield
+#' $$S(0)-S(\infty)+\frac{N}{R_0}\,\log{\frac{S(\infty)}{S(0)}}=I(\infty)-I(0)=0.$$
+#' If $S(0)=N$, then $N-S(\infty)$ is the final size of the outbreak and the fraction ultimately infected is $f=\frac{R(\infty)}{N}=1-\frac{S(\infty)}{N}$.
+#' In terms of the latter, we have
+#' $$R_0=-\frac{\log{(1-f)}}{f}.$$
+#' 
+#' The following shows the relationship between final size and $R_0$:
+## ----final-size,echo=F,purl=TRUE-----------------------------------------
+f <- seq(0,1,length=100)
+R0 <- -log(1-f)/f
+plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
+
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: final size
+#' 
+#' Use `trajectory` to study the dependence of $f$ on $R_0$.
+#' Compare your results with the predictions of the final size equation
+#' $$R_0=-\frac{\log{(1-f)}}{f},$$
+#' the solution of which is [plotted above](#the-epidemic-final-size).
+#' 
+#' --------------------------
+#' 
+#' ### SIR dynamics in an open population
+#' 
+#' Over a sufficiently short time scale, the assumption that the population is closed is reasonable.
+#' To capture the dynamics over the longer term, we'll need to account for births and deaths, i.e., allow the population to be an **open** one.
+#' As we've seen, if we further assume that the birth rate equals the death rate, then the SIR equations become
+#' $$\begin{aligned}
+#' \frac{dS}{dt} &= \mu\,N -\beta\,S\,I-\mu\,S\\
+#' \frac{dI}{dt} &= \beta\,S\,I-\gamma\,I-\mu\,I\\
+#' \frac{dR}{dt} &= \gamma\,I-\mu\,R\\
+#' \end{aligned}$$
+#' 
+#' We must modify the ODE function accordingly:
+## ----open-sir-model-defn-------------------------------------------------
+open.sir.ode <- Csnippet("
+  DS = -Beta*S*I/N+mu*(N-S);
+  DI = Beta*S*I/N-gamma*I-mu*I;
+  DR = gamma*I-mu*R;
+")
+
+init2 <- Csnippet("
+  S = S_0;
+  I = I_0;
+  R = N-S_0-I_0;
+")
+
+pomp(data=data.frame(time=seq(0,20,by=1/52),cases=NA),
+     times="time",t0=-1/52,
+     skeleton=open.sir.ode,
+     skeleton.type="vectorfield",
+     initializer=init2,
+     statenames=c("S","I","R"),
+     paramnames=c("Beta","gamma","mu","S_0","I_0","N")
+) -> open.sir
+
+#' 
+#' We'll need to specify a birth/death rate in addition to the two parameters we specified before:
+## ----set-open-params-----------------------------------------------------
+params <- c(mu=1/50,Beta=400,gamma=13,
+            N=100000,S_0=100000/12,I_0=100)
+
+#' We integrate the equations as before:
+## ----solve-open-sir------------------------------------------------------
+x <- trajectory(open.sir,params=params,as=TRUE)
+
+#' 
+#' We can plot each of the state variables against time, and $I$ against $S$:
+#' 
+## ----open-epi-plot,eval=TRUE,fig.show='hold'-----------------------------
+library(ggplot2)
+ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
+ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
+
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: exploring the model's dynamical repertoire
+#' Explore the dynamics of the system for different values of the $\beta$ and $\gamma$ parameters by simulating and plotting trajectories as time series and in phase space (e.g., $I$ vs. $S$).
+#' Use the same values of $\beta$ and $\gamma$ we looked at above.
+#' How does the value of $R_0$ affect the results?
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: host lifespan
+#' Under the assumptions of this model, the average host lifespan is $1/\mu$.  
+#' Explore how host lifespan affects the dynamics by integrating the differential equations for lifespans of 20 and 200 years.
+#' 
+#' The compartmental modeling strategy can be put to use in modeling a tremendous range of infections.
+#' The following exercises make some first steps in this direction.
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: SIRS model
+#' The SIR model assumes lifelong sterilizing immunity following infection.
+#' For many infections, immunity is not permanent.
+#' Make a compartment diagram for an SIRS model, in which individuals lose their immunity after some time.
+#' Write the corresponding differential equations and modify the above codes to study its dynamics.
+#' Compare the SIR and SIRS dynamics for the parameters $\mu=1/50$, $\gamma=365/13$, $\beta=400$ and assuming that, in the SIRS model, immunity lasts for 10 years.
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: SEIR model
+#' Make a diagram, write the equations, and study the dynamics of the SEIR model for the dynamics of an infection with a latent period.
+#' Compare the dynamics of SIR and SEIR models for the parameters $\mu=1/50$, $\gamma=365/5$, $\beta=1000$ and assuming that, in the SEIR model, the latent period has duration 8 days.
+#' 
+#' --------------------------
+#' 
+#' ### Nonautonomous equations
+#' 
+#' #### SIR with seasonal transmission
+#' 
+#' The simple SIR model always predicts damped oscillations towards an equilibrium (or pathogen extinction if $R_0$ is too small). 
+#' This is at odds with the recurrent outbreaks seen in many real pathogens. 
+#' Sustained oscillations require some additional drivers in the model. 
+#' An important driver in childhood infections of humans (e.g., measles) is seasonality in contact rates because of aggregation of children the during school term. 
+#' We can analyze the consequences of this by assuming sinusoidal forcing on $\beta$ according to $\beta(t)=\beta_0\,(1+\beta_1\cos(2\,\pi\,t))$. 
+#' We can modify the code presented above to solve the equations for a seasonally forced epidemic.
+## ----seas-sir,cache=TRUE-------------------------------------------------
+seasonal.sir.ode <- Csnippet("
+  double Beta = beta0*(1+beta1*cos(2*M_PI*t));
+  DS = -Beta*S*I/N+mu*(N-S);
+  DI = Beta*S*I/N-gamma*I-mu*I;
+  DR = gamma*I-mu*R;
+")
+
+pomp(open.sir,
+     skeleton=seasonal.sir.ode,
+     skeleton.type="vectorfield",
+     initializer=init2,
+     statenames=c("S","I","R"),
+     paramnames=c("beta0","beta1","gamma","mu","N","S_0","I_0")
+) -> seas.sir
+
+params3 <- c(mu=1/50,beta0=400,beta1=0.15,gamma=26,
+             N=1e5,S_0=7000,I_0=50)
+
+trajectory(seas.sir,params=params3,as=TRUE) -> x
+
+library(ggplot2)
+ggplot(x,mapping=aes(x=time,y=I))+geom_path()
+ggplot(x,mapping=aes(x=S,y=I))+geom_path()
+
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: exploration
+#' Explore the dynamics of the seasonally forced SIR model for increasing amplitude $\beta_1$.
+#' Be sure to distinguish between transient and asymptotic dynamics.
+#' 
+#' --------------------------
+#' 
+#' 
+#' ## [Back to course homepage](http://kingaa.github.io/short-course)
+#' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/parest/odes.R)
+#' 
+#' ## References
