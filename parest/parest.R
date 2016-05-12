@@ -1,5 +1,5 @@
 #' ---
-#' title: "Introduction to Inference: Parameter Estimation"
+#' title: "Introduction to inference: parameter estimation"
 #' author: "Aaron A. King"
 #' output:
 #'   html_document:
@@ -46,7 +46,7 @@ set.seed(1173489184)
 #' Practically speaking, this means that we have to find the values of the models' parameters that give the closest correspondence between model predictions and data.
 #' Parameter estimation can be challenging even when we are fairly confident in the ability of a single model to explain the dynamics.
 #' 
-#' ## Working with ordinary differential equation models (ODE)
+#' ## Working with ordinary differential equation models (ODE) in **pomp**
 #' 
 #' Here we begin our study of computational techniques for studying epidemiological models. 
 #' In this session we introduce the numerical solution (or integration) of nonlinear differential equations using the sophisticated solvers incorporated into **pomp**.
@@ -138,10 +138,14 @@ ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 
 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: conversion of units
 #' 
 #' Suppose that you'd rather measure time in years.
 #' Modify the parameters accordingly and verify your modifications.
+#' 
+#' --------------------------
 #' 
 #' Let's study how the epidemic curve depends on the transmission rate, $\beta$, and the infectious period.
 #' In particular, we'll investigate how the epidemic curve changes as we vary $\beta$ from 0.05 to 2 and the infectious period from 1 to 8 days.
@@ -150,10 +154,13 @@ ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 #' The ability to numerically integrate ODE is essential, but its power is limited.
 #' The next exercise demonstrates the importance of being able to analyze the equations as well.
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: exploring the model's dynamical repertoire
 #' For each of the above parameter combinations, notice that either an epidemic occurs or the infection fades out.
 #' Can you predict this behavior from a knowledge of the parameters without numerically integrating the equations?
 #' 
+#' --------------------------
 #' 
 #' ### The basic reproduction number
 #' 
@@ -175,12 +182,16 @@ ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 #' 
 #' The following shows the relationship between final size and $R_0$:
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: final size
 #' 
 #' Use `trajectory` to study the dependence of $f$ on $R_0$.
 #' Compare your results with the predictions of the final size equation
 #' $$R_0=-\frac{\log{(1-f)}}{f},$$
 #' the solution of which is [plotted above](#the-epidemic-final-size).
+#' 
+#' --------------------------
 #' 
 #' ### SIR dynamics in an open population
 #' 
@@ -235,10 +246,14 @@ ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: exploring the model's dynamical repertoire
 #' Explore the dynamics of the system for different values of the $\beta$ and $\gamma$ parameters by simulating and plotting trajectories as time series and in phase space (e.g., $I$ vs. $S$).
 #' Use the same values of $\beta$ and $\gamma$ we looked at above.
 #' How does the value of $R_0$ affect the results?
+#' 
+#' --------------------------
 #' 
 #' #### Exercise: host lifespan
 #' Under the assumptions of this model, the average host lifespan is $1/\mu$.  
@@ -247,16 +262,22 @@ ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
 #' The compartmental modeling strategy can be put to use in modeling a tremendous range of infections.
 #' The following exercises make some first steps in this direction.
 #' 
-#' #### Challenge: SIRS model
+#' --------------------------
+#' 
+#' #### Exercise: SIRS model
 #' The SIR model assumes lifelong sterilizing immunity following infection.
 #' For many infections, immunity is not permanent.
 #' Make a compartment diagram for an SIRS model, in which individuals lose their immunity after some time.
 #' Write the corresponding differential equations and modify the above codes to study its dynamics.
 #' Compare the SIR and SIRS dynamics for the parameters $\mu=1/50$, $\gamma=365/13$, $\beta=400$ and assuming that, in the SIRS model, immunity lasts for 10 years.
 #' 
-#' #### Challenge: SEIR model
+#' --------------------------
+#' 
+#' #### Exercise: SEIR model
 #' Make a diagram, write the equations, and study the dynamics of the SEIR model for the dynamics of an infection with a latent period.
 #' Compare the dynamics of SIR and SEIR models for the parameters $\mu=1/50$, $\gamma=365/5$, $\beta=1000$ and assuming that, in the SEIR model, the latent period has duration 8 days.
+#' 
+#' --------------------------
 #' 
 #' ### Nonautonomous equations
 #' 
@@ -294,9 +315,13 @@ ggplot(x,mapping=aes(x=time,y=I))+geom_path()
 ggplot(x,mapping=aes(x=S,y=I))+geom_path()
 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: exploration
 #' Explore the dynamics of the seasonally forced SIR model for increasing amplitude $\beta_1$.
 #' Be sure to distinguish between transient and asymptotic dynamics.
+#' 
+#' --------------------------
 #' 
 #' 
 #' ## Feature-based parameter estimation
@@ -342,6 +367,8 @@ ggplot(x,mapping=aes(x=S,y=I))+geom_path()
 #' We then plot these estimates with their uncertainties to show this precision-accuracy tradeoff.
 #' 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: measles in Niamey
 #' 
 #' Biweekly data for outbreaks of measles in three communities within Niamey, Niger [@Grais2006] are provided on the course website.
@@ -352,6 +379,8 @@ niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
 
 #' 
 #' Use both the final-size and the invasion rate methods to obtain estimates of $R_0$ for measles using the data from each of the communities of Niamey, assuming that the infectious period is approximately two weeks.
+#' 
+#' --------------------------
 #' 
 #' ## Fitting deterministic dynamical epidemiological models to data
 #' 
@@ -439,9 +468,13 @@ ggplot(dat,aes(x=time))+
   geom_line(aes(y=I),color='red')
 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: least-squares estimation of $R_0$
 #' Use this method to obtain estimates of $R_0$ for measles from each of the three communities in Niamey.
 #' You may again assume that the infectious period is two weeks.
+#' 
+#' --------------------------
 #' 
 #' Clearly, this fit leaves much to be desired, but recall that we've here assumed that we know the correct values for all parameters but $\beta$.
 #' In particular, we've assumed we know the infectious period, and the initial conditions.
@@ -466,14 +499,20 @@ ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
   labs(fill=expression(sqrt(SSE)),x=expression(beta),y=expression(S(0)))
 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: interpreting the shape of the likelihood surface
 #' Discuss the shape of this surface: 
 #' what does it tell us about the uncertainty in the model's parameters?
 #' 
-#' #### Challenge: SEIR model estimation
+#' --------------------------
+#' 
+#' #### Exercise: SEIR model estimation
 #' Repeat the estimation using a closed SEIR model.
 #' Assume that the infectious period is 5&nbsp;da and the latent period is 8&nbsp;da.
 #' How and why does your estimate of $R_0$ differ from that you obtained using the SIR model?
+#' 
+#' --------------------------
 #' 
 #' ### Optimization algorithms
 #' 
@@ -503,20 +542,28 @@ optim(fn=f2,par=c(10000,10,8)) -> fit2
 fit2
 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: rescaling the data
 #' In the foregoing, we've estimated parameters by minimizing the sum of squared differences between model-predicted number of cases and the data.
 #' What would happen if we tried to minimize the squared error on the log scale, i.e., to minimize $(\log(\mathrm{model})-\log(\mathrm{data}))^2$?
 #' What would happen if we minimized the squared error on the square-root scale, i.e., $(\sqrt{\mathrm{model}}-\sqrt{\mathrm{data}})^2$?
 #' What's the "correct" scale to choose?
 #' 
-#' #### Challenge: four-parameter optimization
+#' --------------------------
+#' 
+#' #### Exercise: four-parameter optimization
 #' Try to estimate all four parameters at once.
 #' Start your algorithm from several places to check that they all converge to the same place.
 #' You may find it useful to restart the optimizer to verify its convergence.
 #' 
-#' #### Challenge: interpreting local optima
+#' --------------------------
+#' 
+#' #### Exercise: interpreting local optima
 #' The above plot of SSE against $\beta$ shows a second local minimum of the SSE at a much higher value of $\beta$.
 #' Why is this?
+#' 
+#' --------------------------
 #' 
 #' Many other optimization algorithms exist.
 #' `optim` implements several of these (see `?optim`).
@@ -595,9 +642,13 @@ abline(v=k2/n2,col='blue')
 #' Vertical lines show the maximum likelihood estimate (MLE) of $p$.
 #' <!-- Horizontal lines show the critical likelihoods for the likelihood ratio test at the 95% confidence level. -->
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: interpreting the likelihood
 #' How do the two curves just plotted differ from one another?
 #' What features of the data are responsible for the differences?
+#' 
+#' --------------------------
 #' 
 #' ### From data points to data sets
 #' 
@@ -684,9 +735,13 @@ ll <- sapply(b,f3)
 #' $$\log\mathcal{L} = -\tfrac{1}{2}\,\left(\frac{1}{\sigma^2}\,\sum_{t}\!(y_t-Y_t)^2+\log{(\sigma^2)}+\log{(2\pi)}\right)$$
 #' So MLE and least-squares are equivalent if the errors are normal with constant variance!
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: log-normal errors
 #' Suppose, alternatively, that the errors are log-normal with constant variance.
 #' Under what definition of SSE will least-squares and maximum likelihood give the same parameter estimates?
+#' 
+#' --------------------------
 #' 
 #' ## Modeling the noise
 #' 
@@ -846,19 +901,27 @@ mle3 <- with(as.list(coef(fit7)),
 #' In order to fit the data, the optimization algorithm has expanded the error variance, to the point of absurdity.
 #' The typical model realization (in blue) does not much resemble the data.
 #' 
-#' #### Challenge: three-parameter estimation
+#' --------------------------
+#' 
+#' #### Exercise: three-parameter estimation
 #' Try to estimate $p$, $b$, and $S(0)$ simultaneously.
 #' 
-#' #### Challenge: binomial errors
+#' --------------------------
+#' 
+#' #### Exercise: binomial errors
 #' Reformulate the problem using the binomial error model.
 #' Modify the parameter estimation codes appropriately, estimate the parameters, and comment on the results.
 #' 
-#' #### Challenge: modifying the mean-variance relationship
+#' --------------------------
+#' 
+#' #### Exercise: modifying the mean-variance relationship
 #' Reformulate the problem using a normal error model in which the variance is proportional to the mean:
 #' $$y_t\;\sim\;\dist{Normal}{p\,I_t,\sigma\,\sqrt{I_t}}.$$
 #' Modify the parameter estimation codes appropriately, estimate the parameters (including both $p$ and $\sigma$), and comment on the results.
 #' 
-#' #### Challenge: incidence
+#' --------------------------
+#' 
+#' #### Exercise: prevalence vs incidence
 #' We've been treating the Niamey data as if they were direct---though inaccurate---measurements of the prevalence.
 #' Actually, these are incidence data: they are measures of unique infections.
 #' It would be more appropriate to model these data by adding another equation
@@ -866,6 +929,8 @@ mle3 <- with(as.list(coef(fit7)),
 #' to accumulate new infections and assuming the data are distributed according to, for example,
 #' $$y_t\;\sim\;\dist{Poisson}{p\,(H_t-H_{t-1})}.$$
 #' Modify the codes above to reflect these more appropriate assumptions, estimate the parameters, and comment on the results.
+#' 
+#' --------------------------
 #' 
 #' ## [Back to course homepage](http://kingaa.github.io/short-course)
 #' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/parest/parest.R)

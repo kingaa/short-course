@@ -1,5 +1,5 @@
 ---
-title: "Introduction to Partially-Observed Markov Processes"
+title: "Introduction to partially observed Markov processes"
 author: "Aaron A. King and Edward L. Ionides"
 output:
   html_document:
@@ -601,9 +601,13 @@ In particular, we avoid "simulating a set of differential equations", preferring
 
 ## Exercises
 
+--------------------------
+
 #### Exercise: Ricker model parameters
 Fiddle with the parameters to try and make the simulations look more like the data.
 This will help you build some intuition for what the various parameters do.
+
+--------------------------
 
 #### Exercise: Reformulating the Ricker model
 Reparameterize the Ricker model so that the scaling of $N$ is explicit:
@@ -615,6 +619,8 @@ Modify the measurement model so that
 $$\mathrm{pop}_t \sim \dist{Negbin}{\phi\,N_t,k},$$
 i.e., $\mathrm{pop}_t$ is negative-binomially distributed with mean $\phi\,N_t$ and clumping parameter $k$.
 See `?NegBinomial` for documentation on the negative binomial distribution and [the **R** Extensions Manual section on distribution functions](http://cran.r-project.org/doc/manuals/r-release/R-exts.html#Distribution-functions) for information on how to access these in C.
+
+--------------------------
 
 #### Exercise: Beverton-Holt
 Construct a `pomp` object for the *Parus major* data and the stochastic Beverton-Holt model

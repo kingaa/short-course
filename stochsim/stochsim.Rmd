@@ -1,5 +1,5 @@
 ---
-title: "Dynamic models and their simulation by Euler's method"
+title: "Simulation of stochastic dynamic models"
 author: "Edward L. Ionides and Aaron A. King"
 output:
   html_document:
@@ -170,9 +170,13 @@ P[N_{IR}(t+\delta)=N_{IR}(t)] &= 1-\mu_{IR}(t)\,I(t)\,\delta + o(\delta)\\
 
 <!-- ### Demographic vs environmental stochasticity -->
 
+--------------------------
+
 #### Exercise: From Markov chain to ODE 
 Find the expected value of $N_{SI}(t+\delta)-N_{SI}(t)$ and $N_{IR}(t+\delta)-N_{IR}(t)$ given the current state, $S(t)$, $I(t)$ and $R(t)$.
 Take the limit as $\delta\to 0$ and show that this gives the ODE model.
+
+--------------------------
 
 ### Euler's method for ODE
 
@@ -251,10 +255,14 @@ $$\tilde X\big(\,(k+1)\delta\,\big) = \tilde X( k\delta) + \delta\, h\big(\, \ti
 where $Z_1,Z_2,\dots$ is a sequence of independent standard normal random variables, i.e., $Z_k\sim\dist{Normal}{0,1}$. 
 Although SDEs are often considered an advanced topic in probability, the Euler approximation doesn't demand much more than familiarity with the normal distribution.
 
+--------------------------
+
 #### Exercise: SDE version of the SIR model
 
 Write down the Euler-Maruyama method for an SDE representation of the closed-population SIR model. 
 Consider some difficulties that might arise with non-negativity constraints, and propose some practical way one might deal with that issue.
+
+--------------------------
 
 - A useful method to deal with positivity constraints is to use Gamma noise rather than Brownian noise [@bhadra11,@He2010,@laneri10].
 SDEs driven by Gamma noise can be investigated by Euler solutions simply by replacing the Gaussian noise by an appropriate Gamma distribution.
@@ -407,9 +415,13 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
   geom_line()+guides(color=FALSE)
 ```
 
+--------------------------
+
 #### Exercise: Explore the SIR model
 
 Fiddle with the parameters to see if you can't find parameters for which the data are a more plausible realization.
+
+--------------------------
 
 #### Exercise: The SEIR model
 
@@ -432,6 +444,8 @@ popViewport()
 
 Modify the codes above to construct a `pomp` object containing the flu data and an SEIR model.
 Perform simulations as above and adjust parameters to get a sense of whether improvement is possible by including a latent period.
+
+--------------------------
 
 #### Exercise: Rethinking the boarding-school flu data
 

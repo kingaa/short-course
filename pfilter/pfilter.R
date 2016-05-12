@@ -1,5 +1,5 @@
 #' ---
-#' title: Likelihood for POMPs
+#' title: Likelihood for POMP models
 #' author: "Aaron A. King and Edward L. Ionides"
 #' output:
 #'   html_document:
@@ -405,9 +405,13 @@ p %>%
 #' - Although AIC is not designed to be a formal statistical test, it is a commonly used objective rule for model selection.
 #'   This rule could be intrepreted as a hypothesis test, with the size and power investigated by simulation, if desired.
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: AIC as a formal statistical test
 #' 
 #' Determine the size of AIC as a hypothesis test for nested hypotheses with $d=1$ in a regular parametric situation. 
+#' 
+#' --------------------------
 #' 
 #' ## Confidence intervals for parameters: Profile likelihood
 #' 
@@ -557,15 +561,21 @@ ggplot(data=sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
 
 #' 
 #' 
+#' --------------------------
+#' 
 #' #### Exercise: More slices
 #' 
 #' Construct likelihood slices through the MLE we just found.
+#' 
+#' --------------------------
 #' 
 #' #### Exercise: Visualizing the likelihood surface
 #' 
 #' Evaluate the likelihood at points on a grid lying in a 2D slice through the MLE we found above.
 #' Each group should choose a different slice.
 #' Afterward, we'll compare results across groups.
+#' 
+#' --------------------------
 #' 
 #' #### Exercise: Global maximization
 #' 
