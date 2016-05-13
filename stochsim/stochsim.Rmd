@@ -325,7 +325,7 @@ An attractive option here is to model the number moving from one compartment to 
 In particular, we model the number, $\dlta{N_{SI}}$, moving from S to I over interval $\dlta{t}$ as $$\dlta{N_{SI}} \sim \dist{Binomial}{S,1-e^{-\lambda\dlta{t}}},$$ and the number moving from I to R as $$\dlta{N_{IR}} \sim \dist{Binomial}{I,1-e^{-\gamma\dlta{t}}}.$$
 
 A `Csnippet` that encodes such a simulator is as follows:
-```{r rproc1,purl=FALSE}
+```{r rproc1}
 sir_step <- Csnippet("
   double dN_SI = rbinom(S,1-exp(-Beta*I/N*dt));
   double dN_IR = rbinom(I,1-exp(-gamma*dt));
@@ -336,7 +336,7 @@ sir_step <- Csnippet("
 ```
 At day zero, we'll assume that $I=1$ and $R=0$, but we don't know how big the school is, so we treat $N$ as a parameter to be estimated and let $S(0)=N-1$.
 Thus an initializer `Csnippet` is
-```{r init1,purl=FALSE}
+```{r init1}
 sir_init <- Csnippet("
   S = N-1;
   I = 1;
@@ -344,7 +344,7 @@ sir_init <- Csnippet("
 ")
 ```
 We fold these `Csnippets`, with the data, into a `pomp` object thus:
-```{r rproc1-pomp,purl=FALSE}
+```{r rproc1-pomp}
 pomp(bsflu,time="day",t0=0,rprocess=euler.sim(sir_step,delta.t=1/6),
      initializer=sir_init,paramnames=c("N","Beta","gamma"),
      statenames=c("S","I","R")) -> sir

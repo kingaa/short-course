@@ -280,9 +280,30 @@ ggplot(data=bsflu,aes(x=day,y=B))+geom_line()+geom_point()
 #' In particular, we model the number, $\dlta{N_{SI}}$, moving from S to I over interval $\dlta{t}$ as $$\dlta{N_{SI}} \sim \dist{Binomial}{S,1-e^{-\lambda\dlta{t}}},$$ and the number moving from I to R as $$\dlta{N_{IR}} \sim \dist{Binomial}{I,1-e^{-\gamma\dlta{t}}}.$$
 #' 
 #' A `Csnippet` that encodes such a simulator is as follows:
+## ----rproc1--------------------------------------------------------------
+sir_step <- Csnippet("
+  double dN_SI = rbinom(S,1-exp(-Beta*I/N*dt));
+  double dN_IR = rbinom(I,1-exp(-gamma*dt));
+  S -= dN_SI;
+  I += dN_SI - dN_IR;
+  R += dN_IR;
+")
+
 #' At day zero, we'll assume that $I=1$ and $R=0$, but we don't know how big the school is, so we treat $N$ as a parameter to be estimated and let $S(0)=N-1$.
 #' Thus an initializer `Csnippet` is
+## ----init1---------------------------------------------------------------
+sir_init <- Csnippet("
+  S = N-1;
+  I = 1;
+  R = 0;
+")
+
 #' We fold these `Csnippets`, with the data, into a `pomp` object thus:
+## ----rproc1-pomp---------------------------------------------------------
+pomp(bsflu,time="day",t0=0,rprocess=euler.sim(sir_step,delta.t=1/6),
+     initializer=sir_init,paramnames=c("N","Beta","gamma"),
+     statenames=c("S","I","R")) -> sir
+
 #' 
 #' Now let's assume that the case reports, $B$, result from a process by which new infections result in confinement with probability $\rho$, which we can think of as the probability that an infection is severe enough to be noticed by the school authorities.
 #' Since confined cases have, presumably, a much lower transmission rate, let's treat $B$ as being a count of the number of boys who have moved from I to R over the course of the past day.
