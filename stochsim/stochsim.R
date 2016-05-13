@@ -84,7 +84,7 @@ set.seed(594709947L)
 #'   These equations represent a kind of conservation law. 
 #' - Over any finite time interval $[t,t+\delta)$, we have
 #' $$\begin{aligned} 
-#' \dlta{S} &= \dlta{N}_{SI}\\
+#' \dlta{S} &= -\dlta{N}_{SI}\\
 #' \dlta{I} &= \dlta{N}_{SI}-\dlta{N}_{IR}\\
 #' \dlta{R} &= \dlta{N}_{IR},
 #' \end{aligned}$$
@@ -184,7 +184,7 @@ set.seed(594709947L)
 #' 
 #' - The counting processes for the flows between compartments are $\tilde N_{SI}(t)$ and $\tilde N_{IR}(t)$. The counting processes are related to the numbers of individuals in the compartments by the same flow equations we had before:
 #' $$\begin{aligned} 
-#' \dlta{\tilde S} &= \dlta{\tilde N}_{SI}\\
+#' \dlta{\tilde S} &= -\dlta{\tilde N}_{SI}\\
 #' \dlta{\tilde I} &= \dlta{\tilde N}_{SI}-\dlta{\tilde N}_{IR}\\
 #' \dlta{\tilde R} &= \dlta{\tilde N}_{IR},
 #' \end{aligned}$$
