@@ -213,10 +213,10 @@ R(t) &amp;= R(0) + N_{IR}(t)
 <li>Recall that a <em>Markov chain</em> is a discrete-valued stochastic process with the <em>Markov property</em>: the future evolution of the process depends only on the current state.</li>
 <li>Surprisingly many models have this Markov property. If all important variables are included in the state of the system, then the Markov property appears automatically.</li>
 <li>The Markov property lets us specify a model by giving the transition probabilities on small intervals together with initial conditions. For the SIR model in a closed population, we have <span class="math display">\[\begin{aligned}
-P[N_{SI}(t+\delta)=N_{SI}(t)+1] &amp;= \mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
-P[N_{SI}(t+\delta)=N_{SI}(t)] &amp;= 1-\mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
-P[N_{IR}(t+\delta)=N_{IR}(t)+1] &amp;= \mu_{IR}\,I(t)\,\delta + o(\delta)\\
-P[N_{IR}(t+\delta)=N_{IR}(t)] &amp;= 1-\mu_{IR}(t)\,I(t)\,\delta + o(\delta)\\
+{\mathbb{P}\left[{N_{SI}(t+\delta)=N_{SI}(t)+1}\right]} &amp;= \mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
+{\mathbb{P}\left[{[}\right]}N_{SI}(t+\delta)=N_{SI}(t)} &amp;= 1-\mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
+{\mathbb{P}\left[{N_{IR}(t+\delta)=N_{IR}(t)+1}\right]} &amp;= \mu_{IR}\,I(t)\,\delta + o(\delta)\\
+{\mathbb{P}\left[{N_{IR}(t+\delta)=N_{IR}(t)}\right]} &amp;= 1-\mu_{IR}(t)\,I(t)\,\delta + o(\delta)\\
 \end{aligned}\]</span></li>
 <li>A <em>simple</em> counting process is one for which no more than one event can occur at a time (<a href="https://en.wikipedia.org/wiki/Point_process">Wikipedia: point process</a>). Thus, in a technical sense, the SIR Markov chain model we have written is simple. One may want to model the extra randomness resulting from multiple simultaneous events: someone sneezing in a crowded bus, large gatherings at football matches, etc. This extra randomness may even be critical to match the variability in data.</li>
 <li>We will see later, in the <a href="../measles/measles.html">measles case study</a>, a situation where this extra randomness plays an important role. The representation of the model in terms of counting processes turns out to be useful for this.</li>
@@ -265,8 +265,8 @@ P[N_{IR}(t+\delta)=N_{IR}(t)] &amp;= 1-\mu_{IR}(t)\,I(t)\,\delta + o(\delta)\\
 <h3>Euler’s method for a discrete SIR model</h3>
 <ul>
 <li><p>Recall the simple continuous-time Markov chain interpretation of the SIR model without demography: <span class="math display">\[\begin{aligned}
-P[N_{SI}(t+\delta)=N_{SI}(t)+1] &amp;= \mu_{SI}(t)\,S(t)\,\delta + o(\delta),\\
-P[N_{IR}(t+\delta)=N_{IR}(t)+1] &amp;= \mu_{IR}\,I(t)\,\delta + o(\delta).
+{\mathbb{P}\left[{N_{SI}(t+\delta)=N_{SI}(t)+1}\right]} &amp;= \mu_{SI}(t)\,S(t)\,\delta + o(\delta),\\
+{\mathbb{P}\left[{N_{IR}(t+\delta)=N_{IR}(t)+1}\right]} &amp;= \mu_{IR}\,I(t)\,\delta + o(\delta).
 \end{aligned}\]</span></p></li>
 <li><p>We look for a numerical solution with state variables <span class="math inline">\(\tilde S(k\delta)\)</span>, <span class="math inline">\(\tilde I(k\delta)\)</span>, <span class="math inline">\(\tilde R(k\delta)\)</span>.</p></li>
 <li><p>The counting processes for the flows between compartments are <span class="math inline">\(\tilde N_{SI}(t)\)</span> and <span class="math inline">\(\tilde N_{IR}(t)\)</span>. The counting processes are related to the numbers of individuals in the compartments by the same flow equations we had before: <span class="math display">\[\begin{aligned} 

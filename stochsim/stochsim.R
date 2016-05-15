@@ -112,10 +112,10 @@ set.seed(594709947L)
 #' - The Markov property lets us specify a model by giving the transition probabilities on small intervals together with initial conditions. 
 #'   For the SIR model in a closed population, we have
 #' $$\begin{aligned}
-#' P[N_{SI}(t+\delta)=N_{SI}(t)+1] &= \mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
-#' P[N_{SI}(t+\delta)=N_{SI}(t)] &= 1-\mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
-#' P[N_{IR}(t+\delta)=N_{IR}(t)+1] &= \mu_{IR}\,I(t)\,\delta + o(\delta)\\
-#' P[N_{IR}(t+\delta)=N_{IR}(t)] &= 1-\mu_{IR}(t)\,I(t)\,\delta + o(\delta)\\
+#' \prob{N_{SI}(t+\delta)=N_{SI}(t)+1} &= \mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
+#' \prob[N_{SI}(t+\delta)=N_{SI}(t)} &= 1-\mu_{SI}(t)\,S(t)\,\delta + o(\delta)\\
+#' \prob{N_{IR}(t+\delta)=N_{IR}(t)+1} &= \mu_{IR}\,I(t)\,\delta + o(\delta)\\
+#' \prob{N_{IR}(t+\delta)=N_{IR}(t)} &= 1-\mu_{IR}(t)\,I(t)\,\delta + o(\delta)\\
 #' \end{aligned}$$
 #' - A *simple* counting process is one for which no more than one event can occur at a time ([Wikipedia: point process](https://en.wikipedia.org/wiki/Point_process)). 
 #'   Thus, in a technical sense, the SIR Markov chain model we have written is simple. 
@@ -176,8 +176,8 @@ set.seed(594709947L)
 #' 
 #' - Recall the simple continuous-time Markov chain interpretation of the SIR model without demography:
 #' $$\begin{aligned}
-#' P[N_{SI}(t+\delta)=N_{SI}(t)+1] &= \mu_{SI}(t)\,S(t)\,\delta + o(\delta),\\
-#' P[N_{IR}(t+\delta)=N_{IR}(t)+1] &= \mu_{IR}\,I(t)\,\delta + o(\delta).
+#' \prob{N_{SI}(t+\delta)=N_{SI}(t)+1} &= \mu_{SI}(t)\,S(t)\,\delta + o(\delta),\\
+#' \prob{N_{IR}(t+\delta)=N_{IR}(t)+1} &= \mu_{IR}\,I(t)\,\delta + o(\delta).
 #' \end{aligned}$$
 #' 
 #' - We look for a numerical solution with state variables $\tilde S(k\delta)$, $\tilde I(k\delta)$, $\tilde R(k\delta)$. 

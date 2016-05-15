@@ -468,11 +468,11 @@ abline(v=b.hat,lty=2)
 
 The great similarity in the likelihood estimate to our first least-squares estimate is no accident.
 Why is this?
-Let $y_t$ be the observed number of infectives at time $t$ and $Y_t$ be the model's prediction.
+Let $y^*_t$ be the observed number of infectives at time $t$ and $Y_t$ be the model's prediction.
 Then the log likelihood is
-$$\log\prob{y_t|Y_t} = \log{\left(\frac{1}{\sqrt{2\pi\sigma^2}}\,\exp{\left(-\frac{(y_t-Y_t)^2}{2\sigma^2}\right)}\right)} = -\tfrac{1}{2}\,\log{2\pi\sigma^2}-\tfrac{1}{2}\,\frac{(y_t-Y_t)^2}{\sigma^2}$$
+$$\log\prob{y^*_t|Y_t} = \log{\left(\frac{1}{\sqrt{2\pi\sigma^2}}\,\exp{\left(-\frac{(y^*_t-Y_t)^2}{2\sigma^2}\right)}\right)} = -\tfrac{1}{2}\,\log{2\pi\sigma^2}-\tfrac{1}{2}\,\frac{(y^*_t-Y_t)^2}{\sigma^2}$$
 and
-$$\log\mathcal{L} = -\tfrac{1}{2}\,\left(\frac{1}{\sigma^2}\,\sum_{t}\!(y_t-Y_t)^2+\log{(\sigma^2)}+\log{(2\pi)}\right)$$
+$$\log\mathcal{L} = -\tfrac{1}{2}\,\left(\frac{1}{\sigma^2}\,\sum_{t}\!(y^*_t-Y_t)^2+\log{(\sigma^2)}+\log{(2\pi)}\right)$$
 So MLE and least-squares are equivalent if the errors are normal with constant variance!
 
 --------------------------
