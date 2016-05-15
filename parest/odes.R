@@ -172,9 +172,13 @@ ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
 #' 
 #' For a simple, closed SIR outbreak, we can derive an expression that determines the *final size* of the outbreak, i.e., the total number of hosts ultimately infected.
 #' To do this, note that if 
-#' $\frac{dS}{dt}=-\frac{\beta S I}{N}$ and
-#' $\frac{dI}{dt}=\frac{\beta S I}{N}-\gamma\,I$, then
-#' $\frac{dI}{dS}=-1+\frac{N}{R_0\,S},$ which we integrate to yield
+#' \begin{equation*}\begin{gathered}
+#' \frac{dS}{dt}=-\frac{\beta S I}{N} \qquad \text{and} \qquad
+#' \frac{dI}{dt}=\frac{\beta S I}{N}-\gamma\,I,
+#' \end{gathered}\end{equation*}
+#' then
+#' $$\frac{dI}{dS}=-1+\frac{N}{R_0\,S},$$
+#' which we integrate to yield
 #' $$S(0)-S(\infty)+\frac{N}{R_0}\,\log{\frac{S(\infty)}{S(0)}}=I(\infty)-I(0)=0.$$
 #' If $S(0)=N$, then $N-S(\infty)$ is the final size of the outbreak and the fraction ultimately infected is $f=\frac{R(\infty)}{N}=1-\frac{S(\infty)}{N}$.
 #' In terms of the latter, we have
