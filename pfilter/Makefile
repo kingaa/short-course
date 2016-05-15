@@ -1,4 +1,4 @@
-default: pfilter.R pfilter.html monteCarlo.html sir-grid1.rds
+default: pfilter.R pfilter.html monteCarlo.html flu-grid1.rds
 ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)

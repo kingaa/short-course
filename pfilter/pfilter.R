@@ -34,11 +34,10 @@ library(pomp)
 stopifnot(packageVersion("pomp")>="1.4.5")
 library(ggplot2)
 theme_set(theme_bw())
-library(grid)
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
-set.seed(594709947)
+set.seed(1221234211)
 
 #' 
 #' ## Objectives
@@ -152,60 +151,65 @@ set.seed(594709947)
 #' Let's go back to the boarding school influenza outbreak to see what this looks like in practice.
 #' Let's reconstruct the toy SIR model we were working with.
 #' 
-## ----sir-construct-------------------------------------------------------
+## ----flu-construct-------------------------------------------------------
 read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt") -> bsflu
 
-sir_step <- Csnippet("
-  double dN_SI = rbinom(S,1-exp(-Beta*I/N*dt));
-  double dN_IR = rbinom(I,1-exp(-gamma*dt));
-  S -= dN_SI;
-  I += dN_SI - dN_IR;
-  R += dN_IR;
-  H += dN_IR;
+rproc <- Csnippet("
+  double N = 762;
+  double t1 = rbinom(S,1-exp(-Beta*I/N*dt));
+  double t2 = rbinom(I,1-exp(-mu_I*dt));
+  double t3 = rbinom(R1,1-exp(-mu_R1*dt));
+  S  -= t1;
+  I  += t1 - t2;
+  R1 += t2 - t3;
 ")
 
-sir_init <- Csnippet("
-  S = nearbyint(N)-1;
+init <- Csnippet("
+  S = 762;
   I = 1;
-  R = 0;
-  H = 0;
+  R1 = 0;
 ")
 
-dmeas <- Csnippet("lik = dbinom(B,H,rho,give_log);")
-rmeas <- Csnippet("B = rbinom(H,rho);")
+dmeas <- Csnippet("
+  lik = dpois(B,rho*R1+1e-6,give_log);
+")
 
-pomp(bsflu,times="day",t0=0,
-     rprocess=euler.sim(sir_step,delta.t=1/5),
-     initializer=sir_init,rmeasure=rmeas,dmeasure=dmeas,
-     zeronames="H",statenames=c("H","S","I","R"),
-     paramnames=c("Beta","gamma","rho","N")) -> sir
+rmeas <- Csnippet("
+  B = rpois(rho*R1+1e-6);
+")
+
+pomp(subset(bsflu,select=-C),times="day",t0=0,
+     rprocess=euler.sim(rproc,delta.t=1/5),
+     initializer=init,rmeasure=rmeas,dmeasure=dmeas,
+     statenames=c("S","I","R1"),
+     paramnames=c("Beta","mu_I","mu_R1","rho")) -> flu
 
 #' 
 #' Let's generate a large number of simulated trajectories at some particular point in parameter space.
-## ----bbs-mc-like-2,results='markup'--------------------------------------
-simulate(sir,params=c(Beta=2,gamma=1,rho=0.8,N=2600),
-         nsim=1000,states=TRUE) -> x
-matplot(time(sir),t(x["H",1:50,]),type='l',lty=1,
-        xlab="time",ylab="H",bty='l',col='blue')
-lines(time(sir),obs(sir,"B"),lwd=2,col='black')
+## ----bbs-mc-like-2-------------------------------------------------------
+simulate(flu,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9),
+         nsim=5000,states=TRUE) -> x
+matplot(time(flu),t(x["R1",1:50,]),type='l',lty=1,
+        xlab="time",ylab="R1",bty='l',col='blue')
+lines(time(flu),obs(flu,"B"),lwd=2,col='black')
 
 #' 
 #' We can use the function `dmeasure` to evaluate the log likelihood of the data given the states, the model, and the parameters:
-## ----bbs-mc-like-3,results='markup',cache=T------------------------------
-ell <- dmeasure(sir,y=obs(sir),x=x,times=time(sir),
-                params=c(Beta=2,gamma=1,rho=0.8,N=2600),log=TRUE)
+## ----bbs-mc-like-3,cache=T-----------------------------------------------
+ell <- dmeasure(flu,y=obs(flu),x=x,times=time(flu),log=TRUE,
+                params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9))
 dim(ell)
 
 #' According to the equation above, we should sum up the log likelihoods across time:
-## ----bbs-mc-like-4,results='markup'--------------------------------------
-ell <- apply(ell,1,sum); summary(exp(ell)); logmeanexp(ell,se=TRUE)
+## ----bbs-mc-like-4-------------------------------------------------------
+ell <- apply(ell,1,sum)
+summary(exp(ell))
 
-#' [The `logmeanexp` command is used to counteract Jensen's inequality.]
-#' The error in the estimate is  high and therefore the estimated likelihood is imprecise.
+#' The variability in the individual likelihoods is high and therefore the likelihood esitmate is imprecise.
 #' We will need many simulations to get an estimate of the likelihood sufficiently precise to be of any use in parameter estimation or model selection.
 #' 
-#' What's the problem?
-#' Essentially, far too many of the trajectories don't pass near the data.
+#' What is the problem?
+#' Essentially, very few of the trajectories pass anywhere near the data and therefore almost all have extremely bad likelihoods.
 #' Moreover, once a trajectory diverges from the data, it almost never comes back.
 #' While the calculation is "correct" in that it will converge to the true likelihood as the number of simulations tends to $\infty$, we waste a lot of effort investigating trajectories of very low likelihood.
 #' *This is a consequence of the fact that we are proposing trajectories in a way that is completely unconditional on the data.*
@@ -251,15 +255,16 @@ ell <- apply(ell,1,sum); summary(exp(ell)); logmeanexp(ell,se=TRUE)
 #' In **pomp**, the basic particle filter is implemented in the command `pfilter`.
 #' We must choose the number of particles to use by setting the `Np` argument.
 #' 
-## ----sir-pfilter-1,results='markup',cache=T------------------------------
-pf <- pfilter(sir,Np=1000,params=c(Beta=2,gamma=1,rho=0.8,N=2600))
+## ----flu-pfilter-1,cache=T-----------------------------------------------
+pf <- pfilter(flu,Np=5000,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9))
 logLik(pf)
 
 #' 
 #' We can run a few particle filters to get an estimate of the Monte Carlo variability:
-## ----sir-pfilter-2,results='markup',cache=T------------------------------
-pf <- replicate(10,pfilter(sir,Np=1000,
-                           params=c(Beta=2,gamma=1,rho=0.8,N=2600)))
+## ----flu-pfilter-2,cache=T-----------------------------------------------
+pf <- replicate(10,
+                pfilter(flu,Np=5000,
+                        params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9)))
 ll <- sapply(pf,logLik)
 logmeanexp(ll,se=TRUE)
 
@@ -277,27 +282,27 @@ logmeanexp(ll,se=TRUE)
 #' - In higher dimensions, one can still think of peaks and valleys and ridges. 
 #' However, as the dimension increases it quickly becomes hard to imagine the surface.
 #' 
-#' To get an idea of what the likelihood surface looks like in the neighborhood of the default parameter set supplied by `sir`, we can construct some likelihood *slices*.
-#' We'll make slices in the $\beta$ and $\gamma$ directions.
+#' To get an idea of what the likelihood surface looks like in the neighborhood of the default parameter set supplied by `flu`, we can construct some likelihood *slices*.
+#' We'll make slices in the $\beta$ and $\mu_I$ directions.
 #' Both slices will pass through the default parameter set.
 #' 
-## ----sir-like-slice,cache=TRUE,results='hide'----------------------------
+## ----flu-like-slice,cache=TRUE,results='hide'----------------------------
 sliceDesign(
-  c(Beta=2,gamma=1,rho=0.8,N=2600),
+  c(Beta=2,mu_I=1,mu_R1=1/4,rho=0.9),
   Beta=rep(seq(from=0.5,to=4,length=40),each=3),
-  gamma=rep(seq(from=0.5,to=2,length=40),each=3)) -> p
+  mu_I=rep(seq(from=0.5,to=2,length=40),each=3)) -> p
 
 library(foreach)
 library(doParallel)
 registerDoParallel()
 
-set.seed(998468235L,kind="L'Ecuyer")
+set.seed(108028909,kind="L'Ecuyer")
 
 foreach (theta=iter(p,"row"),.combine=rbind,
          .inorder=FALSE,
          .options.multicore=list(set.seed=TRUE)
 ) %dopar% {
-  pfilter(sir,params=unlist(theta),Np=5000) -> pf
+  pfilter(flu,params=unlist(theta),Np=5000) -> pf
   theta$loglik <- logLik(pf)
   theta
 } -> p
@@ -306,12 +311,12 @@ foreach (theta=iter(p,"row"),.combine=rbind,
 #' Note that we've used the **foreach** package with the parallel backend (**doParallel**) to parallelize these computations.
 #' To ensure that we have high-quality random numbers in each parallel *R* session, we use a parallel random number generator (`kind="L'Ecuyer"`, `.options.multicore=list(set.seed=TRUE)`).
 #' 
-## ----sir-like-slice-plot,cache=FALSE,echo=FALSE,results="hide"-----------
+## ----flu-like-slice-plot,cache=FALSE,echo=FALSE--------------------------
 library(magrittr)
 library(reshape2)
 library(ggplot2)
 p %>% 
-  melt(measure=c("Beta","gamma")) %>%
+  melt(measure=c("Beta","mu_I")) %>%
   subset(variable==slice) %>%
   ggplot(aes(x=value,y=loglik,color=variable))+
   geom_point()+
@@ -331,13 +336,13 @@ p %>%
 #' 
 #' Slices offer a very limited perspective on the geometry of the likelihood surface.
 #' With just two parameters, we can evaluate the likelihood at a grid of points and visualize the surface directly.
-## ----sir-grid1-----------------------------------------------------------
-bake(file="sir-grid1.rds",seed=421776444,kind="L'Ecuyer",{
+## ----flu-grid1-----------------------------------------------------------
+bake(file="flu-grid1.rds",seed=421776444,kind="L'Ecuyer",{
 
-    expand.grid(Beta=seq(from=1,to=4,length=50),
-                gamma=seq(from=0.7,to=3,length=50),
-                rho=0.8,
-                N=2600) -> p
+    expand.grid(Beta=seq(from=1.5,to=5,length=50),
+                mu_I=seq(from=0.7,to=4,length=50),
+                mu_R1=1/4,
+                rho=0.9) -> p
     
     library(foreach)
     library(doParallel)
@@ -348,41 +353,36 @@ bake(file="sir-grid1.rds",seed=421776444,kind="L'Ecuyer",{
              .options.multicore=list(set.seed=TRUE)
              ) %dopar% 
     {
-        pfilter(sir,params=unlist(theta),Np=5000) -> pf
+        pfilter(flu,params=unlist(theta),Np=5000) -> pf
         theta$loglik <- logLik(pf)
         theta
     }
     
 })-> p
 
-## ----sir-grid1-plot,echo=F,cache=F,purl=T--------------------------------
+## ----flu-grid1-plot,echo=F,purl=T----------------------------------------
 library(magrittr)
 library(reshape2)
 library(plyr)
-p %<>% arrange(Beta,gamma,rho,N)
-saveRDS(p,file="sir-grid1.rds")
-contint <- 3
+p %<>% arrange(Beta,mu_I,mu_R1,rho)
+saveRDS(p,file="flu-grid1.rds")
 p %>% 
   mutate(loglik=ifelse(loglik>max(loglik)-100,loglik,NA)) %>%
-  ggplot(aes(x=Beta,y=gamma,z=loglik,fill=loglik))+
+  ggplot(aes(x=Beta,y=mu_I,z=loglik,fill=loglik))+
   geom_tile(color=NA)+
-  geom_contour(color='black',binwidth=contint)+
   scale_fill_gradient()+
-  labs(x=expression(beta),y=expression(gamma))
+  labs(x=expression(beta),y=expression(mu[I]))
 
 #' 
 #' In the above, all points with log likelihoods less than 100 units below the maximum are shown in grey.
-#' The contour interval is `r contint` log units.
 #' 
 #' ------------------------
 #' 
 #' #### Exercise: 2D likelihood slice
 #' 
-#' Compute a slice of the likelihood in the $\beta$-$N$ plane.
+#' Compute a slice of the likelihood in the $\beta$-$\rho$ plane.
 #' 
 #' ------------------------
-#' 
-#' 
 #' 
 #' 
 #' ## Maximizing the likelihood
@@ -479,14 +479,14 @@ p %>%
 #'   For example, we can fix the seed of the pseudo-random number generator (RNG).
 #'   A side effect will be that the objective function becomes jagged, marked by many small local knolls and pits.
 #'   Alternatively, we can use a stochastic optimization algorithm, with which we will be only be able to obtain estimates of our MLE.
-#'   This is the trade-off between a noisy and a rough objective function.
+#'   This is the trade-off between a rough and a noisy objective function.
 #' 1. Because the particle filter gives us just an estimate of the likelihood and no information about the derivative, we must choose an algorithm that is "derivative-free".
 #'   There are many such, but we can expect less efficiency than would be possible with derivative information.
 #'   Note that finite differencing is not an especially promising way of constructing derivatives. 
 #'   The price would be a $n$-fold increase in cpu time, where $n$ is the dimension of the parameter space.
 #'   Also, since the likelihood is noisily estimated, we would expect the derivative estimates to be even noisier.
 #' 1. Finally, the parameters set we must optimize over is not unbounded.
-#'   We must have $\beta,\gamma>0$ and $0<\rho<1$.
+#'   We must have $\beta,\mu_I>0$ and $0<\rho<1$.
 #'   We must therefore select an optimizer that can solve this *constrained maximization problem*, or find some of way of turning it into an unconstrained maximization problem.
 #'   For example, we can transform the parameters onto a scale on which there are no constraints.
 #' 
@@ -494,27 +494,29 @@ p %>%
 #' We'll try using `optim`'s default method: Nelder-Mead, fixing the random-number generator seed to make the likelihood calculation deterministic.
 #' Since Nelder-Mead is an unconstrained optimizer, we must transform the parameters.
 #' The following `Csnippet`s encode an appropriate transformation and its inverse, and introduce them into the `pomp` object.
-## ----sir-partrans--------------------------------------------------------
+## ----flu-partrans--------------------------------------------------------
 toEst <- Csnippet("
  TBeta = log(Beta);
- Tgamma = log(gamma);
+ Tmu_R1 = log(mu_R1);
+ Tmu_I = log(mu_I);
  Trho = logit(rho);
 ")
 
 fromEst <- Csnippet("
  TBeta = exp(Beta);
- Tgamma = exp(gamma);
+ Tmu_I = exp(mu_I);
+ Tmu_R1 = exp(mu_R1);
  Trho = expit(rho);
 ")
 
-pomp(sir,toEstimationScale=toEst,
+pomp(flu,toEstimationScale=toEst,
      fromEstimationScale=fromEst,
-     paramnames=c("Beta","gamma","rho")) -> sir
+     paramnames=c("Beta","mu_I","mu_R1","rho")) -> flu
 
 #' 
 #' Let's fix a reference point in parameter space and insert these parameters into the `pomp` object:
-## ----sir-ref-params------------------------------------------------------
-coef(sir) <- c(Beta=2,gamma=1,rho=0.8,N=2600)
+## ----flu-ref-params------------------------------------------------------
+coef(flu) <- c(Beta=2,mu_I=1,mu_R1=1/4,rho=0.9,N=763)
 
 #' 
 #' The following constructs a function returning the negative log likelihood of the data at a given point in parameter space.
@@ -523,52 +525,49 @@ coef(sir) <- c(Beta=2,gamma=1,rho=0.8,N=2600)
 #' Note too, how this function returns a large (and therefore bad) value when the particle filter encounters and error.
 #' This behavior makes the objective function more robust.
 #' 
-## ----sir-like-optim-1,echo=T,eval=T,results='markup'---------------------
+## ----flu-like-optim-1,echo=T,eval=T--------------------------------------
 neg.ll <- function (par, est) {
-  allpars <- coef(sir,transform=TRUE)
+  allpars <- coef(flu,transform=TRUE)
   allpars[est] <- par
   try(
     freeze(
-      pfilter(sir,params=partrans(sir,allpars,dir="fromEst"),
-              Np=1000),
-      seed=5859684
+      pfilter(flu,params=partrans(flu,allpars,dir="fromEst"),
+              Np=2000),
+      seed=915909831
     )
   ) -> pf
-  if (inherits(pf,"try-error")) {
-    1e10                 ## a big, bad number
-  } else {
-    -logLik(pf)
-  }
+  if (inherits(pf,"try-error")) 1e10 else -logLik(pf)
 }
 
 #' 
 #' Now we call `optim` to minimize this function:
-## ----sir-like-optim-2,results='markup',cache=T---------------------------
+## ----flu-like-optim-2,cache=T--------------------------------------------
 ## use Nelder-Mead with fixed RNG seed
 fit <- optim(
-  par=c(log(1), log(2), log(0.8)),
-  est=c("gamma","Beta","rho"),
+  par=c(log(1), log(2), log(1/4), log(0.9)),
+  est=c("mu_I","Beta","mu_R1","rho"),
   fn=neg.ll,
   method="Nelder-Mead",
   control=list(maxit=400,trace=0)
 )
 
-mle <- sir
-coef(mle,c("gamma","Beta","rho"),transform=TRUE) <- fit$par
-coef(mle,c("gamma","Beta","rho")) ## point estimate
+mle <- flu
+coef(mle,c("mu_I","Beta","mu_R1","rho"),transform=TRUE) <- fit$par
+coef(mle,c("mu_I","Beta","mu_R1","rho")) ## point estimate
 
 fit$val
 
-lls <- replicate(n=5,logLik(pfilter(mle,Np=5000)))
+lls <- replicate(n=5,logLik(pfilter(mle,Np=20000)))
 ll <- logmeanexp(lls,se=TRUE); ll
-
-simulate(mle,nsim=8,as.data.frame=TRUE,include.data=TRUE) -> sims
 
 #' 
 #' We plot some simulations at these parameters.
+## ----flu-sims------------------------------------------------------------
+simulate(mle,nsim=10,as.data.frame=TRUE,include.data=TRUE) -> sims
+
 #' The data are shown in blue.
 #' The `r max(sims$sim)` simulations are shown in red.
-## ----sir-like-optim-plot,echo=F------------------------------------------
+## ----flu-sims-plot,echo=F------------------------------------------------
 ggplot(data=sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
   guides(color=FALSE)+
   geom_line()
