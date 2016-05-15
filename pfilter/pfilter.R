@@ -56,6 +56,7 @@ set.seed(594709947)
 #' ### The likelihood function
 #' 
 #' - The basis for modern frequentist, Bayesian, and information-theoretic inference.
+#' - Method of maximum likelihood introduced by @Fisher1922.
 #' - The function itself is a representation of the what the data have to say about the parameters.
 #' - A good general reference on likelihood is @Pawitan2001.
 #' 
@@ -63,11 +64,11 @@ set.seed(594709947)
 #' 
 #' Data are a sequence of $N$ observations, denoted $y_{1:N}^*$.
 #' A statistical model is a density function $f(y_{1:N};\theta)$ which defines a probability distribution for each value of a parameter vector $\theta$.
-#' Statistical inference involves deciding for which (if any) values of $\theta$ it is reasonable to model $y_{1:N}^*$ as a random draw from $f(y_{1:N};\theta)$.
+#' To perform statistical inference, we must decide, among other things, for which (if any) values of $\theta$ it is reasonable to model $y^*_{1:N}$ as a random draw from $f(y_{1:N};\theta)$.
 #' 
 #' The likelihood function is the density function evaluated at the data.
 #' It is usually convenient to work with the log likelihood function,
-#' $$\loglik(\theta)=\log f(y_{1:N}^*;\theta)$$
+#' $$\loglik(\theta)=\log f(y^*_{1:N};\theta)$$
 #' 
 #' #### Modeling using discrete and continuous distributions
 #' 
@@ -115,16 +116,24 @@ set.seed(594709947)
 #' What is the likelihood?
 #' 
 #' Since the probability of the observation, $Y_n$, depends only on $X_n$ and $\theta$, and since, in particular $Y_{m}$ and $Y_{n}$ are independent given $X_{m}$ and $X_{n}$, we have $$\lik(\theta) = \prod_{n} f_{Y_n|X_n}(y_n^*;x_n(\theta),\theta)$$ or $$\ell(\theta) = \log\lik(\theta) = \sum_{n} \log f_{Y_n|X_n}(y_n^*;x_n(\theta),\theta).$$
+#' The following diagram illustrates this.
 #' 
+#' 
+#' In this diagram, note that we are plotting $x_n$ and $y_n$ on the same axes.
+#' In general, of course, they can belong to very different spaces.
 #' 
 #' #### General case: stochastic unobserved state process
 #' 
 #' For a POMP model, the likelihood takes the form of an integral:
 #' $$\lik(\theta)=\prob{y^*_{1:N}|\theta}=\int\!\prod_{n=1}^{N}\!\prob{y^*_n|x_n,\theta}\,\prob{x_n|x_{n-1},\theta}\,dx_{1}\,\cdots\,dx_{N}.$$
-#' To compute this integral, we can use [Monte Carlo integration](./monteCarlo.html#monte-carlo-integration).
-#' [See here for a quick introduction to Monte Carlo methods](./monteCarlo.html).
+#' This integral is high dimensional and, except for the simplest cases, can not be reduced analytically.
+#' A general approach to computing integrals, which will be useful here is [Monte Carlo integration](./monteCarlo.html#monte-carlo-integration).
+#' 
+#' [[See here for a brief introduction to Monte Carlo methods](./monteCarlo.html).]
+#' 
+#' Let us investigate a Monte Carlo integration scheme for the POMP likelihood.
 #' In particular, if we propose trajectories of the unobserved state process according to some probabilistic rule, we can generate a large number of these and approximate $\lik(\theta)$ by its Monte Carlo estimate.
-#' Specifically, let us generate $J$ trajectories of length $N$, $x_{n,j}$, $j=1\,\dots,J$, $n=1,\dots,N$.
+#' Specifically, let us randomly generate $J$ trajectories of length $N$, $x_{n,j}$, $j=1\,\dots,J$, $n=1,\dots,N$.
 #' Let $w_j$ denote the probability that we propose trajectory $j$.
 #' We compute the likelihood of each trajectory
 #' $$\lik{_j}(\theta)=\prod_{n=1}^{N} \prob{y^*_n|x_{n,j},\theta}\,\prob{x_{n,j}|x_{n-1,j},\theta}$$
@@ -144,9 +153,7 @@ set.seed(594709947)
 #' Let's reconstruct the toy SIR model we were working with.
 #' 
 ## ----sir-construct-------------------------------------------------------
-base_url <- "http://kingaa.github.io/short-course/"
-url <- paste0(base_url,"stochsim/bsflu_data.txt")
-bsflu <- read.table(url)
+read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt") -> bsflu
 
 sir_step <- Csnippet("
   double dN_SI = rbinom(S,1-exp(-Beta*I/N*dt));
@@ -177,7 +184,7 @@ pomp(bsflu,times="day",t0=0,
 #' Let's generate a large number of simulated trajectories at some particular point in parameter space.
 ## ----bbs-mc-like-2,results='markup'--------------------------------------
 simulate(sir,params=c(Beta=2,gamma=1,rho=0.8,N=2600),
-         nsim=10000,states=TRUE) -> x
+         nsim=1000,states=TRUE) -> x
 matplot(time(sir),t(x["H",1:50,]),type='l',lty=1,
         xlab="time",ylab="H",bty='l',col='blue')
 lines(time(sir),obs(sir,"B"),lwd=2,col='black')
@@ -200,16 +207,17 @@ ell <- apply(ell,1,sum); summary(exp(ell)); logmeanexp(ell,se=TRUE)
 #' What's the problem?
 #' Essentially, far too many of the trajectories don't pass near the data.
 #' Moreover, once a trajectory diverges from the data, it almost never comes back.
+#' While the calculation is "correct" in that it will converge to the true likelihood as the number of simulations tends to $\infty$, we waste a lot of effort investigating trajectories of very low likelihood.
 #' *This is a consequence of the fact that we are proposing trajectories in a way that is completely unconditional on the data.*
-#' The problem will only get worse with longer data sets.
+#' The problem will get much worse with longer data sets.
 #' 
 #' ### The particle filter
 #' 
-#' We can arrive at a more efficient algorithm by factorizing the likelihood in a different way:
+#' We arrive at a more efficient algorithm by factorizing the likelihood in a different way:
 #' $$\lik(\theta)=\prob{y^*_{1:N}|\theta}
 #' =\prod_{n}\,\prob{y^*_n|y^*_{1:n-1},\theta} 
 #' =\prod_{n}\,\int\!\prob{y^*_n|x_n,\theta}\,\prob{x_n|y^*_{1:n-1},\theta}\,dx_{n}.\tag{1}$$
-#' Now, the Markov property gives us that
+#' Now, the Markov property gives us the Chapman-Kolmogorov equation,
 #' $$\prob{x_n|y^*_{1:n-1},\theta} 
 #' = \int\!\prob{x_n|x_{n-1},\theta}\,\prob{x_{n-1}|y^*_{1:n-1},\theta}\,dx_{n-1},\tag{2}$$
 #' and Bayes' theorem tells us that
@@ -219,7 +227,7 @@ ell <- apply(ell,1,sum); summary(exp(ell)); logmeanexp(ell,se=TRUE)
 #' We'll refer to the distribution of $X_n | y^*_{1:n-1}$ as the *prediction distribution* at time $n$ and
 #' the distribution of $X_{n} | y^*_{1:n}$ as the *filtering distribution* at time $n$.
 #' 
-#' Let's use Monte Carlo techniques to estimate the sums.
+#' Let's use Monte Carlo techniques to estimate the integrals.
 #' Suppose $\left\{x_{n-1,j}^{F}\right\}_{j=1}^J$ is a set of points drawn from the filtering distribution at time $n-1$.
 #' Eqn.&nbsp;2 tells us that we obtain a sample $\left\{x_{n,j}^{P}\right\}$ of points drawn from the prediction distribution at time $n$ by simply simulating the process model:
 #' $$X_{n,j}^{P} \sim \mathrm{process}(x_{n-1,j}^{F},\theta), \qquad j=1,\dots,J.$$
@@ -228,7 +236,7 @@ ell <- apply(ell,1,sum); summary(exp(ell)); logmeanexp(ell,se=TRUE)
 #' $$\lik_n(\theta) = \prob{y^*_n|y^*_{1:n-1},\theta} = \sum_{x_{n}}\,\prob{y^*_{n}|x_{n},\theta}\,\prob{x_{n}|y^*_{1:n-1},\theta} \approx \frac{1}{J}\,\sum_j\,\prob{y^*_{n}|x_{n,j}^{P},\theta}.$$
 #' We can iterate this procedure through the data, one step at a time, alternately simulating and resampling, until we reach $n=N$.
 #' The full log likelihood is then approximately
-#' $$\loglik(\theta) = \log{\lik(\theta)} = \sum_n \log{\lik_n(\theta)}.$$
+#' $$\loglik(\theta) = \log{\lik(\theta)} \approx \sum_n \log{\lik_n(\theta)}.$$
 #' It can be shown that this estimate of the likelihood is unbiased.
 #' 
 #' This is known as the *sequential Monte Carlo* algorithm or the *particle filter*.
@@ -244,13 +252,13 @@ ell <- apply(ell,1,sum); summary(exp(ell)); logmeanexp(ell,se=TRUE)
 #' We must choose the number of particles to use by setting the `Np` argument.
 #' 
 ## ----sir-pfilter-1,results='markup',cache=T------------------------------
-pf <- pfilter(sir,Np=5000,params=c(Beta=2,gamma=1,rho=0.8,N=2600))
+pf <- pfilter(sir,Np=1000,params=c(Beta=2,gamma=1,rho=0.8,N=2600))
 logLik(pf)
 
 #' 
 #' We can run a few particle filters to get an estimate of the Monte Carlo variability:
 ## ----sir-pfilter-2,results='markup',cache=T------------------------------
-pf <- replicate(10,pfilter(sir,Np=10000,
+pf <- replicate(10,pfilter(sir,Np=1000,
                            params=c(Beta=2,gamma=1,rho=0.8,N=2600)))
 ll <- sapply(pf,logLik)
 logmeanexp(ll,se=TRUE)
@@ -351,14 +359,20 @@ bake(file="sir-grid1.rds",seed=421776444,kind="L'Ecuyer",{
 library(magrittr)
 library(reshape2)
 library(plyr)
+p %<>% arrange(Beta,gamma,rho,N)
+saveRDS(p,file="sir-grid1.rds")
+contint <- 3
 p %>% 
   mutate(loglik=ifelse(loglik>max(loglik)-100,loglik,NA)) %>%
   ggplot(aes(x=Beta,y=gamma,z=loglik,fill=loglik))+
   geom_tile(color=NA)+
-  geom_contour(color='black',binwidth=3)+
+  geom_contour(color='black',binwidth=contint)+
   scale_fill_gradient()+
   labs(x=expression(beta),y=expression(gamma))
 
+#' 
+#' In the above, all points with log likelihoods less than 100 units below the maximum are shown in grey.
+#' The contour interval is `r contint` log units.
 #' 
 #' ------------------------
 #' 
