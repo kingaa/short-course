@@ -464,6 +464,21 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' 
 #' --------------------------
 #' 
+#' #### Exercise: Fit more parameters.
+#' 
+#' Try to estimate $\beta$, $\mu_I$, $\rho$, and $\mu_{R1}$ simultaneously.
+#' Does your estimate of $\mu_{R1}$ differ from the value we computed from the raw data?
+#' How do you interpret the agreement or lack thereof?
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: Modify the measurement model
+#' 
+#' The Poisson measurement model used here may not seem easy to interpret.
+#' Formulate an alternative measurement model and maximize the likelihood to compare the alternative model.
+#' 
+#' --------------------------
+#' 
 #' #### Exercise: Construct a profile likelihood
 #' 
 #' How strong is the evidence about the contact rate, $\beta$, given this model and data? Use `mif2` to construct a profile likelihood. Due to time constraints, you may be able to compute only a preliminary version.

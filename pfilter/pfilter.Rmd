@@ -262,19 +262,22 @@ Let's reconstruct the toy SIR model we were working with.
 read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt") -> bsflu
 
 rproc <- Csnippet("
-  double N = 762;
+  double N = 763;
   double t1 = rbinom(S,1-exp(-Beta*I/N*dt));
   double t2 = rbinom(I,1-exp(-mu_I*dt));
   double t3 = rbinom(R1,1-exp(-mu_R1*dt));
+  double t4 = rbinom(R2,1-exp(-mu_R2*dt));
   S  -= t1;
   I  += t1 - t2;
   R1 += t2 - t3;
+  R2 += t3 - t4;
 ")
 
 init <- Csnippet("
   S = 762;
   I = 1;
   R1 = 0;
+  R2 = 0;
 ")
 
 dmeas <- Csnippet("
@@ -283,28 +286,29 @@ dmeas <- Csnippet("
 
 rmeas <- Csnippet("
   B = rpois(rho*R1+1e-6);
+  C = rpois(rho*R2+1e-6);
 ")
 
-pomp(subset(bsflu,select=-C),times="day",t0=0,
+pomp(bsflu,times="day",t0=0,
      rprocess=euler.sim(rproc,delta.t=1/5),
      initializer=init,rmeasure=rmeas,dmeasure=dmeas,
-     statenames=c("S","I","R1"),
-     paramnames=c("Beta","mu_I","mu_R1","rho")) -> flu
+     statenames=c("S","I","R1","R2"),
+     paramnames=c("Beta","mu_I","mu_R1","mu_R2","rho")) -> flu
 ```
 
 Let's generate a large number of simulated trajectories at some particular point in parameter space.
 ```{r bbs-mc-like-2}
-simulate(flu,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9),
+simulate(flu,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9),
          nsim=5000,states=TRUE) -> x
 matplot(time(flu),t(x["R1",1:50,]),type='l',lty=1,
-        xlab="time",ylab="R1",bty='l',col='blue')
+        xlab="time",ylab=expression(R[1]),bty='l',col='blue')
 lines(time(flu),obs(flu,"B"),lwd=2,col='black')
 ```
 
 We can use the function `dmeasure` to evaluate the log likelihood of the data given the states, the model, and the parameters:
 ```{r bbs-mc-like-3,cache=T}
 ell <- dmeasure(flu,y=obs(flu),x=x,times=time(flu),log=TRUE,
-                params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9))
+                params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9))
 dim(ell)
 ```
 According to the equation above, we should sum up the log likelihoods across time:
@@ -363,7 +367,7 @@ In **pomp**, the basic particle filter is implemented in the command `pfilter`.
 We must choose the number of particles to use by setting the `Np` argument.
 
 ```{r flu-pfilter-1,cache=T}
-pf <- pfilter(flu,Np=5000,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9))
+pf <- pfilter(flu,Np=5000,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9))
 logLik(pf)
 ```
 
@@ -371,7 +375,7 @@ We can run a few particle filters to get an estimate of the Monte Carlo variabil
 ```{r flu-pfilter-2,cache=T}
 pf <- replicate(10,
                 pfilter(flu,Np=5000,
-                        params=c(Beta=3,mu_I=1/2,mu_R1=1/4,rho=0.9)))
+                        params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9)))
 ll <- sapply(pf,logLik)
 logmeanexp(ll,se=TRUE)
 ```
@@ -389,13 +393,13 @@ Narrow ridges can be easy to fall off, and hard to get back on to.
 - In higher dimensions, one can still think of peaks and valleys and ridges. 
 However, as the dimension increases it quickly becomes hard to imagine the surface.
 
-To get an idea of what the likelihood surface looks like in the neighborhood of the default parameter set supplied by `flu`, we can construct some likelihood *slices*.
+To get an idea of what the likelihood surface looks like in the neighborhood of a point in parameter space, we can construct some likelihood *slices*.
 We'll make slices in the $\beta$ and $\mu_I$ directions.
-Both slices will pass through the default parameter set.
+Both slices will pass through the central point.
 
 ```{r flu-like-slice,cache=TRUE,results='hide'}
 sliceDesign(
-  c(Beta=2,mu_I=1,mu_R1=1/4,rho=0.9),
+  center=c(Beta=2,mu_I=1,mu_R1=1/4,mu_R2=1/1.8,rho=0.9),
   Beta=rep(seq(from=0.5,to=4,length=40),each=3),
   mu_I=rep(seq(from=0.5,to=2,length=40),each=3)) -> p
 
@@ -448,7 +452,7 @@ bake(file="flu-grid1.rds",seed=421776444,kind="L'Ecuyer",{
 
     expand.grid(Beta=seq(from=1.5,to=5,length=50),
                 mu_I=seq(from=0.7,to=4,length=50),
-                mu_R1=1/4,
+                mu_R1=1/4,mu_R2=1/1.8,
                 rho=0.9) -> p
     
     library(foreach)
@@ -471,17 +475,17 @@ bake(file="flu-grid1.rds",seed=421776444,kind="L'Ecuyer",{
 library(magrittr)
 library(reshape2)
 library(plyr)
-p %<>% arrange(Beta,mu_I,mu_R1,rho)
+p %<>% arrange(Beta,mu_I,mu_R1,mu_R2,rho)
 saveRDS(p,file="flu-grid1.rds")
 p %>% 
-  mutate(loglik=ifelse(loglik>max(loglik)-100,loglik,NA)) %>%
+  mutate(loglik=ifelse(loglik>max(loglik)-50,loglik,NA)) %>%
   ggplot(aes(x=Beta,y=mu_I,z=loglik,fill=loglik))+
   geom_tile(color=NA)+
   scale_fill_gradient()+
   labs(x=expression(beta),y=expression(mu[I]))
 ```
 
-In the above, all points with log likelihoods less than 100 units below the maximum are shown in grey.
+In the above, all points with log likelihoods less than 50 units below the maximum are shown in grey.
 
 ------------------------
 
@@ -623,7 +627,7 @@ pomp(flu,toEstimationScale=toEst,
 
 Let's fix a reference point in parameter space and insert these parameters into the `pomp` object:
 ```{r flu-ref-params}
-coef(flu) <- c(Beta=2,mu_I=1,mu_R1=1/4,rho=0.9,N=763)
+coef(flu) <- c(Beta=2,mu_I=1,mu_R1=512/sum(bsflu$B),mu_R2=512/sum(bsflu$C),rho=0.9)
 ```
 
 The following constructs a function returning the negative log likelihood of the data at a given point in parameter space.
@@ -632,7 +636,7 @@ Note how the `freeze` function is used to fix the seed of the RNG.
 Note too, how this function returns a large (and therefore bad) value when the particle filter encounters and error.
 This behavior makes the objective function more robust.
 
-```{r flu-like-optim-1,echo=T,eval=T}
+```{r flu-like-optim-1}
 neg.ll <- function (par, est) {
   allpars <- coef(flu,transform=TRUE)
   allpars[est] <- par
@@ -648,19 +652,19 @@ neg.ll <- function (par, est) {
 ```
 
 Now we call `optim` to minimize this function:
-```{r flu-like-optim-2,cache=T}
+```{r flu-like-optim-2}
 ## use Nelder-Mead with fixed RNG seed
 fit <- optim(
-  par=c(log(1), log(2), log(1/4), log(0.9)),
-  est=c("mu_I","Beta","mu_R1","rho"),
+  par=c(log(2), log(1), log(0.9/(1-0.9))),
+  est=c("Beta","mu_I","rho"),
   fn=neg.ll,
   method="Nelder-Mead",
   control=list(maxit=400,trace=0)
 )
 
 mle <- flu
-coef(mle,c("mu_I","Beta","mu_R1","rho"),transform=TRUE) <- fit$par
-coef(mle,c("mu_I","Beta","mu_R1","rho")) ## point estimate
+coef(mle,c("Beta","mu_I","rho"),transform=TRUE) <- fit$par
+coef(mle)
 
 fit$val
 
@@ -703,6 +707,13 @@ The search of parameter space we conducted above was local.
 It is possible that we found a local maximum, but that other maxima exist with higher likelihoods.
 Conduct a more thorough search by initializing the Nelder-Mead starting points across a wider region of parameter space.
 Do you find any other local maxima?
+
+--------------------------
+
+#### Exercise: Modify the measurement model
+
+The Poisson measurement model used here may not seem easy to interpret.
+Formulate an alternative measurement model and maximize the likelihood to compare the alternative model.
 
 --------------------------
 
