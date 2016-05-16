@@ -40,124 +40,137 @@ if (is.na(ncpu)) ncpu <- 40
 #' 
 #' ## Objectives
 #' 
-#' 1. display a published case study using plug-and-play methods with non-trivial model complexities
-#' 1. demonstrate the use of profile likelihood in scientific inference
-#' 1. discuss the interpretation of parameter estimates
-#' 1. emphasize the need to allow for extra sources of stochasticity in modeling
-#' 
-#' ----------------------------------
+#' 1. To display a published case study using plug-and-play methods with non-trivial model complexities
+#' 1. To demonstrate the use of profile likelihood in scientific inference
+#' 1. To discuss the interpretation of parameter estimates
+#' 1. To emphasize the potential need for extra sources of stochasticity in modeling
 #' 
 #' ## Measles revisited
 #' 
 #' ### Motivation: challenges in inference from disease dynamics
 #' 
-#' - Understanding, forecasting, managing epidemiological systems increasingly depends on models
-#' - Dynamic models can be used to test causal hypotheses
+#' - Understanding, forecasting, managing epidemiological systems increasingly depends on models.
+#' - Dynamic models can be used to test causal hypotheses.
 #' - Real epidemiological systems:
-#'     - are nonlinear
-#'     - are stochastic
-#'     - are nonstationary
-#' 	  - evolve in continuous time
-#' 	  - have hidden variables
-#' 	  - can be measured only with (large) error
-#' - Dynamics of infectious disease outbreaks illustrate this well
+#' - are nonlinear
+#' - are stochastic
+#' - are nonstationary
+#' - evolve in continuous time
+#' - have hidden variables
+#' - can be measured only with (large) error
+#' - Dynamics of infectious disease outbreaks illustrate this well.
+#' 
+#' - Measles is the paradigm for a nonlinear ecological system that can be well described by low-dimensional nonlinear dynamics.
+#' - A tradition of careful modeling studies have proposed and found evidence for a number of specific mechanisms, including
+#' - a high value of $R_0$ (c. 15--20)
+#' - seasonality in transmission rates associated with school terms
+#' - a birth cohort effect
+#' - response to changing birth rates
+#' - under-reporting
+#' - fadeouts and reintroductions that scale with city size
+#' - spatial traveling waves
+#' - Much of this evidence has been amassed from fitting models to data, using a variety of methods.
 #' 
 #' 
-#' ----------------------------------
 #' 
 #' ### Outline
 #' 
-#' - revisit classic measles data set
-#' - ask questions about:
-#'     - measles extinction and recolonization
-#'     - transmission rates
-#'     - seasonality
-#'     - resupply of susceptibles
-#' - use a model that 
-#'     1. expresses our current understanding of measles dynamics
-#'     1. cannot be fit by existing likelihood-based methods
-#' - examine data from large and small towns using the same model
-#' - does our perspective on this disease change?
-#' - what bigger lessons can we learn regarding inference for dynamical systems?
+#' - We revisit a classic measles data set, weekly case reports in 954 urban centers in England and Wales during the pre-vaccine era (1950--1963).
+#' - We revisit questions of:
+#' - measles extinction and recolonization
+#' - transmission rates
+#' - seasonality
+#' - resupply of susceptibles
+#' - We use a model that 
+#' 1. expresses our current understanding of measles dynamics
+#' 1. includes a long list of mechanisms that have been proposed and demonstrated in the literature
+#' 1. cannot be fit by existing likelihood-based methods
+#' - We examine data from large and small towns using the same model, something no existing methods have been able to do.
+#' - We ask: does our perspective on this disease change when we expect the models to explain the data in detail?
+#' - What bigger lessons can we learn regarding inference for dynamical systems?
 #' 
-#' ----------------------------------
+#' ## He, Ionides, & King, *J. R. Soc. Interface* (2010)
 #' 
-#' ### He, Ionides, & King, *J. R. Soc. Interface* (2010)
+#' ### Data sets
 #' 
-#' #### Data sets
-#' 
-#'   - Twenty towns 
-#' 	- population sizes: 2k--3.4M
-#' 	- Weekly case reports, 1950--1963
-#' 	- Annual birth records and population sizes, 1944--1963
-#' 
-#'  
-#' 
-#' ---------------------------------------
+#' - Twenty towns, including
+#' - 10 largest
+#' - 10 smaller, chosen at random
+#' - population sizes: 2k--3.4M
+#' - Weekly case reports, 1950--1963
+#' - Annual birth records and population sizes, 1944--1963
 #' 
 #' 
-#' #### Continuous-time Markov process model
 #' 
 #' 
-#' ![model diagram](./model_diagram.png)
+#' ### Continuous-time Markov process model
+#' 
+#' Diagram of the model:
+#' 
+#' 
+#' ![](./model_diagram.png)
 #' 
 #' - $B(t) = \text{birth rate, from data}$
 #' - $N(t) = \text{population size, from data}$
-#' - overdispersed binomial measurement model: $\mathrm{cases}_t\,\vert\,I{\to}R=z_t \sim \dist{Normal}{\rho\,z_t,\rho\,(1-\rho)\,z_t+(\psi\,\rho\,z_t)^2}$
+#' - Overdispersed binomial measurement model: $\mathrm{cases}_t\,\vert\,\dlta{N}_{IR}=z_t \sim \dist{Normal}{\rho\,z_t,\rho\,(1-\rho)\,z_t+(\psi\,\rho\,z_t)^2}$
 #' 
-#' - entry into susceptible class:
+#' - Entry into susceptible class:
 #' $$\mu_{BS}(t) = (1-c)\,B(t-\tau)+c\,\delta(t-t_0)\,\int_{t-1}^{t}\,B(t-\tau-s)\,ds$$
 #' 
-#' - force of infection
+#' - Force of infection
 #' $$\mu_{SE}(t) = \tfrac{\beta(t)}{N(t)}\,(I+\iota)\,\zeta(t)$$
 #' 
 #' - $c = \text{cohort effect}$  
 #' - $\tau = \text{school-entry delay}$  
-#' - $\beta(t) = \text{school-term transmission}$  
+#' - $\beta(t) = \text{school-term transmission} = \begin{cases}\beta_0\,(1+a) &\text{during term}\\\beta_0\,(1-a) &\text{during vacation}\end{cases}$  
 #' - $\iota = \text{imported infections}$
-#' - $\zeta(t) = \text{white noise with intensity}\,\sigma_{SE}$
+#' - $\zeta(t) = \text{Gamma white noise with intensity}\,\sigma_{SE}$
 #' 
 #' 
-#' ---------------------------------------
+#' ### Fitting procedure
 #' 
-#' #### Fitting procedure
-#' 
-#' - a large Latin-hypercube design was used to initiate searches
-#' - iterated filtering to maximize the likelihood
-#' - point estimates of all parameters for 20 cities
-#' - profile likelihoods to quantify uncertainty in London and Hastings
-#' 
-#' ---------------------------------------
+#' - A large Latin-hypercube design was used to initiate searches.
+#' - Iterated filtering was used to maximize the likelihood.
+#' - Obtain point estimates of all parameters for 20 cities.
+#' - Use profile likelihoods to quantify uncertainty in London and Hastings.
 #' 
 #' 
 #' #### Imported infections
 #' 
-#' $$\mu_{SE}=\frac{\beta(t)}{N(t)}\,(I+\iota)\,\zeta(t)$$
+#' $$\text{force of infection} = \mu_{SE}=\frac{\beta(t)}{N(t)}\,(I+\iota)\,\zeta(t)$$
 #' 
-#' 
-#' ---------------------------------------
 #' 
 #' 
 #' #### Seasonality
 #' 
 #' 
-#' ---------------------------------------
 #' 
 #' ### Notable findings
 #' 
 #' #### Cohort effect
 #' 
 #' 
-#' ---------------------------------------
-#' 
-#' #### $R_0$
-#' 
-#' 
-#' 
-#' ---------------------------------------
 #' 
 #' #### Birth delay
 #' 
+#' 
+#' #### Reporting rate
+#' 
+#' 
+#' #### Predicted vs observed critical community size
+#' 
+#' 
+#' ### Problematic results
+#' 
+#' #### $R_0$
+#' 
+#' - Recall that $R_0$ is the basic reproduction number: a measure of how communicable an infection is.
+#' - Existing estimates of $R_0$ (c. 15--20) come from two sources:
+#' - serology surveys
+#' - models fit to data using feature-based methods
+#' 
+#' 
+#' #### Parameter estimates
 #' 
 ## ----mles,include=FALSE--------------------------------------------------
 read.csv(text="
@@ -185,40 +198,20 @@ Sheffield,-2810.7,0.21,0.02,4,54.3,62.2,0.649,33.1,0.313,1.02,0.853,0.225,0.175,
 ",stringsAsFactors=FALSE) -> mles
 
 #' 
-#' ---------------------------------------
-#' 
-#' #### Reporting rate
-#' 
-#' 
-#' ---------------------------------------
-#' 
-#' #### Predicted vs observed critical community size
-#' 
-#' 
-#' ---------------------------------------
-#' 
-#' #### Parameter estimates
-#' 
 #' 
 #' $r = \mathrm{cor}(\log{\hat\theta},\log{N_{1950}})$
 #' 
-#' ---------------------------------------
-#' 
 #' #### Extrademographic stochasticity
-#' 
 #' 
 #' $$\mu_{SE}=\frac{\beta(t)}{N(t)}\,(I+\iota)\,\zeta(t)$$
 #' 
-#' 
-#' 
-#' ---------------------------------------
 #' 
 #' 
 #' ## Practicum
 #' 
 #' ### Objectives
 #' 
-#' 1. Demonstrate how further extra-demographic stochasticity can be modeled
+#' 1. Demonstrate how extra-demographic stochasticity can be modeled
 #' 1. Demonstrate the use of covariates in **pomp**
 #' 
 #' ### Preliminaries
@@ -248,6 +241,11 @@ datfile <- file.path(tempdir(),"twentycities.rda")
 download.file(daturl,destfile=datfile,mode="wb")
 load(datfile)
 
+#' 
+#' In the following, we'll be using the **plyr**, **reshape2**, and **magrittr** packages.
+#' These provide a number of tools for data munging that are extremely flexible and useful.
+#' [A brief explanation of these tools is provided here](../hadley/munging.html).
+#' 
 ## ----plot-data-----------------------------------------------------------
 measles %>% 
   mutate(year=as.integer(format(date,"%Y"))) %>%
@@ -265,15 +263,13 @@ demog %>% melt(id="year") %>%
   ggplot(aes(x=year,y=value))+geom_point()+
   facet_wrap(~variable,ncol=1,scales="free_y")
 
-#' 
-#' 
 ## ----prep-covariates-----------------------------------------------------
 demog %>% 
   summarize(
     time=seq(from=min(year),to=max(year),by=1/12),
     pop=predict(smooth.spline(x=year,y=pop),x=time)$y,
     birthrate=predict(smooth.spline(x=year+0.5,y=births),x=time-4)$y
-    ) -> covar
+  ) -> covar
 
 ## ----covarplot-----------------------------------------------------------
 plot(pop~time,data=covar,type='l')
@@ -312,7 +308,7 @@ points(births~I(year+0.5),data=demog)
 #' 
 #' ![model diagram](./model_diagram.png)
 #' 
-#' $b = \text{births}$  
+#' $B = \text{births}$  
 #' $S = \text{susceptibles}$  
 #' $E = \text{exposed, incubating}$  
 #' $I = \text{infectious}$  
@@ -408,7 +404,7 @@ dmeas <- Csnippet("
   double v = m*(1.0-rho+psi*psi*m);
   double tol = 1.0e-18;
   if (cases > 0.0) {
-	  lik = pnorm(cases+0.5,m,sqrt(v)+tol,1,0)-pnorm(cases-0.5,m,sqrt(v)+tol,1,0)+tol;
+    lik = pnorm(cases+0.5,m,sqrt(v)+tol,1,0)-pnorm(cases-0.5,m,sqrt(v)+tol,1,0)+tol;
   } else {
     lik = pnorm(cases+0.5,m,sqrt(v)+tol,1,0)+tol;
   }
@@ -450,7 +446,7 @@ dat %>%
        paramnames=c("R0","mu","sigma","gamma","alpha","iota",
                     "rho","sigmaSE","psi","cohort","amplitude",
                     "S_0","E_0","I_0","R_0")
-       ) -> m1
+  ) -> m1
 
 #' 
 #' The following codes plot the data and covariates together.
@@ -489,7 +485,7 @@ set.seed(998468235L,kind="L'Ecuyer")
 foreach(i=1:4,
         .packages="pomp",
         .options.multicore=list(set.seed=TRUE)
-        ) %dopar% {
+) %dopar% {
   pfilter(m1,Np=10000,params=theta)
 } -> pfs
 logmeanexp(sapply(pfs,logLik),se=TRUE)
@@ -584,8 +580,6 @@ pomp(m1,toEstimationScale=toEst,
 #' Set the extrademographic stochasticity parameter $\sigma_{SE}=0$, set $\alpha=1$, and fix $\rho$ and $\iota$ at their MLE values, then maximize the likelihood over the remaining parameters. 
 #' How do your results compare with those at the MLE? 
 #' Compare likelihoods but also use simulations to diagnose differences between the models.
-#' 
-#' 
 #' 
 #' --------------------------
 #' 
