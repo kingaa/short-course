@@ -42,13 +42,12 @@ set.seed(1221234211)
 #' 
 #' ## Objectives
 #' 
-#' 1. To convey and understanding of the nature of the problem of likelihood computation for POMP models
-#' 1. To explain the simplest particle filter algorithm
-#' 1. To give students experience visualizing and exploring likelihood surfaces using the particle filter for computation of the likelihood
-#' 1. Understand the basic techniques of likelihood-based inference
-#' 2. Describe how to apply these techniques in situations where the likelihood cannot be written down explicitly but can be evaluated and maximized via Monte Carlo methods.
-#' 3. Gain some experience at carrying out likelihood-based inferences for dynamic models using simulation-based statistical methodology in the **R** package **pomp**.
+#' Students completing this lesson will:
 #' 
+#' 1. Gain an understanding of the nature of the problem of likelihood computation for POMP models.
+#' 1. Be able to explain the simplest particle filter algorithm.
+#' 1. Gain experience in the visualization and exploration of likelihood surfaces.
+#' 1. Learn to apply standard optimization methods for the maximization of the likelihood.
 #' 
 #' ## Theory of the particle filter
 #' 
@@ -74,7 +73,7 @@ set.seed(1221234211)
 #' Recall that the probability distribution $f(y_{1:N};\theta)$ defines a random variable $Y_{1:N}$ for which probabilities can be computed as integrals of $f(y_{1:N};\theta)$.
 #' Specifically, for any event $E$ describing a set of possible outcomes of $Y_{1:N}$, 
 #' $$P[Y_{1:N} \in E] = \int_E f(y_{1:N};\theta)\, dy_{1:N}.$$ 
-#' If the model corresponds to a discrete distribution, then the integral is replaced by a sum and the probability density function is called a probability mass function.
+#' If the model corresponds to a discrete distribution, then the integral is replaced by a sum and the probability density function is called a *probability mass function*.
 #' The definition of the likelihood function remains unchanged.
 #' We will use the notation of continuous random variables, but all the methods apply also to discrete models. 
 #' 
@@ -342,26 +341,26 @@ p %>%
 #' With just two parameters, we can evaluate the likelihood at a grid of points and visualize the surface directly.
 ## ----flu-grid1-----------------------------------------------------------
 bake(file="flu-grid1.rds",seed=421776444,kind="L'Ecuyer",{
-
-    expand.grid(Beta=seq(from=1.5,to=5,length=50),
-                mu_I=seq(from=0.7,to=4,length=50),
-                mu_R1=1/4,mu_R2=1/1.8,
-                rho=0.9) -> p
-    
-    library(foreach)
-    library(doParallel)
-    registerDoParallel()
-    
-    ## Now we do the computation
-    foreach (theta=iter(p,"row"),.combine=rbind,.inorder=FALSE,
-             .options.multicore=list(set.seed=TRUE)
-             ) %dopar% 
-    {
-        pfilter(flu,params=unlist(theta),Np=5000) -> pf
-        theta$loglik <- logLik(pf)
-        theta
-    }
-    
+  
+  expand.grid(Beta=seq(from=1.5,to=5,length=50),
+              mu_I=seq(from=0.7,to=4,length=50),
+              mu_R1=1/4,mu_R2=1/1.8,
+              rho=0.9) -> p
+  
+  library(foreach)
+  library(doParallel)
+  registerDoParallel()
+  
+  ## Now we do the computation
+  foreach (theta=iter(p,"row"),.combine=rbind,.inorder=FALSE,
+           .options.multicore=list(set.seed=TRUE)
+  ) %dopar% 
+  {
+    pfilter(flu,params=unlist(theta),Np=5000) -> pf
+    theta$loglik <- logLik(pf)
+    theta
+  }
+  
 })-> p
 
 ## ----flu-grid1-plot,echo=F,purl=T----------------------------------------
@@ -401,9 +400,9 @@ p %>%
 #' - Intuitively, a model with a higher maximized likelihood should be preferable to a model with a substantially lower maximized likelihood. 
 #' - However, since $\Theta^*$ is a subset of $\Theta$, it is mathematically necessary that
 #' $$ \ell_\mathrm{max} \ge \ell^*_\mathrm{max}.$$
-#'   This raises the question of how close $\ell^*_\mathrm{max}$ should be to $\ell_\mathrm{max}$ to make it reasonable to prefer the simpler model $\Theta^*$ over the more complex model $\Theta$.
+#' This raises the question of how close $\ell^*_\mathrm{max}$ should be to $\ell_\mathrm{max}$ to make it reasonable to prefer the simpler model $\Theta^*$ over the more complex model $\Theta$.
 #' - The principle of parsimony (Occam's razor) advises that we be satisfied with the simpler model unless there is good evidence to do otherwise. 
-#'   For a formal hypothesis test, we accordingly set our null hypothesis to be $\Theta^*$ and our alternative hypothesis to be $\Theta$.
+#' For a formal hypothesis test, we accordingly set our null hypothesis to be $\Theta^*$ and our alternative hypothesis to be $\Theta$.
 #' - A likelihood ratio test rejects $\Theta^*$ in favor of $\Theta$ when 
 #' $$ \ell_\mathrm{max} -\ell_\mathrm{max}^* > c.$$
 #' - An elegant mathematical property (Wilks' theorem) says that, for regular parametric models where $N$ is large and $\Theta$ has $d$ more free parameters than $\Theta^*$, then $2(\ell_\mathrm{max}-\ell^*_\mathrm{max})$ has a chi-square distribution with $d$ degrees of freedom.
@@ -411,17 +410,17 @@ p %>%
 #' $$\ell_\mathrm{max} - \ell^*_\mathrm{max} > 1.92$$
 #' since $\prob{\chi^2_1>3.84}=0.05$.
 #' - One can carry out a simulation study to assess the actual size of this test, if one is concerned whether the asymptotic property of Wilks is sufficiently accurate. 
-#'   Fortunately, Wilks' theorem is often a good approximation for many finite-sample problems.
+#' Fortunately, Wilks' theorem is often a good approximation for many finite-sample problems.
 #' - Wilks' theorem gives a convenient, quick scientific interpretation of maximized log likelihood values.
-#'   One can choose later whether to refine the interpretation via further simulation studies.
+#' One can choose later whether to refine the interpretation via further simulation studies.
 #' - Akaike's information criterion (AIC) is defined by
 #' $$\mathrm{AIC} = -2(\mbox{maximized log likelihood}) +2(\mbox{# parameters}).$$
-#'   This criterion makes a slightly different decision, recommending $\Theta$ over $\Theta^*$ if $$\ell_\mathrm{max} -\ell_\mathrm{max}^* > d.$$
-#'   The justification of AIC is based on minimizing prediction error. AIC tends to prefer larger models than Occam's razor: 
-#'   heuristically, it values simplicity not for its own sake, but only because unnecessary parameters lead to over-fitting and hence greater out-of-fit forecasting error. 
+#' This criterion makes a slightly different decision, recommending $\Theta$ over $\Theta^*$ if $$\ell_\mathrm{max} -\ell_\mathrm{max}^* > d.$$
+#' The justification of AIC is based on minimizing prediction error. AIC tends to prefer larger models than Occam's razor: 
+#' heuristically, it values simplicity not for its own sake, but only because unnecessary parameters lead to over-fitting and hence greater out-of-fit forecasting error. 
 #' - Wilks' theorem applies only to nested hypotheses (when $\Theta^*$ is a subset of $\Theta$) whereas AIC is applicable to compare non-nested models, which may have entirely different structure. 
 #' - Although AIC is not designed to be a formal statistical test, it is a commonly used objective rule for model selection.
-#'   This rule could be intrepreted as a hypothesis test, with the size and power investigated by simulation, if desired.
+#' This rule could be intrepreted as a hypothesis test, with the size and power investigated by simulation, if desired.
 #' 
 #' --------------------------
 #' 
@@ -453,21 +452,21 @@ p %>%
 #' $$\ell(\hat\theta)=\ell_\mathrm{max},\quad \ell(\hat\theta^*)=\ell_\mathrm{max}^*.$$
 #' 
 #' - If the likelihood function has a flat region, or ridge, at its maximum then the MLE is not unique. 
-#'   Alternatively, one can talk about a maximum likelihood surface describing the set of parameter values for which $\ell(\hat\theta)=\ell_\mathrm{max}$.
+#' Alternatively, one can talk about a maximum likelihood surface describing the set of parameter values for which $\ell(\hat\theta)=\ell_\mathrm{max}$.
 #' - Flat, or nearly flat, ridges in the likelihood surface are not an idle concern. 
-#'   Many dynamic models have combinations of parameters that are weakly identified: they cannot be well estimated on the basis of the data.
+#' Many dynamic models have combinations of parameters that are weakly identified: they cannot be well estimated on the basis of the data.
 #' 
 #' ## Biological interpretation of parameter estimates
 #' 
 #' When we write down a mechanistic model for an epidemiological system, we have some idea of what we intend parameters to mean; a reporting rate, a contact rate between individuals, an immigration rate, a duration of immunity, etc. 
 #' 
 #' - The data and the parameter estimation procedure do not know about our intended interpretation of the model. 
-#'   It can and does happen that some parameter estimates, statistically consistent with the data, may be scientifically absurd according to the biological reasoning that went into building the model. 
+#' It can and does happen that some parameter estimates, statistically consistent with the data, may be scientifically absurd according to the biological reasoning that went into building the model. 
 #' - This can arise as a consequence of weak identifiability. 
 #' - It can also be a warning that the data do not agree that our model represents reality in the way we had hoped.
-#'   This is a signal that more work is needed on model development.
+#' This is a signal that more work is needed on model development.
 #' - Biologically unreasonable parameter estimates can sometimes be avoided by fixing some parameters at known, reasonable values. 
-#'   However, this risks suppressing the warning that the data were trying to give about weaknesses in the model, or in the biological interpretation of it.
+#' However, this risks suppressing the warning that the data were trying to give about weaknesses in the model, or in the biological interpretation of it.
 #' - This issue will be discussed further in connection with the case studies.
 #' 
 #' ## Maximizing the likelihood using the particle filter
@@ -478,21 +477,21 @@ p %>%
 #' However, three issues arise immediately:
 #' 
 #' 1. The particle filter gives us a stochastic estimate of the likelihood.
-#'   We can reduce this variability by making $J$ larger, but we cannot make it go away.
-#'   If we use a deterministic optimizer (i.e., one that assumes the objective function is evaluated deterministically), then we must control this variability somehow.
-#'   For example, we can fix the seed of the pseudo-random number generator (RNG).
-#'   A side effect will be that the objective function becomes jagged, marked by many small local knolls and pits.
-#'   Alternatively, we can use a stochastic optimization algorithm, with which we will be only be able to obtain estimates of our MLE.
-#'   This is the trade-off between a rough and a noisy objective function.
+#' We can reduce this variability by making $J$ larger, but we cannot make it go away.
+#' If we use a deterministic optimizer (i.e., one that assumes the objective function is evaluated deterministically), then we must control this variability somehow.
+#' For example, we can fix the seed of the pseudo-random number generator (RNG).
+#' A side effect will be that the objective function becomes jagged, marked by many small local knolls and pits.
+#' Alternatively, we can use a stochastic optimization algorithm, with which we will be only be able to obtain estimates of our MLE.
+#' This is the trade-off between a rough and a noisy objective function.
 #' 1. Because the particle filter gives us just an estimate of the likelihood and no information about the derivative, we must choose an algorithm that is "derivative-free".
-#'   There are many such, but we can expect less efficiency than would be possible with derivative information.
-#'   Note that finite differencing is not an especially promising way of constructing derivatives. 
-#'   The price would be a $n$-fold increase in cpu time, where $n$ is the dimension of the parameter space.
-#'   Also, since the likelihood is noisily estimated, we would expect the derivative estimates to be even noisier.
+#' There are many such, but we can expect less efficiency than would be possible with derivative information.
+#' Note that finite differencing is not an especially promising way of constructing derivatives. 
+#' The price would be a $n$-fold increase in cpu time, where $n$ is the dimension of the parameter space.
+#' Also, since the likelihood is noisily estimated, we would expect the derivative estimates to be even noisier.
 #' 1. Finally, the parameters set we must optimize over is not unbounded.
-#'   We must have $\beta,\mu_I>0$ and $0<\rho<1$.
-#'   We must therefore select an optimizer that can solve this *constrained maximization problem*, or find some of way of turning it into an unconstrained maximization problem.
-#'   For example, we can transform the parameters onto a scale on which there are no constraints.
+#' We must have $\beta,\mu_I>0$ and $0<\rho<1$.
+#' We must therefore select an optimizer that can solve this *constrained maximization problem*, or find some of way of turning it into an unconstrained maximization problem.
+#' For example, we can transform the parameters onto a scale on which there are no constraints.
 #' 
 #' Here, let's opt for deterministic optimization of a rough function.
 #' We'll try using `optim`'s default method: Nelder-Mead, fixing the random-number generator seed to make the likelihood calculation deterministic.

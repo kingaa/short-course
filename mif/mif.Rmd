@@ -76,37 +76,37 @@ Many, many statistical methods have been proposed for inference on POMP models [
 ### Plug-and-play (also called simulation-based) methods
 
 - Inference methodology that calls `rprocess` but not `dprocess` is said to be ___plug-and-play__.
-  All popular modern Monte Carlo methods fall into this category. 
+All popular modern Monte Carlo methods fall into this category. 
 - Simulation-based is equivalent to plug-and-play. 
-	+ Historically, simulation-based meant simulating forward from initial conditions to the end of the time series. 
-	+ However, particle filtering methods instead consider each observation interval sequentially.
-	  They carry out multiple, carefully selected, simulations over each interval.
-	+ Plug-and-play methods can call `dmeasure`.
-	  A method that uses only `rprocess` and `rmeasure` is called "doubly plug-and-play".
++ Historically, simulation-based meant simulating forward from initial conditions to the end of the time series. 
++ However, particle filtering methods instead consider each observation interval sequentially.
+They carry out multiple, carefully selected, simulations over each interval.
++ Plug-and-play methods can call `dmeasure`.
+A method that uses only `rprocess` and `rmeasure` is called "doubly plug-and-play".
 - Two __non-plug-and-play__ methods (expectation-maximization (EM) algorithms and Markov chain Monte Carlo (MCMC)) have theoretical convergence problems for nonlinear POMP models.
-  The failures of these two workhorses of statistical computation have prompted development of alternative methodology.
+The failures of these two workhorses of statistical computation have prompted development of alternative methodology.
 
 ### Full-information and feature-based methods
 
 - __Full-information__ methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).
 - __Feature-based__ methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.
 - Asymptotically, full_information methods are statistically efficient and feature-based methods are not.
-	+ Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.
-	+ However, good low-dimensional summary statistics can be hard to find. 
-	+ When using statistically inefficient methods, it can be hard to know how much information you are losing. 
-	+ Intuition and scientific reasoning can be inadequate tools to derive informative low-dimensional summary statistics [@shrestha11,@ionides11-statSci].
++ Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.
++ However, good low-dimensional summary statistics can be hard to find. 
++ When using statistically inefficient methods, it can be hard to know how much information you are losing. 
++ Intuition and scientific reasoning can be inadequate tools to derive informative low-dimensional summary statistics [@shrestha11,@ionides11-statSci].
 
 ### Bayesian and frequentist methods
 
 - Recently, plug-and-play Bayesian methods have been discovered:
-	+ particle Markov chain Monte Carlo (PMCMC) [@andrieu10].
-	+ approximate Bayesian computation (ABC) [@toni09].
++ particle Markov chain Monte Carlo (PMCMC) [@andrieu10].
++ approximate Bayesian computation (ABC) [@toni09].
 - Prior belief specification is both the strength and weakness of Bayesian methodology:
-	+ The likelihood surface for nonlinear POMP models often contains nonlinear ridges and variations in curvature. 
-	+ These situations bring into question the appropriateness of independent priors derived from expert opinion on marginal distributions of parameters.
-	+ They also are problematic for specification of "flat" or "uninformative" prior beliefs.
-	+ Expert opinion can be treated as data for non-Bayesian analysis.
-	  However, our primary task is to identify the information in the data under investigation, so it can be helpful to use methods that do not force us to make our conclusions dependent on quantification of prior beliefs.
++ The likelihood surface for nonlinear POMP models often contains nonlinear ridges and variations in curvature. 
++ These situations bring into question the appropriateness of independent priors derived from expert opinion on marginal distributions of parameters.
++ They also are problematic for specification of "flat" or "uninformative" prior beliefs.
++ Expert opinion can be treated as data for non-Bayesian analysis.
+However, our primary task is to identify the information in the data under investigation, so it can be helpful to use methods that do not force us to make our conclusions dependent on quantification of prior beliefs.
 
 ### Full-information, plug-and-play, frequentist methods
 
@@ -364,7 +364,7 @@ stew(file="pf.rda",{
                   .options.multicore=list(set.seed=TRUE),
                   .export=c("bsflu","fixed_params")
     ) %dopar% {
-        pfilter(bsflu,params=c(Beta=2,mu_I=1,rho=0.9,fixed_params),Np=10000)
+      pfilter(bsflu,params=c(Beta=2,mu_I=1,rho=0.9,fixed_params),Np=10000)
     }
   )
   n_pf <- getDoParWorkers()
@@ -557,15 +557,15 @@ For various reasons, it can be surprisingly hard to make sure that the written e
 Here are some things to think about:
 
 1. Papers should be written to be readable to as broad a community as possible.
-   Code must be written to run successfully.
-   People do not want to clutter papers with numerical details which they hope and belief are scientifically irrelevant.
-   What problems can arise due to this, and what solutions are available?
+Code must be written to run successfully.
+People do not want to clutter papers with numerical details which they hope and belief are scientifically irrelevant.
+What problems can arise due to this, and what solutions are available?
 1. Suppose that there is an error in the coding of `rprocess`.
-   Suppose that plug-and-play statistical methodology is used to infer parameters.
-   A conscientious researcher carries out a simulation study, using `simulate` to generate some realizations from the fitted model and checking that the inference methodology can successfully recover the known parameters for this model, up to some statistical error.
-   Will this procedure help to identify the error in `rprocess`?
-   If not, how does one debug `rprocess`?
-   What research practices help minimize the risk of errors in simulation code?
+Suppose that plug-and-play statistical methodology is used to infer parameters.
+A conscientious researcher carries out a simulation study, using `simulate` to generate some realizations from the fitted model and checking that the inference methodology can successfully recover the known parameters for this model, up to some statistical error.
+Will this procedure help to identify the error in `rprocess`?
+If not, how does one debug `rprocess`?
+What research practices help minimize the risk of errors in simulation code?
 
 --------------------------
 
@@ -582,21 +582,21 @@ v_{1,n}^2 & 0 & 0 & \cdots & 0 \\
 0 & 0 & v_{3,n}^2 & \cdots & 0 \\
 \vdots & \vdots & \vdots & \ddots & \vdots \\
 0 & 0 & 0 & \cdots & v_{p,n}^2 \end{array}\right).$$
-	+ If $\theta_i$ is a parameter that affects the dynamics or observations throughout the timeseries, it is called a __regular parameter__, and it is often appropriate to specify $$v_{i,n} = v_i.$$
-	+ If $\theta_j$ is a parameter that affects only the initial conditions of the dynamic model, it is called an __initial value parameter__ (IVP) and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=0$} \\0 & \mbox{if $n>0$} \end{array}\right.$$
-	+ If $\theta_k$ is a break-point parameter that models how the system changes at time $t_q$ then $\theta_k$ is like an IVP at time $t_q$ and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=q$} \\	0 & \mbox{if $n\neq q$} \end{array}\right.$$
++ If $\theta_i$ is a parameter that affects the dynamics or observations throughout the timeseries, it is called a __regular parameter__, and it is often appropriate to specify $$v_{i,n} = v_i.$$
++ If $\theta_j$ is a parameter that affects only the initial conditions of the dynamic model, it is called an __initial value parameter__ (IVP) and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=0$} \\0 & \mbox{if $n>0$} \end{array}\right.$$
++ If $\theta_k$ is a break-point parameter that models how the system changes at time $t_q$ then $\theta_k$ is like an IVP at time $t_q$ and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=q$} \\	0 & \mbox{if $n\neq q$} \end{array}\right.$$
 * $\sigma_{1:M}$ is called a __cooling schedule__, following a thermodynamic analogy popularized by [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing).
-  As $\sigma_m$ becomes small, the system cools toward a "freezing point".
-  If the algorithm is working sucessfully, the freezing point should be close to the lowest-energy state of the system, i.e., the MLE.
+As $\sigma_m$ becomes small, the system cools toward a "freezing point".
+If the algorithm is working sucessfully, the freezing point should be close to the lowest-energy state of the system, i.e., the MLE.
 * It is generally helpful for optimization to provide transformations of the parameters so that (on the estimation scale) they are real-valued and have uncertainty on the order of 1 unit.
-  For example, one typically takes a logarithmic transformation of positive parameters and a logistic transformation of $[0,1]$ valued parameters.
-  + On this scale, it is surprisingly often effective to take $$v_i \sim 0.02$$ for regular parameters (RPs) and $$v_j \sim 0.1$$ for initial value parameters (IVPs).
+For example, one typically takes a logarithmic transformation of positive parameters and a logistic transformation of $[0,1]$ valued parameters.
++ On this scale, it is surprisingly often effective to take $$v_i \sim 0.02$$ for regular parameters (RPs) and $$v_j \sim 0.1$$ for initial value parameters (IVPs).
 * We suppose that $\sigma_1=1$, since the scale of the parameters is addressed by the matrix $V_n$.
-  Early on in an investigation, one might take $M=100$ and $\sigma_M=0.1$.
-  Later on, consideration of diagnostic plots may suggest refinements. 
+Early on in an investigation, one might take $M=100$ and $\sigma_M=0.1$.
+Later on, consideration of diagnostic plots may suggest refinements. 
 * It is surprising that useful general advice exists for these quantities that could in principle be highly model-specific.
-  Here is one possible explanation: the precision of interest is often the second significant figure and there are often order 100 observations (10 monthly obsevations would be too few to fit a mechanistic model;
-  1000 would be unusual for an epidemiological system). 
+Here is one possible explanation: the precision of interest is often the second significant figure and there are often order 100 observations (10 monthly obsevations would be too few to fit a mechanistic model;
+1000 would be unusual for an epidemiological system). 
 
 --------------------------
 
