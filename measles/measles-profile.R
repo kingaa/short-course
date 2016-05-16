@@ -4,7 +4,7 @@
 #' output:
 #'   html_document:
 #'     toc: yes
-#'     toc_depth: 2
+#'     toc_depth: 3
 #' bibliography: ../course.bib
 #' csl: ../ecology.csl
 #' 
@@ -487,6 +487,7 @@ try(detach("package:Rmpi",unload=TRUE),silent=TRUE)
 #' 
 #' --------------------------
 #' 
+#' ## [Back to measles lesson](./measles.html)
 #' ## [Back to course homepage](http://kingaa.github.io/short-course)
 #' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles-profile.R)
 #' 
