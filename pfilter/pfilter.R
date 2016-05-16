@@ -81,7 +81,7 @@ set.seed(1221234211)
 #' 
 #' - For simple statistical models, we may describe the model by explicitly writing the density function $f(y_{1:N};\theta)$. 
 #' One may then ask how to simulate a random variable $Y_{1:N}\sim f(y_{1:N};\theta)$.
-#' - For many dynamic models it is convenient to define the model via a procedure to simulate the random variable $Y_{1:N}$. 
+#' - For many dynamic models it is much more convenient to define the model via a procedure to simulate the random variable $Y_{1:N}$. 
 #' This implicitly defines the corresponding density $f(y_{1:N};\theta)$. 
 #' For a complicated simulation procedure, it may be difficult or impossible to write down or even compute $f(y_{1:N};\theta)$ exactly. 
 #' - It is important to bear in mind that the likelihood function exists even when we don't know what it is!
@@ -117,8 +117,7 @@ set.seed(1221234211)
 #' The following diagram illustrates this.
 #' 
 #' 
-#' In this diagram, note that we are plotting $x_n$ and $y_n$ on the same axes.
-#' In general, of course, they can belong to very different spaces.
+#' In this diagram, $\hat y_n$ refers to the model prediction ($\hat y_n = \expect{Y_n \vert X_n=x_n(\theta)}$) and $y_n^*$ to the data.
 #' 
 #' #### General case: stochastic unobserved state process
 #' 
@@ -276,7 +275,7 @@ logmeanexp(ll,se=TRUE)
 #' 
 #' It is extremely useful to visualize the geometric surface defined by the likelihood function.
 #' 
-#' - If $\Theta$ is two-dimensional, then the surface $\ell(\theta)$ has features like a landscape:
+#' - If $\Theta$ is two-dimensional, then the surface $\ell(\theta)$ has features like a landscape.
 #' - Local maxima of $\ell(\theta)$ are peaks.
 #' - Local minima are valleys.
 #' - Peaks may be separated by a valley or may be joined by a ridge. 
@@ -456,19 +455,6 @@ p %>%
 #' - Flat, or nearly flat, ridges in the likelihood surface are not an idle concern. 
 #' Many dynamic models have combinations of parameters that are weakly identified: they cannot be well estimated on the basis of the data.
 #' 
-#' ## Biological interpretation of parameter estimates
-#' 
-#' When we write down a mechanistic model for an epidemiological system, we have some idea of what we intend parameters to mean; a reporting rate, a contact rate between individuals, an immigration rate, a duration of immunity, etc. 
-#' 
-#' - The data and the parameter estimation procedure do not know about our intended interpretation of the model. 
-#' It can and does happen that some parameter estimates, statistically consistent with the data, may be scientifically absurd according to the biological reasoning that went into building the model. 
-#' - This can arise as a consequence of weak identifiability. 
-#' - It can also be a warning that the data do not agree that our model represents reality in the way we had hoped.
-#' This is a signal that more work is needed on model development.
-#' - Biologically unreasonable parameter estimates can sometimes be avoided by fixing some parameters at known, reasonable values. 
-#' However, this risks suppressing the warning that the data were trying to give about weaknesses in the model, or in the biological interpretation of it.
-#' - This issue will be discussed further in connection with the case studies.
-#' 
 #' ## Maximizing the likelihood using the particle filter
 #' 
 #' In the toy example we've been working with, the default parameter set is not particularly close to the MLE.
@@ -606,6 +592,29 @@ ggplot(data=sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
 #' 
 #' The Poisson measurement model used here may not seem easy to interpret.
 #' Formulate an alternative measurement model and maximize the likelihood to compare the alternative model.
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: Fit more parameters.
+#' 
+#' Try to estimate $\beta$, $\mu_I$, $\rho$, and $\mu_{R1}$ simultaneously.
+#' Does your estimate of $\mu_{R1}$ differ from the value we computed from the raw data?
+#' How do you interpret the agreement or lack thereof?
+#' 
+#' --------------------------
+#' 
+#' ## Biological interpretation of parameter estimates
+#' 
+#' When we write down a mechanistic model for an epidemiological system, we have some idea of what we intend parameters to mean; a reporting rate, a contact rate between individuals, an immigration rate, a duration of immunity, etc. 
+#' 
+#' - The data and the parameter estimation procedure do not know about our intended interpretation of the model. 
+#' It can and does happen that some parameter estimates, statistically consistent with the data, may be scientifically absurd according to the biological reasoning that went into building the model. 
+#' - This can arise as a consequence of weak identifiability. 
+#' - It can also be a warning that the data do not agree that our model represents reality in the way we had hoped.
+#' This is a signal that more work is needed on model development.
+#' - Biologically unreasonable parameter estimates can sometimes be avoided by fixing some parameters at known, reasonable values. 
+#' However, this risks suppressing the warning that the data were trying to give about weaknesses in the model, or in the biological interpretation of it.
+#' - This issue will be discussed further in connection with the case studies.
 #' 
 #' --------------------------
 #' 
