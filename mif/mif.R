@@ -20,6 +20,8 @@
 #' Please share and remix noncommercially, mentioning its origin.  
 #' ![CC-BY_NC](../graphics/cc-by-nc.png)
 #' 
+#' Produced with **R** version `r getRversion()` and **pomp** version `r packageVersion("pomp")`.
+#' 
 ## ----prelims,include=FALSE,purl=TRUE,cache=FALSE-------------------------
 library(pomp)
 options(stringsAsFactors=FALSE)
@@ -34,8 +36,7 @@ set.seed(557976883)
 #' This tutorial covers likelihood estimation via the method of iterated filtering.
 #' It presupposes familiarity with building partially observed Markov process (POMP) objects in the **R** package **pomp** [@King2016]. 
 #' **pomp** is available from [CRAN](http://cran.r-project.org/web/packages/pomp) and [github](http://kingaa.github.io/pomp).
-#' The code here runs **pomp** version `r packageVersion("pomp")` on **R** version `r getRversion()`.
-#' This tutorial follows on from the topic of carrying out particle filtering (also known as sequential Monte Carlo) via `pfilter` in **pomp**. 
+#' This tutorial follows on from the [topic of carrying out particle filtering (also known as sequential Monte Carlo) via `pfilter` in **pomp**](../pfilter/pfilter.html). 
 #' 
 #' We have the following goals:
 #' 

@@ -468,16 +468,17 @@ ggplot(data=melt(bsflu,id="day"),mapping=aes(x=day,y=value,color=variable))+
 Formulate a model with both confinement and convalescent stages.
 Implement it in **pomp** using a compartmental model like that diagrammed below.
 
-```{r sirr-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=15/2}
+```{r sirr-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=9}
 library(grid)
 vp <- viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc"))
 pushViewport(vp)
 fs <- 24
-grid.rect(x=c(1/5,2/5,3/5,4/5),y=1/2,width=1/10,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
-grid.text(x=c(1/5,2/5,3/5,4/5),y=1/2,label=c(expression(S),expression(I),expression(R[1]),expression(R[2])),gp=gpar(fontface=3,fontsize=fs))
-grid.lines(x=c(5/20,7/20),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
-grid.lines(x=c(9/20,11/20),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
-grid.lines(x=c(13/20,15/20),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.rect(x=c(1/6,2/6,3/6,4/6,5/6),y=1/2,width=1/12,height=1,just=c(0.5,0.5),gp=gpar(fill="white",lwd=2))
+grid.text(x=c(1/6,2/6,3/6,4/6,5/6),y=1/2,label=c(expression(S),expression(I),expression(R[1]),expression(R[2]),expression(R[3])),gp=gpar(fontface=3,fontsize=fs))
+grid.lines(x=c(5/24,7/24),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.lines(x=c(9/24,11/24),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.lines(x=c(13/24,15/24),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
+grid.lines(x=c(17/24,19/24),y=1/2,arrow=arrow(length=unit(0.1,"npc")),gp=gpar(lwd=2))
 popViewport()
 ```
 
