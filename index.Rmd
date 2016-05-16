@@ -137,8 +137,8 @@ Date,Topic
 2016-05-13,"[Simulation of stochastic dynamic models.](./stochsim/stochsim.html)"
 2016-05-16,"[Likelihood for POMP models: theory and practice](./pfilter/pfilter.html)"
 2016-05-17,"[Iterated filtering: principles and practice](./mif/mif.html)"
-2016-05-18,"[Case study: the persistence of polio.](./polio/polio.html)"
-2016-05-19,Case study
+2016-05-18,"[Case study: measles in large and small towns](./measles/measles.html)"
+2016-05-19,"[Case study: the persistence of polio.](./polio/polio.html)"
 2016-05-20,Examination
 ') %>%
   mutate(Topic=mapvalues(as.character(Topic),NA,""),
