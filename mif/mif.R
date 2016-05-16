@@ -152,34 +152,6 @@ set.seed(557976883)
 #' * The superscript $P$ in $\Theta^{P,m}_{n,j}$ and $X^{P,m}_{n,j}$ denote solutions to the _prediction_ problem, with the particles $j=1,\dots,J$ providing a Monte Carlo representation of the conditional distribution at time $n$ given data $y^*_{1:n-1}$ for filtering iteration $m$.
 #' * The _weight_ $w^m_{n,j}$ gives the likelihood of the data at time $n$ for particle $j$ in filtering iteration $m$.
 #' 
-#' ### Choosing the algorithmic settings for IF2
-#' 
-#' * The initial parameter swarm, $\{ \Theta^0_j, j=1,\dots,J\}$, usually consists of $J$ identical replications of some starting parameter vector.
-#' * $J$ is set to be sufficient for particle filtering. By the time of the last iteration ($m=M$) one should not have effective sample size close to 1. 
-#' * Perturbations are usually chosen to be Gaussian, with $\sigma_m$ being a scale factor for iteration $m$:
-#' $$h_n(\theta|\varphi;\sigma) \sim N[\varphi, \sigma^2_m V_n].$$
-#' * $V_n$ is usually taken to be diagonal,
-#' $$ V_n = \left( \begin{array}{ccccc}
-#' v_{1,n}^2 & 0 & 0 & \cdots & 0 \\
-#' 0 & v_{2,n}^2 &  0 & \cdots & 0 \\
-#' 0 & 0 & v_{3,n}^2 & \cdots & 0 \\
-#' \vdots & \vdots & \vdots & \ddots & \vdots \\
-#' 0 & 0 & 0 & \cdots & v_{p,n}^2 \end{array}\right).$$
-#' 	+ If $\theta_i$ is a parameter that affects the dynamics or observations throughout the timeseries, it is called a __regular parameter__, and it is often appropriate to specify $$v_{i,n} = v_i.$$
-#' 	+ If $\theta_j$ is a parameter that affects only the initial conditions of the dynamic model, it is called an __initial value parameter__ (IVP) and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=0$} \\0 & \mbox{if $n>0$} \end{array}\right.$$
-#' 	+ If $\theta_k$ is a break-point parameter that models how the system changes at time $t_q$ then $\theta_k$ is like an IVP at time $t_q$ and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=q$} \\	0 & \mbox{if $n\neq q$} \end{array}\right.$$
-#' * $\sigma_{1:M}$ is called a __cooling schedule__, following a thermodynamic analogy popularized by [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing).
-#'   As $\sigma_m$ becomes small, the system cools toward a "freezing point".
-#'   If the algorithm is working sucessfully, the freezing point should be close to the lowest-energy state of the system, i.e., the MLE.
-#' * It is generally helpful for optimization to provide transformations of the parameters so that (on the estimation scale) they are real-valued and have uncertainty on the order of 1 unit.
-#'   For example, one typically takes a logarithmic transformation of positive parameters and a logistic transformation of $[0,1]$ valued parameters.
-#'   + On this scale, it is surprisingly often effective to take $$v_i \sim 0.02$$ for regular parameters (RPs) and $$v_j \sim 0.1$$ for initial value parameters (IVPs).
-#' * We suppose that $\sigma_1=1$, since the scale of the parameters is addressed by the matrix $V_n$.
-#'   Early on in an investigation, one might take $M=100$ and $\sigma_M=0.1$.
-#'   Later on, consideration of diagnostic plots may suggest refinements. 
-#' * It is surprising that useful general advice exists for these quantities that could in principle be highly model-specific.
-#'   Here is one possible explanation: the precision of interest is often the second significant figure and there are often order 100 observations (10 monthly obsevations would be too few to fit a mechanistic model;
-#'   1000 would be unusual for an epidemiological system). 
 #' 
 #' ## Applying IF2 to the boarding school influenza outbreak
 #' 
@@ -222,7 +194,7 @@ bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_da
 #' 
 ## ----bsflu_names---------------------------------------------------------
 statenames <- c("S","I","R1","R2")
-paramnames <- c("Beta","mu_I","rho","mu_R1","mu_R2")
+paramnames <- c("Beta","mu_I","mu_R1","mu_R2","rho")
 
 #' 
 #' In the codes below, we'll refer to the data variables by their names ($B$, $C$), as given in the `bsflu_data` data-frame:
@@ -230,63 +202,55 @@ paramnames <- c("Beta","mu_I","rho","mu_R1","mu_R2")
 #' Now, we write the model code:
 #' 
 ## ----csnippets_bsflu-----------------------------------------------------
-dmeas <- "
+dmeas <- Csnippet("
   lik = dpois(B,rho*R1+1e-6,give_log);
-"
+")
 
-rmeas <- "
+rmeas <- Csnippet("
   B = rpois(rho*R1+1e-6);
-  C = rpois(rho*R2);
-"
+")
 
-rproc <- "
-  double t1 = rbinom(S,1-exp(-Beta*I*dt));
-  double t2 = rbinom(I,1-exp(-dt*mu_I));
-  double t3 = rbinom(R1,1-exp(-dt*mu_R1));
-  double t4 = rbinom(R2,1-exp(-dt*mu_R2));
-  S -= t1;
-  I += t1 - t2;
+rproc <- Csnippet("
+  double N = 763;
+  double t1 = rbinom(S,1-exp(-Beta*I/N*dt));
+  double t2 = rbinom(I,1-exp(-mu_I*dt));
+  double t3 = rbinom(R1,1-exp(-mu_R1*dt));
+  S  -= t1;
+  I  += t1 - t2;
   R1 += t2 - t3;
-  R2 += t3 - t4;
-"
+")
 
-fromEst <- "
+fromEst <- Csnippet("
  TBeta = exp(Beta);
- Tmu_I = exp(mu_I);
  Trho = expit(rho);
-"
+ Tmu_I = exp(mu_I);
+")
 
-toEst <- "
+toEst <- Csnippet("
  TBeta = log(Beta);
- Tmu_I = log(mu_I);
  Trho = logit(rho);
-"
+ Tmu_I = log(mu_I);
+")
 
-init <- "
- S=762;
- I=1;
- R1=0;
- R2=0;
-"
+init <- Csnippet("
+ S = 762;
+ I = 1;
+ R1 = 0;
+")
 
 #' 
 #' We build the `pomp` object:
 #' 
 ## ----pomp_bsflu----------------------------------------------------------
 library(pomp)
+
 pomp(
-  data=bsflu_data,
-  times="day",
-  t0=0,
-  rprocess=euler.sim(
-    step.fun=Csnippet(rproc),
-    delta.t=1/12
-  ),
-  rmeasure=Csnippet(rmeas),
-  dmeasure=Csnippet(dmeas),
-  fromEstimationScale=Csnippet(fromEst),
-  toEstimationScale=Csnippet(toEst),
-  initializer=Csnippet(init),
+  data=subset(bsflu_data,select=-C),
+  times="day",t0=0,
+  rprocess=euler.sim(rproc,delta.t=1/12),
+  rmeasure=rmeas,dmeasure=dmeas,
+  fromEstimationScale=fromEst,toEstimationScale=toEst,
+  initializer=init,
   statenames=statenames,
   paramnames=paramnames
 ) -> bsflu
@@ -299,7 +263,7 @@ pomp(
 #' Here, we run some simulations and a particle filter, simply to check that the codes are working correctly.
 #' We'll use the following parameters, derived from our earlier explorations:
 ## ----start_params--------------------------------------------------------
-params <- c(Beta=0.005,mu_I=2,rho=0.9,mu_R1=1/3,mu_R2=1/2)
+params <- c(Beta=2,mu_I=1,rho=0.9,mu_R1=1/3,mu_R2=1/2)
 
 #' 
 #' Now to run and plot some simulations:
@@ -347,7 +311,7 @@ registerDoParallel()
 #' 
 #' ### Running a particle filter.
 #' 
-#' We proceed to carry out replicated particle filters at an initial guess of $\beta=0.01$, $\mu_I=2$, and $\rho=0.9$.
+#' We proceed to carry out replicated particle filters at an initial guess of $\beta=2$, $\mu_I=1$, and $\rho=0.9$.
 #' 
 ## ----pf------------------------------------------------------------------
 stew(file="pf.rda",{
@@ -356,7 +320,7 @@ stew(file="pf.rda",{
                   .options.multicore=list(set.seed=TRUE),
                   .export=c("bsflu","fixed_params")
     ) %dopar% {
-      pfilter(bsflu,params=c(Beta=0.01,mu_I=2,rho=0.9,fixed_params),Np=10000)
+        pfilter(bsflu,params=c(Beta=2,mu_I=1,rho=0.9,fixed_params),Np=10000)
     }
   )
   n_pf <- getDoParWorkers()
@@ -365,7 +329,7 @@ stew(file="pf.rda",{
 (L_pf <- logmeanexp(sapply(pf,logLik),se=TRUE))
 
 #' 
-#' In `r round(t_pf["elapsed"],1)` seconds on a `r n_pf`-core machine, we obtain an unbiased likelihood estimate of `r round(L_pf[1],1)` with a Monte Carlo standard error of `r round(L_pf[2],2)`.
+#' In `r round(t_pf["elapsed"],2)` seconds on a `r n_pf`-core machine, we obtain an unbiased likelihood estimate of `r round(L_pf[1],1)` with a Monte Carlo standard error of `r signif(L_pf[2],2)`.
 #' 
 #' ### Building up a picture of the likelihood surface
 #' 
@@ -400,7 +364,7 @@ stew(file="box_search_local.rda",{
     {
       mif2(
         bsflu,
-        start=c(Beta=0.01,mu_I=2,rho=0.9,fixed_params),
+        start=c(Beta=2,mu_I=1,rho=0.9,fixed_params),
         Np=2000,
         Nmif=50,
         cooling.type="geometric",
@@ -452,7 +416,7 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' 
 ## ----box_global----------------------------------------------------------
 params_box <- rbind(
-  Beta=c(0.001,0.01),
+  Beta=c(1,5),
   mu_I=c(0.5,3),
   rho = c(0.5,1)
 )
@@ -497,7 +461,6 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' 
 #' We see that optimization attempts from diverse remote starting points end up with comparable likelihoods, even when the parameter values are quite distinct. This gives us some confidence in our maximization procedure. 
 #' 
-#' ## Exercises
 #' 
 #' --------------------------
 #' 
@@ -527,6 +490,37 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #'    Will this procedure help to identify the error in `rprocess`?
 #'    If not, how does one debug `rprocess`?
 #'    What research practices help minimize the risk of errors in simulation code?
+#' 
+#' --------------------------
+#' 
+#' ## Choosing the algorithmic settings for IF2
+#' 
+#' * The initial parameter swarm, $\{ \Theta^0_j, j=1,\dots,J\}$, usually consists of $J$ identical replications of some starting parameter vector.
+#' * $J$ is set to be sufficient for particle filtering. By the time of the last iteration ($m=M$) one should not have effective sample size close to 1. 
+#' * Perturbations are usually chosen to be Gaussian, with $\sigma_m$ being a scale factor for iteration $m$:
+#' $$h_n(\theta|\varphi;\sigma) \sim N[\varphi, \sigma^2_m V_n].$$
+#' * $V_n$ is usually taken to be diagonal,
+#' $$ V_n = \left( \begin{array}{ccccc}
+#' v_{1,n}^2 & 0 & 0 & \cdots & 0 \\
+#' 0 & v_{2,n}^2 &  0 & \cdots & 0 \\
+#' 0 & 0 & v_{3,n}^2 & \cdots & 0 \\
+#' \vdots & \vdots & \vdots & \ddots & \vdots \\
+#' 0 & 0 & 0 & \cdots & v_{p,n}^2 \end{array}\right).$$
+#' 	+ If $\theta_i$ is a parameter that affects the dynamics or observations throughout the timeseries, it is called a __regular parameter__, and it is often appropriate to specify $$v_{i,n} = v_i.$$
+#' 	+ If $\theta_j$ is a parameter that affects only the initial conditions of the dynamic model, it is called an __initial value parameter__ (IVP) and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=0$} \\0 & \mbox{if $n>0$} \end{array}\right.$$
+#' 	+ If $\theta_k$ is a break-point parameter that models how the system changes at time $t_q$ then $\theta_k$ is like an IVP at time $t_q$ and it is appropriate to specify $$v_{j,n} = \left\{\begin{array}{ll} v_j & \mbox{if $n=q$} \\	0 & \mbox{if $n\neq q$} \end{array}\right.$$
+#' * $\sigma_{1:M}$ is called a __cooling schedule__, following a thermodynamic analogy popularized by [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing).
+#'   As $\sigma_m$ becomes small, the system cools toward a "freezing point".
+#'   If the algorithm is working sucessfully, the freezing point should be close to the lowest-energy state of the system, i.e., the MLE.
+#' * It is generally helpful for optimization to provide transformations of the parameters so that (on the estimation scale) they are real-valued and have uncertainty on the order of 1 unit.
+#'   For example, one typically takes a logarithmic transformation of positive parameters and a logistic transformation of $[0,1]$ valued parameters.
+#'   + On this scale, it is surprisingly often effective to take $$v_i \sim 0.02$$ for regular parameters (RPs) and $$v_j \sim 0.1$$ for initial value parameters (IVPs).
+#' * We suppose that $\sigma_1=1$, since the scale of the parameters is addressed by the matrix $V_n$.
+#'   Early on in an investigation, one might take $M=100$ and $\sigma_M=0.1$.
+#'   Later on, consideration of diagnostic plots may suggest refinements. 
+#' * It is surprising that useful general advice exists for these quantities that could in principle be highly model-specific.
+#'   Here is one possible explanation: the precision of interest is often the second significant figure and there are often order 100 observations (10 monthly obsevations would be too few to fit a mechanistic model;
+#'   1000 would be unusual for an epidemiological system). 
 #' 
 #' --------------------------
 #' 
