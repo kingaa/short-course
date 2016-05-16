@@ -1,4 +1,4 @@
-default: measles.R measles.html measles-profile.R measles-profile.html sigmaSE-profile1.rds sigmaSE-profile2.rds
+default: measles.R measles.html profile.R profile.html sigmaSE-profile1.rds sigmaSE-profile2.rds
 ifneq ($(INSTALLDIR),)
 	mkdir -p $(INSTALLDIR)
 	install -m0600 $^ $(INSTALLDIR)

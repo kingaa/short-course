@@ -1082,7 +1082,7 @@ pomp(m1,toEstimationScale=toEst,
 
 ## Constructing a likelihood profile
 
-[The linked document shows how a likelihood profile can be constructed using IF2](./measles-profile.html).
+[The linked document shows how a likelihood profile can be constructed using IF2](./profile.html).
 
 ## Exercises
 
@@ -1106,11 +1106,8 @@ Compare likelihoods but also use simulations to diagnose differences between the
 --------------------------
 
 ## [Back to course homepage](http://kingaa.github.io/short-course)
-## **R** codes for this document
-
-- [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
-- [Profile likelihood computation for this example](./measles-profile.html)
-- [**R** code for the profile likelihood computation](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles-profile.R)
+## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/measles/measles.R)
+## [Profile likelihood computation for this example](./profile.html)
 
 ----------------------
 
