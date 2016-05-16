@@ -75,7 +75,7 @@ Many, many statistical methods have been proposed for inference on POMP models [
 
 ### Plug-and-play (also called simulation-based) methods
 
-- Inference methodology that calls `rprocess` but not `dprocess` is said to be ___plug-and-play__.
+- Inference methodology that calls `rprocess` but not `dprocess` is said to be *plug-and-play*.
 All popular modern Monte Carlo methods fall into this category. 
 - Simulation-based is equivalent to plug-and-play. 
 + Historically, simulation-based meant simulating forward from initial conditions to the end of the time series. 
@@ -83,13 +83,13 @@ All popular modern Monte Carlo methods fall into this category.
 They carry out multiple, carefully selected, simulations over each interval.
 + Plug-and-play methods can call `dmeasure`.
 A method that uses only `rprocess` and `rmeasure` is called "doubly plug-and-play".
-- Two __non-plug-and-play__ methods (expectation-maximization (EM) algorithms and Markov chain Monte Carlo (MCMC)) have theoretical convergence problems for nonlinear POMP models.
+- Two *non-plug-and-play* methods (expectation-maximization (EM) algorithms and Markov chain Monte Carlo (MCMC)) have theoretical convergence problems for nonlinear POMP models.
 The failures of these two workhorses of statistical computation have prompted development of alternative methodology.
 
 ### Full-information and feature-based methods
 
-- __Full-information__ methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).
-- __Feature-based__ methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.
+- *Full-information* methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).
+- *Feature-based* methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.
 - Asymptotically, full_information methods are statistically efficient and feature-based methods are not.
 + Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.
 + However, good low-dimensional summary statistics can be hard to find. 

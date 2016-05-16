@@ -163,19 +163,19 @@ $(document).ready(function () {
 <div id="plug-and-play-also-called-simulation-based-methods" class="section level3">
 <h3>Plug-and-play (also called simulation-based) methods</h3>
 <ul>
-<li>Inference methodology that calls <code>rprocess</code> but not <code>dprocess</code> is said to be _<strong>plug-and-play</strong>. All popular modern Monte Carlo methods fall into this category.</li>
+<li>Inference methodology that calls <code>rprocess</code> but not <code>dprocess</code> is said to be <em>plug-and-play</em>. All popular modern Monte Carlo methods fall into this category.</li>
 <li>Simulation-based is equivalent to plug-and-play.</li>
 <li>Historically, simulation-based meant simulating forward from initial conditions to the end of the time series.</li>
 <li>However, particle filtering methods instead consider each observation interval sequentially. They carry out multiple, carefully selected, simulations over each interval.</li>
 <li>Plug-and-play methods can call <code>dmeasure</code>. A method that uses only <code>rprocess</code> and <code>rmeasure</code> is called “doubly plug-and-play”.</li>
-<li>Two <strong>non-plug-and-play</strong> methods (expectation-maximization (EM) algorithms and Markov chain Monte Carlo (MCMC)) have theoretical convergence problems for nonlinear POMP models. The failures of these two workhorses of statistical computation have prompted development of alternative methodology.</li>
+<li>Two <em>non-plug-and-play</em> methods (expectation-maximization (EM) algorithms and Markov chain Monte Carlo (MCMC)) have theoretical convergence problems for nonlinear POMP models. The failures of these two workhorses of statistical computation have prompted development of alternative methodology.</li>
 </ul>
 </div>
 <div id="full-information-and-feature-based-methods" class="section level3">
 <h3>Full-information and feature-based methods</h3>
 <ul>
-<li><strong>Full-information</strong> methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).</li>
-<li><strong>Feature-based</strong> methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.</li>
+<li><em>Full-information</em> methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).</li>
+<li><em>Feature-based</em> methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.</li>
 <li>Asymptotically, full_information methods are statistically efficient and feature-based methods are not.</li>
 <li>Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.</li>
 <li>However, good low-dimensional summary statistics can be hard to find.</li>
