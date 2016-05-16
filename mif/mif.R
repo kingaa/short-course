@@ -320,6 +320,7 @@ stew(file="pf.rda",{
                   .options.multicore=list(set.seed=TRUE),
                   .export=c("bsflu","fixed_params")
     ) %dopar% {
+      library(pomp)
       pfilter(bsflu,params=c(Beta=2,mu_I=1,rho=0.9,fixed_params),Np=10000)
     }
   )
@@ -362,6 +363,7 @@ stew(file="box_search_local.rda",{
                           .export=c("bsflu","fixed_params")
     ) %dopar%  
     {
+      library(pomp)
       mif2(
         bsflu,
         start=c(Beta=2,mu_I=1,rho=0.9,fixed_params),
@@ -388,6 +390,7 @@ stew(file="lik_local.rda",{
                              .options.multicore=list(set.seed=TRUE)
     ) %dopar% 
     {
+      library(pomp)
       evals <- replicate(10, logLik(pfilter(mf,Np=20000)))
       ll <- logmeanexp(evals,se=TRUE)
       c(coef(mf),loglik=ll[1],loglik=ll[2])
@@ -437,6 +440,7 @@ stew(file="box_search_global.rda",{
                               .export=c("mf1","fixed_params")
     ) %dopar% 
     {
+      library(pomp)
       mf <- mif2(mf1,start=c(unlist(guess),fixed_params),
                  cooling.type='geometric')
       mf <- mif2(mf,Nmif=100)

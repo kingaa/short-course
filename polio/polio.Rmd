@@ -405,7 +405,7 @@ stew(file="local_search.rda",{
   w1 <- getDoParWorkers()
   t1 <- system.time({
     m1 <- foreach(i=1:90,
-                  .packages='pomp', .combine=rbind,
+                  .packages='pomp',.combine=rbind,
                   .options.multicore=list(set.seed=TRUE)
     ) %dopar% {
       mf <- mif2(polio,
@@ -610,6 +610,7 @@ bake(file="profile_rho.rds",{
   
   foreach(start=iter(starts,"row"),
           .combine=rbind,
+          .packages="pomp",
           .options.multicore=list(set.seed=TRUE),
           .options.mpi=list(seed=290860873,chunkSize=1)
   ) %dopar% {
@@ -714,7 +715,7 @@ sims %>%
   ) -> imports
 ```
 
-Since only `r with(subset(num_zeros,sim!="data"),round(sum(zeros<datz)/length(zeros)*100,1))`% of the simulations had fewer zero-case months than did the data, the model does predict significantly more fadeouts than does the model.
+Since only `r with(subset(num_zeros,sim!="data"),round(sum(zeros<datz)/length(zeros)*100,1))`% of the simulations had fewer zero-case months than did the data, the model does predict significantly more fadeouts than are seen in the data.
 Months with no asyptomatic infections for the simulations were rare, on average `r round(mean(fadeouts$fadeout1),1)` months per simulation. 
 Months with fewer than 80 infections averaged `r round(mean(fadeouts$fadeout80),1)` per simulation, which in the context of a reporting rate of `r signif(coef(polio,"rho"),3)` can explain the absences of case reports. 
 

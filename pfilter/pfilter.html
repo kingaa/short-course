@@ -340,6 +340,7 @@ foreach (theta=iter(p,&quot;row&quot;),.combine=rbind,
          .inorder=FALSE,
          .options.multicore=list(set.seed=TRUE)
 ) %dopar% {
+  library(pomp)
   pfilter(flu,params=unlist(theta),Np=5000) -&gt; pf
   theta$loglik &lt;- logLik(pf)
   theta
@@ -368,6 +369,7 @@ foreach (theta=iter(p,&quot;row&quot;),.combine=rbind,
            .options.multicore=list(set.seed=TRUE)
   ) %dopar% 
   {
+    library(pomp)
     pfilter(flu,params=unlist(theta),Np=5000) -&gt; pf
     theta$loglik &lt;- logLik(pf)
     theta

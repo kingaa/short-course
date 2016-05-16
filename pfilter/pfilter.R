@@ -304,6 +304,7 @@ foreach (theta=iter(p,"row"),.combine=rbind,
          .inorder=FALSE,
          .options.multicore=list(set.seed=TRUE)
 ) %dopar% {
+  library(pomp)
   pfilter(flu,params=unlist(theta),Np=5000) -> pf
   theta$loglik <- logLik(pf)
   theta
@@ -355,6 +356,7 @@ bake(file="flu-grid1.rds",seed=421776444,kind="L'Ecuyer",{
            .options.multicore=list(set.seed=TRUE)
   ) %dopar% 
   {
+    library(pomp)
     pfilter(flu,params=unlist(theta),Np=5000) -> pf
     theta$loglik <- logLik(pf)
     theta

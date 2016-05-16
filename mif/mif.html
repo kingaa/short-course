@@ -426,6 +426,7 @@ registerDoParallel()</code></pre>
                   .options.multicore=list(set.seed=TRUE),
                   .export=c(&quot;bsflu&quot;,&quot;fixed_params&quot;)
     ) %dopar% {
+      library(pomp)
       pfilter(bsflu,params=c(Beta=2,mu_I=1,rho=0.9,fixed_params),Np=10000)
     }
   )
@@ -455,6 +456,7 @@ write.csv(results,file=&quot;bsflu_params.csv&quot;,row.names=FALSE)</code></pre
                           .export=c(&quot;bsflu&quot;,&quot;fixed_params&quot;)
     ) %dopar%  
     {
+      library(pomp)
       mif2(
         bsflu,
         start=c(Beta=2,mu_I=1,rho=0.9,fixed_params),
@@ -484,6 +486,7 @@ write.csv(results,file=&quot;bsflu_params.csv&quot;,row.names=FALSE)</code></pre
                              .options.multicore=list(set.seed=TRUE)
     ) %dopar% 
     {
+      library(pomp)
       evals &lt;- replicate(10, logLik(pfilter(mf,Np=20000)))
       ll &lt;- logmeanexp(evals,se=TRUE)
       c(coef(mf),loglik=ll[1],loglik=ll[2])
@@ -521,6 +524,7 @@ write.csv(results,file=&quot;bsflu_params.csv&quot;,row.names=FALSE)</code></pre
                               .export=c(&quot;mf1&quot;,&quot;fixed_params&quot;)
     ) %dopar% 
     {
+      library(pomp)
       mf &lt;- mif2(mf1,start=c(unlist(guess),fixed_params),
                  cooling.type='geometric')
       mf &lt;- mif2(mf,Nmif=100)
