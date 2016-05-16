@@ -443,7 +443,7 @@ registerDoParallel()</code></pre>
 (L_pf &lt;- logmeanexp(sapply(pf,logLik),se=TRUE))</code></pre>
 <pre><code>##                      se 
 ## -86.9221208   0.7738137</code></pre>
-<p>In 1.53 seconds on a 20-core machine, we obtain an unbiased likelihood estimate of -86.9 with a Monte Carlo standard error of 0.77.</p>
+<p>In 1.48 seconds on a 20-core machine, we obtain an unbiased likelihood estimate of -86.9 with a Monte Carlo standard error of 0.77.</p>
 </div>
 <div id="building-up-a-picture-of-the-likelihood-surface" class="section level3">
 <h3>Building up a picture of the likelihood surface</h3>
@@ -542,7 +542,7 @@ results_global &lt;- as.data.frame(results_global)
 results &lt;- rbind(results,results_global[names(results)])
 write.csv(results,file=&quot;bsflu_params.csv&quot;,row.names=FALSE)</code></pre>
 <p>In the above, we took advantage of a general <strong>pomp</strong> behavior: re-running a command on an object (i.e., <code>mif2</code> on <code>mf1</code>) created by the same command preserves the algorithmic arguments.</p>
-<p>Evaluation of the best result of this search gives a likelihood of -72.8 with a standard error of 1.94. This took in 26.2 minutes altogether on a machine with 20 processors. One can visualize aspects of the global geometry of the likelihood surface with a scatterplot matrix of these diverse parameter estimates:</p>
+<p>Evaluation of the best result of this search gives a likelihood of -72.8 with a standard error of 1.94. This took in 25.6 minutes altogether on a machine with 20 processors. One can visualize aspects of the global geometry of the likelihood surface with a scatterplot matrix of these diverse parameter estimates:</p>
 <pre class="r"><code>library(plyr)
 all &lt;- ldply(list(guess=guesses,result=subset(results,loglik&gt;max(loglik)-50)))
 pairs(~Beta+mu_I+rho,data=all,col=ifelse(all$.id==&quot;guess&quot;,grey(0.5),&quot;red&quot;),pch=16)</code></pre>
