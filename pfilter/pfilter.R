@@ -429,7 +429,17 @@ p %>%
 #' 
 #' --------------------------
 #' 
-#' ## Confidence intervals for parameters: Profile likelihood
+#' ### Point estimates for parameters: The maximum likelihood estimate (MLE)
+#' 
+#' We define maximum likelihood estimates (MLEs) $\hat\theta$ and $\hat\theta^*$ such that
+#' $$\ell(\hat\theta)=\ell_\mathrm{max},\quad \ell(\hat\theta^*)=\ell_\mathrm{max}^*.$$
+#' 
+#' - If the likelihood function has a flat region, or ridge, at its maximum then the MLE is not unique. 
+#' Alternatively, one can talk about a maximum likelihood surface describing the set of parameter values for which $\ell(\hat\theta)=\ell_\mathrm{max}$.
+#' - Flat, or nearly flat, ridges in the likelihood surface are not an idle concern. 
+#' Many dynamic models have combinations of parameters that are weakly identified: they cannot be well estimated on the basis of the data.
+#' 
+#' ### Confidence intervals for parameters: Profile likelihood
 #' 
 #' The likelihood ratio test with $d=1$ gives a good way to construct confidence intervals. Suppose we are interested in a specific parameter, $\theta_k$, and we want to consider whether the data support the possibility that $\theta_k=\theta_k^*$ in the absence of assumptions on the other parameters.
 #' We can then take $\Theta^*$ to be the subset of $\Theta$ satisfying $\theta_k=\theta_k^*$.
@@ -444,16 +454,6 @@ p %>%
 #' - The maximum of $\ell_\mathrm{profile}(\theta_k)$ over all values of $\theta_k$ is $\ell_\mathrm{max}$.
 #' - Thus, a profile plot allows us to visualize an entire spectrum of confidence intervals.
 #' - If the profile plot has two peaks (i.e., $\ell_\mathrm{profile}(\theta_k)$ is bimodal) then a likelihood ratio test helps us to assess whether or not both peaks provide adequate explanations of the data.
-#' 
-#' ## Point estimates for parameters: The maximum likelihood estimate (MLE)
-#' 
-#' We define maximum likelihood estimates (MLEs) $\hat\theta$ and $\hat\theta^*$ such that
-#' $$\ell(\hat\theta)=\ell_\mathrm{max},\quad \ell(\hat\theta^*)=\ell_\mathrm{max}^*.$$
-#' 
-#' - If the likelihood function has a flat region, or ridge, at its maximum then the MLE is not unique. 
-#' Alternatively, one can talk about a maximum likelihood surface describing the set of parameter values for which $\ell(\hat\theta)=\ell_\mathrm{max}$.
-#' - Flat, or nearly flat, ridges in the likelihood surface are not an idle concern. 
-#' Many dynamic models have combinations of parameters that are weakly identified: they cannot be well estimated on the basis of the data.
 #' 
 #' ## Maximizing the likelihood using the particle filter
 #' 

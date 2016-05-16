@@ -143,9 +143,9 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#maximizing-the-likelihood">Maximizing the likelihood</a><ul>
 <li><a href="#exercise-aic-as-a-formal-statistical-test">Exercise: AIC as a formal statistical test</a></li>
-</ul></li>
-<li><a href="#confidence-intervals-for-parameters-profile-likelihood">Confidence intervals for parameters: Profile likelihood</a></li>
 <li><a href="#point-estimates-for-parameters-the-maximum-likelihood-estimate-mle">Point estimates for parameters: The maximum likelihood estimate (MLE)</a></li>
+<li><a href="#confidence-intervals-for-parameters-profile-likelihood">Confidence intervals for parameters: Profile likelihood</a></li>
+</ul></li>
 <li><a href="#maximizing-the-likelihood-using-the-particle-filter">Maximizing the likelihood using the particle filter</a><ul>
 <li><a href="#exercise-more-slices">Exercise: More slices</a></li>
 <li><a href="#exercise-visualizing-the-likelihood-surface">Exercise: Visualizing the likelihood surface</a></li>
@@ -408,9 +408,16 @@ foreach (theta=iter(p,&quot;row&quot;),.combine=rbind,
 <p>Determine the size of AIC as a hypothesis test for nested hypotheses with <span class="math inline">\(d=1\)</span> in a regular parametric situation.</p>
 <hr />
 </div>
+<div id="point-estimates-for-parameters-the-maximum-likelihood-estimate-mle" class="section level3">
+<h3>Point estimates for parameters: The maximum likelihood estimate (MLE)</h3>
+<p>We define maximum likelihood estimates (MLEs) <span class="math inline">\(\hat\theta\)</span> and <span class="math inline">\(\hat\theta^*\)</span> such that <span class="math display">\[\ell(\hat\theta)=\ell_\mathrm{max},\quad \ell(\hat\theta^*)=\ell_\mathrm{max}^*.\]</span></p>
+<ul>
+<li>If the likelihood function has a flat region, or ridge, at its maximum then the MLE is not unique. Alternatively, one can talk about a maximum likelihood surface describing the set of parameter values for which <span class="math inline">\(\ell(\hat\theta)=\ell_\mathrm{max}\)</span>.</li>
+<li>Flat, or nearly flat, ridges in the likelihood surface are not an idle concern. Many dynamic models have combinations of parameters that are weakly identified: they cannot be well estimated on the basis of the data.</li>
+</ul>
 </div>
-<div id="confidence-intervals-for-parameters-profile-likelihood" class="section level2">
-<h2>Confidence intervals for parameters: Profile likelihood</h2>
+<div id="confidence-intervals-for-parameters-profile-likelihood" class="section level3">
+<h3>Confidence intervals for parameters: Profile likelihood</h3>
 <p>The likelihood ratio test with <span class="math inline">\(d=1\)</span> gives a good way to construct confidence intervals. Suppose we are interested in a specific parameter, <span class="math inline">\(\theta_k\)</span>, and we want to consider whether the data support the possibility that <span class="math inline">\(\theta_k=\theta_k^*\)</span> in the absence of assumptions on the other parameters. We can then take <span class="math inline">\(\Theta^*\)</span> to be the subset of <span class="math inline">\(\Theta\)</span> satisfying <span class="math inline">\(\theta_k=\theta_k^*\)</span>. Using the chi-square approximation to the likelihood ratio statistic, a 95% confidence interval for <span class="math inline">\(\theta_k\)</span> consists of all the values <span class="math inline">\(\theta_k^*\)</span> for which <span class="math display">\[\ell_\mathrm{max}-\ell_\mathrm{max}^* &lt; 1.92.\]</span></p>
 <p>A way to visualize the information about a specific parameter <span class="math inline">\(\theta_k\)</span> is via the profile likelihood function, defined as <span class="math display">\[\ell_\mathrm{profile}(\theta_k^*) = \max\{\ell(\theta): \theta_k=\theta_k^*\}.\]</span> We then plot <span class="math inline">\(\ell_\mathrm{profile}(\theta_k)\)</span> against <span class="math inline">\(\theta_k\)</span>.</p>
 <ul>
@@ -420,13 +427,6 @@ foreach (theta=iter(p,&quot;row&quot;),.combine=rbind,
 <li>If the profile plot has two peaks (i.e., <span class="math inline">\(\ell_\mathrm{profile}(\theta_k)\)</span> is bimodal) then a likelihood ratio test helps us to assess whether or not both peaks provide adequate explanations of the data.</li>
 </ul>
 </div>
-<div id="point-estimates-for-parameters-the-maximum-likelihood-estimate-mle" class="section level2">
-<h2>Point estimates for parameters: The maximum likelihood estimate (MLE)</h2>
-<p>We define maximum likelihood estimates (MLEs) <span class="math inline">\(\hat\theta\)</span> and <span class="math inline">\(\hat\theta^*\)</span> such that <span class="math display">\[\ell(\hat\theta)=\ell_\mathrm{max},\quad \ell(\hat\theta^*)=\ell_\mathrm{max}^*.\]</span></p>
-<ul>
-<li>If the likelihood function has a flat region, or ridge, at its maximum then the MLE is not unique. Alternatively, one can talk about a maximum likelihood surface describing the set of parameter values for which <span class="math inline">\(\ell(\hat\theta)=\ell_\mathrm{max}\)</span>.</li>
-<li>Flat, or nearly flat, ridges in the likelihood surface are not an idle concern. Many dynamic models have combinations of parameters that are weakly identified: they cannot be well estimated on the basis of the data.</li>
-</ul>
 </div>
 <div id="maximizing-the-likelihood-using-the-particle-filter" class="section level2">
 <h2>Maximizing the likelihood using the particle filter</h2>
