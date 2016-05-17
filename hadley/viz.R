@@ -26,6 +26,8 @@ theme_set(theme_bw())
 #' Run the codes shown and study the outputs to learn about these tools.
 #' When questions are posed, do your best to answer them.
 #' 
+#' For your convenience, [the **R** codes for this document are provided in an **R** script](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/hadley/viz.R) which you can download, edit, and run.
+#' 
 #' ## Getting started: **R**'s base graphics
 #' 
 #' ### Transgenic mosquito experiment
@@ -213,7 +215,15 @@ ddply(energy,~source1+year,summarize,TJ=sum(TJ)) -> x
 ggplot(data=x,mapping=aes(x=year,y=TJ,fill=source1))+
     geom_area()
 
+#' --------------------------
 #' 
 #' ### Exercise
 #' 
 #' Ask a question regarding one of the datasets shown here and devise a visualization to answer it.
+#' 
+#' --------------------------
+#' 
+#' ## [Back to course homepage](http://kingaa.github.io/short-course)
+#' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/hadley/viz.R)
+#' 
+#' --------------------------
