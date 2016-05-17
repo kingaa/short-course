@@ -76,7 +76,7 @@ arrange(x,c,b,a)
 
 #' 
 ## ------------------------------------------------------------------------
-energy <- read.csv("./energy_production.csv",comment="#")
+read.csv("http://kingaa.github.io/short-course/hadley/energy_production.csv",comment="#") -> energy
 arrange(energy,region,source,year)
 arrange(energy,-TJ,year)
 
@@ -256,7 +256,7 @@ mutate(energy,source=mapvalues(source,from=c("Coal","Gas","Oil"),
 #' These allow one to chain operations together.
 #' When calculations get complex, it is easier and more natural to view them as a chain of operations instead of using nested function calls or defining intermediate variables.
 #' 
-#' ### The %>% operator
+#' ### The `%>%` operator
 #' 
 #' ```
 #' f(g(data, a, b, c, ...), d, e, ...)
@@ -268,7 +268,7 @@ mutate(energy,source=mapvalues(source,from=c("Coal","Gas","Oil"),
 #' data %>% g(a, b, c, ...) %>% f(d, e, ...)
 #' ```
 #' 
-#' ### The %<>% operator
+#' ### The `%<>%` operator
 #' 
 #' ```
 #' x %>% f(a, b, c, ...) -> x

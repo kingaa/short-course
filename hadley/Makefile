@@ -1,4 +1,4 @@
-TARGETS = munging.R munging.html viz.R viz.html energy_production.csv
+TARGETS = munging.R munging.html viz.R viz.html energy_production.csv oil_production.csv mosquitoes.csv
 
 default: $(TARGETS)
 ifneq ($(INSTALLDIR),)

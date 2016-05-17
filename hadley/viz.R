@@ -8,6 +8,7 @@
 #' bibliography: ../course.bib
 #' csl: ../ecology.csl
 #' ---
+#' 
 ## ----prelims,include=FALSE,cache=FALSE-----------------------------------
 options(
   keep.source=TRUE,
@@ -15,9 +16,15 @@ options(
   )
 
 set.seed(594709947L)
-require(ggplot2)
+library(ggplot2)
 theme_set(theme_bw())
 
+#' 
+#' ## How to use this document.
+#' 
+#' This is an extremely condensed introduction to **R**'s base graphics and---more importantly---the powerful data-visualization package **ggplot2**, developed by Hadley Wickham.
+#' Run the codes shown and study the outputs to learn about these tools.
+#' When questions are posed, do your best to answer them.
 #' 
 #' ## Getting started: **R**'s base graphics
 #' 
@@ -26,7 +33,7 @@ theme_set(theme_bw())
 #' Let's load the data on transgenic mosquito survival time.
 #' 
 ## ------------------------------------------------------------------------
-dat <- read.csv("http://kinglab.eeb.lsa.umich.edu/202/data/mosquitoes.csv")
+dat <- read.csv("http://kingaa.github.io/short-course/hadley/mosquitoes.csv")
 
 #' 
 #' Let's compare the average lifespan of transgenic vs wildtype mosquitoes from this experiment.
@@ -34,11 +41,6 @@ dat <- read.csv("http://kinglab.eeb.lsa.umich.edu/202/data/mosquitoes.csv")
 ## ------------------------------------------------------------------------
 wt <- subset(dat,type=="wildtype",select=lifespan)
 tg <- subset(dat,type=="transgenic",select=-type)
-
-#' The following computes the mean of each.
-## ------------------------------------------------------------------------
-mean(wt$lifespan)
-mean(tg$lifespan)
 
 #' 
 #' Let's try and visualize the data.
@@ -50,6 +52,8 @@ hist(wt$lifespan,breaks=seq(0,55,by=5),ylim=c(0,40))
 par(op)
 
 #' 
+#' **Question:** What does the second `par` command accomplish?
+#' 
 #' Another way to visualize a distribution is via the *empirical cumulative distribution plot*.
 #' 
 ## ------------------------------------------------------------------------
@@ -57,13 +61,14 @@ plot(sort(dat$lifespan),seq(1,nrow(dat))/nrow(dat),type='n')
 lines(sort(wt$lifespan),seq(1,nrow(wt))/nrow(wt),type='s',col='blue')
 lines(sort(tg$lifespan),seq(1,nrow(tg))/nrow(tg),type='s',col='red')
 
-#' [What does `type="n"` do in the first line above?]
+#' **Question:** What does `type="n"` do in the first line above?
 #' 
 #' ### Mammal body and brain sizes
 #' 
 #' The data on mammal body and brain sizes is included in the **MASS** package:
 ## ------------------------------------------------------------------------
 library(MASS)
+
 plot(mammals)
 plot(mammals,log='x')
 plot(mammals,log='xy')
@@ -74,19 +79,22 @@ plot(brain~body,data=mammals,log='xy')
 #' ### Oil production
 #' 
 ## ------------------------------------------------------------------------
-oil <- read.csv("http://kinglab.eeb.lsa.umich.edu/202/data/oil_production.csv",comment.char="#")
+read.csv("http://kingaa.github.io/short-course/hadley/oil_production.csv",
+         comment.char="#") -> oil
+head(oil)
+summary(oil)
 plot(oil)
 plot(Gbbl~year,data=oil,subset=region=="North.America",type='l')
 lines(Gbbl~year,data=oil,subset=region=="Eurasia",type="l",col='red')
 
-require(reshape2)
+library(reshape2)
+
 dcast(oil,year~region) -> wideOil
 names(wideOil)
 wideOil$total <- wideOil$Africa+wideOil$Asia+wideOil$Central+wideOil$Eurasia+wideOil$Europe+wideOil$Middle+wideOil$North.America
 wideOil$total <- apply(wideOil[,-1],1,sum)
 plot(wideOil$year,wideOil$total,type='l')
 
-#' 
 #' 
 #' ## A more systematic approach: the Grammar of Graphics
 #' 
@@ -114,29 +122,36 @@ plot(wideOil$year,wideOil$total,type='l')
 #' ### Energy production
 #' 
 ## ------------------------------------------------------------------------
-energy <- read.csv("http://kinglab.eeb.lsa.umich.edu/202/data/energy_production.csv",comment.char="#")
+read.csv("http://kingaa.github.io/short-course/hadley/energy_production.csv",
+         comment.char="#") -> energy
 
-require(ggplot2)
+library(ggplot2)
 
 ggplot(data=energy,mapping=aes(x=year,y=TJ,color=region,linetype=source))+geom_line()
 ggplot(data=energy,mapping=aes(x=year,y=TJ,color=region))+geom_line()+facet_wrap(~source)
-ggplot(data=energy,mapping=aes(x=year,y=TJ,color=source))+geom_line()+facet_wrap(~region)
+ggplot(data=energy,mapping=aes(x=year,y=TJ,color=source))+geom_line()+facet_wrap(~region,ncol=2)
 
 #' 
 #' What can you conclude from the above?
 #' Try plotting these data on the log scale (`scale_y_log10()`).
 #' How does your interpretation change?
 #' 
-#' What does the `group` aesthetic do?
 ## ------------------------------------------------------------------------
 ggplot(data=energy,mapping=aes(x=year,y=TJ))+geom_line()
 ggplot(data=energy,mapping=aes(x=year,y=TJ,group=source))+geom_line()
+
+#' 
+#' **Question:** How do you account for the appearance of the two plots immediately above?
+#' 
+## ------------------------------------------------------------------------
 ggplot(data=energy,mapping=aes(x=year,y=TJ,group=source:region))+geom_line()
 
 #' 
+#' **Question:** What does the `group` aesthetic do?
+#' 
 #' Let's aggregate across regions by year and source of energy.
 ## ------------------------------------------------------------------------
-require(reshape2)
+library(reshape2)
 
 tot <- dcast(energy,year+source~'TJ',value.var="TJ",fun.aggregate=sum)
 ggplot(data=tot,mapping=aes(x=year,y=TJ,color=source))+geom_line()
@@ -156,7 +171,7 @@ ggplot(data=reg,mapping=aes(x=region,y=TJ,fill=source))+
 #' [See the data munging tutorial.](./data_munging.html)
 #' 
 ## ------------------------------------------------------------------------
-require(plyr)
+library(plyr)
 
 ddply(energy,~region+source,summarize,TJ=mean(TJ)) -> x
 
@@ -178,7 +193,7 @@ ggplot(data=y,mapping=aes(x=region,y=frac,fill=source))+
 #' 
 #' Let's compare fossil fuel production to renewable.
 ## ------------------------------------------------------------------------
-require(plyr)
+library(plyr)
 
 mutate(energy,
        source=as.character(source),
@@ -201,5 +216,4 @@ ggplot(data=x,mapping=aes(x=year,y=TJ,fill=source1))+
 #' 
 #' ### Exercise
 #' 
-#' Ask a question and devise a visualization to answer it.
-#' 
+#' Ask a question regarding one of the datasets shown here and devise a visualization to answer it.

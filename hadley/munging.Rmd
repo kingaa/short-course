@@ -16,22 +16,20 @@ opts_chunk$set(
   progress=TRUE,
   prompt=FALSE,tidy=FALSE,highlight=TRUE,
   strip.white=TRUE,
-  warning=FALSE,
+  warning=TRUE,
   message=FALSE,
-  error=FALSE,
+  error=TRUE,
   echo=TRUE,
   cache=TRUE,
   cache.extra=rand_seed,
   results='hide',
   fig.show='asis',
   size='small',
-  fig.lp="fig:",
   fig.path=paste0("figure/",prefix,"-"),
   cache.path=paste0("cache/",prefix,"-"),
-  fig.pos="h!",
   fig.align='center',
   fig.height=4,fig.width=6.83,
-  dpi=300,
+  dpi=100,
   dev='png',
   dev.args=list(bg='transparent')
 )
@@ -107,7 +105,7 @@ arrange(x,c,b,a)
 ```
 
 ```{r}
-energy <- read.csv("./energy_production.csv",comment="#")
+read.csv("http://kingaa.github.io/short-course/hadley/energy_production.csv",comment="#") -> energy
 arrange(energy,region,source,year)
 arrange(energy,-TJ,year)
 ```
@@ -287,7 +285,7 @@ Ren&eacute; Magritte, *La Trahison des Images*
 These allow one to chain operations together.
 When calculations get complex, it is easier and more natural to view them as a chain of operations instead of using nested function calls or defining intermediate variables.
 
-### The %>% operator
+### The `%>%` operator
 
 ```
 f(g(data, a, b, c, ...), d, e, ...)
@@ -299,7 +297,7 @@ is equivalent to
 data %>% g(a, b, c, ...) %>% f(d, e, ...)
 ```
 
-### The %<>% operator
+### The `%<>%` operator
 
 ```
 x %>% f(a, b, c, ...) -> x
