@@ -156,7 +156,11 @@ set.seed(557976883)
 #' 
 #' ## Applying IF2 to the boarding school influenza outbreak
 #' 
-#' For a relatively simple epidemiological example of IF2, we consider fitting a stochastic SIR model to an influenza outbreak in a British boarding school [@anonymous78]. Reports consist of the number of children confined to bed for each of the 14 days of the outbreak. The total number of children at the school was 763, and a total of 512 children spent time away from class. Only one adult developed influenza-like illness, so adults are omitted from the data and model. First, we read in the boarding school flu (bsflu) data:
+#' For a relatively simple epidemiological example of IF2, we consider fitting a stochastic SIR model to an influenza outbreak in a British boarding school [@anonymous78].
+#' Reports consist of the number of children confined to bed for each of the 14 days of the outbreak.
+#' The total number of children at the school was 763, and a total of 512 children spent time away from class.
+#' Only one adult developed influenza-like illness, so adults are omitted from the data and model.
+#' First, we read in the data:
 #' 
 ## ----load_bbs------------------------------------------------------------
 bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt")
@@ -171,6 +175,7 @@ bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_da
 #' These measurements are modeled as $Y_n=(B_n,C_n)$ with $B_n\sim\mathrm{Poisson}(\rho R_1(t_n))$ and $C_n\sim\mathrm{Poisson}(\rho R_2(t_n))$.
 #' Here, $\rho$ is a reporting rate corresponding to the chance of being symptomatic.
 #' 
+#' 
 #' The index case for the epidemic was proposed to be a boy returning to Britain from Hong Kong, who was reported to have a transient febrile illness from 15 to 18 January.
 #' It would therefore be reasonable to initialize the epidemic with $I(t_0)=1$ at $t_0=-6$.
 #' This is a little tricky to reconcile with the rest of the data; for now, we avoid this issue by instead initializing with $I(t_0)=1$ at $t_0=0$.
@@ -183,19 +188,19 @@ bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_da
 #' $1/\mu_{R2}$ is the mean duration of convalescence for symptomatic cases.
 #' All rates have units $\mathrm{day}^{-1}$. 
 #' 
-#' This model has limitations and weaknesses.
-#' Writing down and fitting a model is a starting point for data analysis, not an end point.
+#' This model has limitations and weaknesses, but writing down and fitting a model is a starting point for data analysis, not an end point.
 #' In particular, one should try model variations.
 #' For example, one could include a latency period for infections, or one could modify the model to give a better description of the bed-confinement and convalescence processes.
 #' Ten individuals received antibiotics for secpondary infections, and they had longer bed-confinement and convalescence times.
 #' Partly for this reason, we will initially fit only the bed-confinement data, using $Y_n=B_n$ for our `dmeasure`. 
 #' 
-#' We do not need a representation of $R_3$ since the total population size is fixed at $P=763$ and hence $R_3(t)=P-S(t)-I(t)-R_1(t)-R_2(t)$. 
-#' For the code, we enumerate the state variables ($S$, $I$, $R_1$, $R_2$) and the parameters ($\beta$, $\mu_I$, $\rho$, $\mu_{R_1}$, $\mu_{R_2}$) as follows:
+#' We do not need a representation of $R_3$ since this variable has consequences neither for the dynamics of the state process nor for the data.
+#' If we confine ourselves for the present to fitting only the bed-confinement data, then we need not track $R_2$.
+#' For the code, we enumerate the state variables ($S$, $I$, $R_1$) and the parameters ($\beta$, $\mu_I$, $\rho$, $\mu_{R_1}$) as follows:
 #' 
 ## ----bsflu_names---------------------------------------------------------
-statenames <- c("S","I","R1","R2")
-paramnames <- c("Beta","mu_I","mu_R1","mu_R2","rho")
+statenames <- c("S","I","R1")
+paramnames <- c("Beta","mu_I","mu_R1","rho")
 
 #' 
 #' In the codes below, we'll refer to the data variables by their names ($B$, $C$), as given in the `bsflu_data` data-frame:
@@ -223,14 +228,14 @@ rproc <- Csnippet("
 
 fromEst <- Csnippet("
  TBeta = exp(Beta);
- Trho = expit(rho);
  Tmu_I = exp(mu_I);
+ Trho = expit(rho);
 ")
 
 toEst <- Csnippet("
  TBeta = log(Beta);
- Trho = logit(rho);
  Tmu_I = log(mu_I);
+ Trho = logit(rho);
 ")
 
 init <- Csnippet("
@@ -321,7 +326,6 @@ stew(file="pf.rda",{
                   .options.multicore=list(set.seed=TRUE),
                   .export=c("bsflu","fixed_params")
     ) %dopar% {
-      library(pomp)
       pfilter(bsflu,params=c(Beta=2,mu_I=1,rho=0.9,fixed_params),Np=10000)
     }
   )
@@ -364,7 +368,6 @@ stew(file="box_search_local.rda",{
                           .export=c("bsflu","fixed_params")
     ) %dopar%  
     {
-      library(pomp)
       mif2(
         bsflu,
         start=c(Beta=2,mu_I=1,rho=0.9,fixed_params),
@@ -391,7 +394,6 @@ stew(file="lik_local.rda",{
                              .options.multicore=list(set.seed=TRUE)
     ) %dopar% 
     {
-      library(pomp)
       evals <- replicate(10, logLik(pfilter(mf,Np=20000)))
       ll <- logmeanexp(evals,se=TRUE)
       c(coef(mf),loglik=ll[1],loglik=ll[2])
@@ -441,9 +443,7 @@ stew(file="box_search_global.rda",{
                               .export=c("mf1","fixed_params")
     ) %dopar% 
     {
-      library(pomp)
-      mf <- mif2(mf1,start=c(unlist(guess),fixed_params),
-                 cooling.type='geometric')
+      mf <- mif2(mf1,start=c(unlist(guess),fixed_params))
       mf <- mif2(mf,Nmif=100)
       ll <- replicate(10,logLik(pfilter(mf,Np=100000)))
       ll <- logmeanexp(ll,se=TRUE)
