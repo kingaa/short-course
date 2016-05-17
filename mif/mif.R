@@ -63,7 +63,7 @@ set.seed(557976883)
 #' 
 #' - *Full-information* methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).
 #' - *Feature-based* methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.
-#' - Asymptotically, full_information methods are statistically efficient and feature-based methods are not.
+#' - Asymptotically, full-information methods are statistically efficient and feature-based methods are not.
 #' + Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.
 #' + However, good low-dimensional summary statistics can be hard to find. 
 #' + When using statistically inefficient methods, it can be hard to know how much information you are losing. 
@@ -176,11 +176,11 @@ bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_da
 #' This is a little tricky to reconcile with the rest of the data; for now, we avoid this issue by instead initializing with $I(t_0)=1$ at $t_0=0$.
 #' All other individuals are modeled to be initially susceptible.
 #' 
-#' Our Markov transmission model is that each individual in $S$ transitions to $I$ at rate $\beta I(t)$;
+#' Our Markov transmission model is that each individual in $S$ transitions to $I$ at rate $\beta\,I(t)/N$;
 #' each individual in $I$ transitions at rate $\mu_I$ to $R_1$.
 #' Subsequently, the individual moves from $R_1$ to $R_2$ at  rate $\mu_{R_1}$, and finally from $R_2$ to $R_3$ at rate $\mu_{R_2}$.
-#' Therefore, $1/\mu_I$ is the mean infectious time prior to bed-confinement; $1/R_1$ is the mean duration of bed-confinement for symptomatic cases;
-#' $1/R_2$ is the mean duration of convalescence for symptomatic cases.
+#' Therefore, $1/\mu_I$ is the mean infectious time prior to bed-confinement; $1/\mu_{R1}$ is the mean duration of bed-confinement for symptomatic cases;
+#' $1/\mu_{R2}$ is the mean duration of convalescence for symptomatic cases.
 #' All rates have units $\mathrm{day}^{-1}$. 
 #' 
 #' This model has limitations and weaknesses.
@@ -488,7 +488,7 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' 
 #' How strong is the evidence about the contact rate, $\beta$, given this model and data? Use `mif2` to construct a profile likelihood. Due to time constraints, you may be able to compute only a preliminary version.
 #' 
-#' It is also possible to profile over the basic reproduction number, $R_0=\beta P/\mu_I$. Is this more or less well determined that $\beta$ for this model and data?
+#' It is also possible to profile over the basic reproduction number, $R_0=\beta /\mu_I$. Is this more or less well determined that $\beta$ for this model and data?
 #' 
 #' --------------------------
 #' 
