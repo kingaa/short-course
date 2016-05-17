@@ -240,11 +240,10 @@ set.seed(594709947L)
 #' ### The boarding-school flu outbreak
 #' 
 #' As an example that we can probe in some depth, let's look at an isolated outbreak of influenza that occurred in a boarding school for boys in England [@Anonymous1978].
-#' <!--- 763 boys were at risk, and ultimately 512 became infected. --->
+#' <!--- 763 boys were at risk, and ultimately 512 spent time away from class (either confined to bed or in convalescence. --->
 #' Download the data and examine it:
 ## ----flu-data1-----------------------------------------------------------
-base_url <- "http://kingaa.github.io/short-course/"
-bsflu <- read.table(paste0(base_url,"stochsim/bsflu_data.txt"))
+read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt")) -> bsflu
 head(bsflu)
 
 #' The variable `B` refers to boys confined to bed and `C` to boys in convalescence.
