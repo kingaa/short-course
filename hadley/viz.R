@@ -111,7 +111,7 @@ plot(wideOil$year,wideOil$total,type='l')
 #' 1. A ***faceting system***: multiple plots
 #' 
 #' You construct a graphical visualization by choosing the constituent parts.
-#' This is implemented in the **ggplot2** package
+#' This is implemented in the **ggplot2** package.
 #' 
 #' ### References
 #' 

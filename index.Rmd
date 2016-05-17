@@ -148,6 +148,12 @@ Date,Topic
 
 ----------------------
 
+[**R** Tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial)  
+
+[Tutorial on data munging with `plyr`, `reshape2`, and `magrittr`](http://kingaa.github.io/short-course/hadley/munging.html)  
+
+[Tutorial on `ggplot2`](http://kingaa.github.io/short-course/hadley/viz.html)  
+
 [Source code for these notes](http://github.com/kingaa/short-course/)  
 
 [**pomp** homepage](http://kingaa.github.io/pomp)  
