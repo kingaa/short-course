@@ -38,13 +38,11 @@ opts_chunk$set(
   results='markup',
   fig.show='asis',
   size='small',
-  fig.lp="fig:",
   fig.path=paste0("figure/",prefix,"-"),
   cache.path=paste0("cache/",prefix,"-"),
-  fig.pos="h!",
   fig.align='center',
   fig.height=4,fig.width=6.83,
-  dpi=300,
+  dpi=100,
   dev='png',
   dev.args=list(bg='transparent')
 )

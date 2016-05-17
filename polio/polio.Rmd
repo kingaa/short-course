@@ -37,13 +37,11 @@ opts_chunk$set(
   results='markup',
   fig.show='asis',
   size='small',
-  fig.lp="fig:",
   fig.path=paste0("figure/",prefix,"-"),
   cache.path=paste0("cache/",prefix,"-"),
-  fig.pos="h!",
   fig.align='center',
   fig.height=4,fig.width=6.83,
-  dpi=300,
+  dpi=100,
   dev='png',
   dev.args=list(bg='transparent')
 )
@@ -750,19 +748,29 @@ In particular, `cooling.fraction.50` gives the fraction by which the random walk
 Interpret the diagnostic plots below. Carry out some numerical experiments to test your interpretations. 
 One could look at filtering diagnostics at the MLE, for example, `plot(pf1[[1]])` but the diagnostic plots for iterated filtering include filtering diagnostics for the last iteration anyhow, so let's just consider the `mif` diagnostic plot. 
 Looking at several simultaneously permits assessment of Monte Carlo variability. 
-`plot` applied to a `mifList` object does this: 
-here, `m3` is of class `mifList` since that is the class resulting from concatenation of `mif2d.pomp` objects using `c()`:
+In the following, `m4` is constructed by concatenating the results of several `mif2` computations using `c()`.
+When we call `plot` on such an object, we obtain useful diagnostics.
 
-```{r check_class_m3,eval=F}
-class(m3)
-```
+```{r mif_diagnostics}
+foreach(i=1:4,
+        .packages='pomp',.combine=c,
+        .options.multicore=list(set.seed=TRUE)
+        ) %dopar% {
+          mif2(polio,
+               Np=1000,
+               Nmif=50,
+               cooling.type="geometric",
+               cooling.fraction.50=0.5,
+               transform=TRUE,
+               rw.sd=rw.sd(
+                 b1=0.02, b2=0.02, b3=0.02, b4=0.02, b5=0.02, b6=0.02,
+                 psi=0.02, rho=0.02, tau=0.02, sigma_dem=0.02, sigma_env=0.02,
+                 IO_0=ivp(0.2), SO_0=ivp(0.2)
+               )
+          )
+        } -> m4
 
-```{r check_class_m3_1,eval=F}
-class(m3[[1]])
-```
-
-```{r mif_diagnostics,eval=F}
-plot(m3[r3$logLik>max(r3$logLik)-10])
+plot(m4)
 ```
 
 The likelihood is particularly important to keep in mind. 
@@ -773,6 +781,7 @@ Thus, as long as the search is demonstrably approaching the maximum likelihood r
 So, let's zoom in on the likelihood convergence:
 
 ```{r likelihood_convergence,eval=F}
+conv.rec(m4)
 loglik_convergence <- do.call(cbind,conv.rec(m3[r3$logLik>max(r3$logLik)-10],"loglik"))
 matplot(loglik_convergence,type="l",lty=1,ylim=max(loglik_convergence,na.rm=T)+c(-10,0))
 ```
