@@ -31,16 +31,17 @@ set.seed(5996485L)
 #' ## Objectives
 #' 
 #' 1. Show how partially observed Markov process (POMP) methods can be used to understand transmission dynamics of polio.
-#' 2. More broadly, discuss the use of POMP methods for compartmental models for biological systems having age structure, seasonality and other covariates.
-#' 3. Get some practice maximizing the likelihood for such models. How does one set up a _global_ search for a maximum likelihood estimate (MLE)? 
+#' 2. Discuss the use of POMP methods for compartmental models for biological systems having age structure, seasonality and other covariates.
+#' 3. Get some practice maximizing the likelihood for such models. How does one set up a _global_ search for a maximum likelihood estimate? 
 #' How does one test whether such a search has been successful?
 #' 
 #' ## Introduction
 #' 
 #' The massive global polio eradication initiative (GPEI) has brought polio from a major global disease to the brink of extinction. 
-#' Finishing this task is proving hard, and improved understanding polio ecology might assist.  Martinez et al. investigated this using extensive state level pre-vaccination era data in the USA [[@Martinez-Bakker2015]](http://dx.doi.org/10.1371/journal.pbio.1002172). 
+#' Finishing this task is proving hard, and an improved understanding of polio ecology might assist.
+#' Martinez et al. investigated this using extensive state level pre-vaccination era data in the USA [[@Martinez-Bakker2015]](http://dx.doi.org/10.1371/journal.pbio.1002172). 
 #' We will follow the approach of @Martinez-Bakker2015 for one state (Wisconsin). 
-#' In the context of their model, we can quantify seasonality of transmission, the role of the birth rate in explaining the transmission dynamics, and the persistence mechanism of polio. 
+#' In the context of the @Martinez-Bakker2015 model, we can quantify seasonality of transmission, the role of the birth rate in explaining the transmission dynamics, and the persistence mechanism of polio. 
 #' @Martinez-Bakker2015 carrried out this analysis for all 48 contigous states and District of Columbia, and their data and code are all publicly available. 
 #' The data we study, in consist of `cases`, the monthly reported polio cases; `births`, the  monthly recorded births; `pop`, the annual census; `time`, date in years.
 #' 
@@ -52,29 +53,36 @@ polio_data <- read.table("http://kingaa.github.io/sbied/polio/polio_wisconsin.cs
 #' 
 #' ### Model formulation
 #' 
-#' We implement the compartment model of @Martinez-Bakker2015, having compartments representing susceptible babies in each of six one-month birth cohorts ($S^B_1$,...,$S^B_6$), susceptible older individuals ($S^O$), infected babies ($I^B$), infected older individuals ($I^O$), and recovered with lifelong immunity ($R$). The state vector of the disease transmission model consists of numbers of individuals in each compartment at each time, 
+#' We implement the compartmental model of @Martinez-Bakker2015.
+#' It has compartments representing susceptible babies in each of six one-month birth cohorts ($S^B_1$,...,$S^B_6$), susceptible older individuals ($S^O$), infected babies ($I^B$), infected older individuals ($I^O$), and individuals who have recovered with lifelong immunity ($R$). 
+#' The state vector of the disease transmission model consists of numbers of individuals in each compartment at each time, 
 #' $$X(t)=\big(S^B_1(t),...,S^B_6(t), I^B(t),I^O(t),R(t) \big).$$
-#' Babies under six months are modeled as fully protected from symptomatic poliomyelitis; older infections lead to reported cases (usually paralysis) at a rate $\rho$. 
+#' Babies under six months are modeled as fully protected from symptomatic poliomyelitis; 
+#' older infections lead to reported cases (usually paralysis) at a rate $\rho$. 
 #' 
 #' The flows through the compartments are graphically represented as follows (Figure 1A of @Martinez-Bakker2015):
 #' 
 #' ![Polio model diagram](./polio_fig1A.png)
 #' 
 #' Since duration of infection is comparable to the one-month reporting aggregation, a discrete time model may be appropriate. 
-#' @Martinez-Bakker2015 fitted monthly observations from May 1932 through January 1953, so we define $t_n=1932+ (4+n)/12$ for $n=0,\dots,N$, and we write
-#' $$X_n=X(t_n)=\big(S^B_{1,n},...,S^B_{6,n}, I^B_n,I^O_n,R_n \big).$$
+#' @Martinez-Bakker2015 fitted monthly observations from May 1932 through January 1953, so we define $t_n=1932+ (4+n)/12$ for $n=0,\dots,N$, and we write $$X_n=X(t_n)=\big(S^B_{1,n},...,S^B_{6,n}, I^B_n,I^O_n,R_n \big).$$
 #' The mean force of infection, in units of $\mathrm{yr}^{-1}$, is modeled as
 #' $$\bar\lambda_n=\left( \beta_n \frac{I^O_n+I^B_n}{P_n} + \psi \right)$$
 #' where $P_n$ is census population interpolated to time $t_n$ and seasonality of transmission is modeled as
 #' $$\beta_n=\exp\left\{ \sum_{k=1}^K b_k\xi_k(t_n) \right\},$$
-#' with $\{\xi_k(t),k=1,\dots,K\}$ being a periodic B-spline basis. We set $K=6$. The force of infection has a stochastic perturbation,
+#' with $\{\xi_k(t),k=1,\dots,K\}$ being a periodic B-spline basis.
+#' We set $K=6$. The force of infection has a stochastic perturbation,
 #' $$\lambda_n = \bar\lambda_n \epsilon_n,$$
-#' where $\epsilon_n$ is a Gamma random variable with mean 1 and variance $\sigma^2_{\mathrm{env}} + \sigma^2_{\mathrm{dem}}\big/\bar\lambda_n$. These two terms capture variation on the environmental and demographic scales, respectively. All compartments suffer a mortality rate, set at $\delta=1/60\mathrm{yr}^{-1}$. 
-#' Within each month, all susceptible individuals are modeled as having exposure to constant competing hazards of mortality and polio infection.  The chance of remaining in the susceptible population when exposed to these hazards for one month is therefore
+#' where $\epsilon_n$ is a Gamma random variable with mean 1 and variance $\sigma^2_{\mathrm{env}} + \sigma^2_{\mathrm{dem}}\big/\bar\lambda_n$.
+#' These two terms capture variation on the environmental and demographic scales, respectively.
+#' All compartments suffer a mortality rate, set at $\delta=1/60\mathrm{yr}^{-1}$. 
+#' Within each month, all susceptible individuals are modeled as having exposure to constant competing hazards of mortality and polio infection.
+#' The chance of remaining in the susceptible population when exposed to these hazards for one month is therefore
 #' $$p_n = \exp\big\{ -(\delta+\lambda_n)/12\big\},$$
 #' with the chance of polio infection being 
 #' $$q_n = (1-p_n)\lambda_n\big/(\lambda_n+\delta).$$
-#' We employ a continuous population model, with no demographic stochasticity (in some sense, the demographic-scale stochasticity in $\lambda_n$ is in fact environmental stochasticity since it modifies a rate that affects all compartments equally). Writing $B_n$ for births in month $n$, we obtain the dynamic model of @Martinez-Bakker2015:
+#' We employ a continuous population model, with no demographic stochasticity (in some sense, the demographic-scale stochasticity in $\lambda_n$ is in fact environmental stochasticity since it modifies a rate that affects all compartments equally).
+#' Writing $B_n$ for births in month $n$, we obtain the dynamic model of @Martinez-Bakker2015:
 #' $$\begin{aligned}
 #' S^B_{1,n+1}&= B_{n+1}\\
 #' S^B_{k,n+1}&= p_nS^B_{k-1,n} \quad\mbox{for $k=2,\dots,6$}\\
@@ -88,7 +96,8 @@ polio_data <- read.table("http://kingaa.github.io/sbied/polio/polio_wisconsin.cs
 #' We will suppose there are parameters $\big(\tilde S^B_{1,0},...,\tilde S^B_{6,0}, \tilde I^B_0,\tilde I^O_0,\tilde S^O_0\big)$ that specify the population in each compartment at time $t_0$ via
 #' $$ S^B_{1,0}= {\tilde S}^B_{1,0} ,...,S^B_{6,0}= \tilde S^B_{6,0}, \quad I^B_{0}= P_0 \tilde I^B_{0},\quad S^O_{0}= P_0 \tilde S^O_{0}, \quad I^O_{0}= P_0 \tilde I^O_{0}.$$
 #' Following @Martinez-Bakker2015, we make an approximation for the initial conditions of ignoring infant infections at time $t_0$. 
-#' Thus, we set $\tilde I^B_{0}=0$ and use monthly births in the preceding months (ignoring infant mortality) to fix $\tilde S^B_{k,0}=B_{1-k}$ for $k=1,\dots,6$. The estimated initial conditions are then defined by the two parameters $\tilde I^O_{0}$ and $\tilde S^O_{0}$, since the initial recovered population, $R_0$, is specified by subtraction of all the other compartments from the total initial population, $P_0$. 
+#' Thus, we set $\tilde I^B_{0}=0$ and use monthly births in the preceding months (ignoring infant mortality) to fix $\tilde S^B_{k,0}=B_{1-k}$ for $k=1,\dots,6$.
+#' The estimated initial conditions are then defined by the two parameters $\tilde I^O_{0}$ and $\tilde S^O_{0}$, since the initial recovered population, $R_0$, is specified by subtraction of all the other compartments from the total initial population, $P_0$. 
 #' Note that it is convenient to parameterize the estimated initial states as fractions of the population, whereas the initial states fixed at births are parameterized directly as a count.
 #' 
 #' 
@@ -326,8 +335,8 @@ library(reshape2)
 library(magrittr)
 library(ggplot2)
 pf1 %>% 
-  setNames(seq_along(pf1)) %>%
-  ldply(as.data.frame,.id='rep') %>% 
+  setNames(seq_along(pf1)) %>% 
+  ldply(as.data.frame,.id='rep') %>%
   subset(select=c(time,rep,ess,cond.loglik)) %>% 
   melt(id=c('time','rep')) %>%
   ggplot(aes(x=time,y=value,group=variable))+
@@ -695,31 +704,45 @@ sims %>%
 #' Interpret the diagnostic plots below. Carry out some numerical experiments to test your interpretations. 
 #' One could look at filtering diagnostics at the MLE, for example, `plot(pf1[[1]])` but the diagnostic plots for iterated filtering include filtering diagnostics for the last iteration anyhow, so let's just consider the `mif` diagnostic plot. 
 #' Looking at several simultaneously permits assessment of Monte Carlo variability. 
-#' `plot` applied to a `mifList` object does this: 
-#' here, `m3` is of class `mifList` since that is the class resulting from concatenation of `mif2d.pomp` objects using `c()`:
+#' In the following, `m4` is constructed by concatenating the results of several `mif2` computations using `c()`.
+#' When we call `plot` on such an object, we obtain useful diagnostics.
 #' 
-## ----check_class_m3,eval=F-----------------------------------------------
-## class(m3)
+## ----mif_diagnostics,fig.height=6,fig.width=6----------------------------
+foreach(i=1:4,
+        .packages='pomp',.combine=c,
+        .options.multicore=list(set.seed=TRUE)
+) %dopar% {
+  mif2(polio,
+       start=c(b1=3,b2=0,b3=1.5,b4=6,b5=5,b6=3,
+               psi=0.002,rho=0.01,tau=0.001,
+               sigma_dem=0.04,sigma_env=0.5,
+               SO_0=0.12,IO_0=0.001,fixed_params),
+       Np=1000,
+       Nmif=50,
+       cooling.type="geometric",
+       cooling.fraction.50=0.5,
+       transform=TRUE,
+       rw.sd=rw.sd(
+         b1=0.02, b2=0.02, b3=0.02, b4=0.02, b5=0.02, b6=0.02,
+         psi=0.02, rho=0.02, tau=0.02, sigma_dem=0.02, sigma_env=0.02,
+         IO_0=ivp(0.2), SO_0=ivp(0.2)
+       )
+  )
+} -> m4
 
-#' 
-## ----check_class_m3_1,eval=F---------------------------------------------
-## class(m3[[1]])
-
-#' 
-## ----mif_diagnostics,eval=F----------------------------------------------
-## plot(m3[r3$logLik>max(r3$logLik)-10])
+plot(m4)
 
 #' 
 #' The likelihood is particularly important to keep in mind. 
 #' If parameter estimates are numerically unstable, that could be a consequence of a weakly identified parameter subspace. 
 #' The presence of some weakly identified combinations of parameters is not fundamentally a scientific flaw; 
 #' rather, our scientific inquiry looks to investigate which questions can and cannot be answered in the context of a set of data and modeling assumptions. 
-#' Thus, as long as the search is demonstrably approaching the maximum likelihood region we should not necessarily be worried about the stability of parameter values (at least, from the point of diagnosing successful maximization). 
+#' Thus, as long as the search is demonstrably approaching the maximum likelihood region we should not necessarily be worried about the stability of parameter values (at least, from the point of view of diagnosing successful maximization). 
 #' So, let's zoom in on the likelihood convergence:
 #' 
-## ----likelihood_convergence,eval=F---------------------------------------
-## loglik_convergence <- do.call(cbind,conv.rec(m3[r3$logLik>max(r3$logLik)-10],"loglik"))
-## matplot(loglik_convergence,type="l",lty=1,ylim=max(loglik_convergence,na.rm=T)+c(-10,0))
+## ----likelihood_convergence----------------------------------------------
+llconv <- do.call(cbind,conv.rec(m4,"loglik"))
+matplot(llconv,type="l",lty=1,ylim=max(llconv,na.rm=T)+c(-30,0))
 
 #' 
 #' --------------------------

@@ -48,7 +48,7 @@ opts_chunk$set(
   size='small',
   fig.path=paste0("figure/",prefix,"-"),
   cache.path=paste0("cache/",prefix,"-"),
-  fig.align='left',
+  fig.align='center',
   fig.height=4,fig.width=6.83,
   dpi=100,
   dev='CairoPNG',
@@ -87,7 +87,7 @@ Compartmental models are of great utility in many disciplines and very much so i
 Let us derive deterministic and stochastic versions of the susceptible-infected-recovered (SIR) model of disease transmission dynamics in a closed population.
 In so doing, we will use notation that generalizes to more complex systems [[@breto09]](http://dx.doi.org/10.1214/08-AOAS201).
 
-```{r sir-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=6}
+```{r sir-diagram,echo=FALSE,purl=FALSE,fig.height=3/4,fig.width=6,fig.cap="Diagram of the SIR compartmental model."}
 library(grid)
 vp <- viewport(width=unit(0.95,"npc"),height=unit(0.95,"npc"))
 pushViewport(vp)
@@ -284,7 +284,7 @@ As an example that we can probe in some depth, let's look at an isolated outbrea
 <!--- 763 boys were at risk, and ultimately 512 spent time away from class (either confined to bed or in convalescence. --->
 Download the data and examine it:
 ```{r flu-data1}
-read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt")) -> bsflu
+read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt") -> bsflu
 head(bsflu)
 ```
 The variable `B` refers to boys confined to bed and `C` to boys in convalescence.
