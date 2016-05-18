@@ -282,10 +282,10 @@ dmeas <- Csnippet("
 
 rmeas <- Csnippet("
   B = rpois(rho*R1+1e-6);
-  C = rpois(rho*R2+1e-6);
 ")
 
-pomp(bsflu,times="day",t0=0,
+pomp(subset(bsflu,select=-C),
+     times="day",t0=0,
      rprocess=euler.sim(rproc,delta.t=1/5),
      initializer=init,rmeasure=rmeas,dmeasure=dmeas,
      statenames=c("S","I","R1","R2"),
