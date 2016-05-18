@@ -98,7 +98,7 @@ wideOil$total <- apply(wideOil[,-1],1,sum)
 plot(wideOil$year,wideOil$total,type='l')
 
 #' 
-#' ## A more systematic approach: the Grammar of Graphics
+#' ## A systematic approach to visualization: the Grammar of Graphics
 #' 
 #' Parts of a graphic:
 #' 
