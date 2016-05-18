@@ -165,10 +165,12 @@ $(document).ready(function () {
 <h3>Plug-and-play (also called simulation-based) methods</h3>
 <ul>
 <li>Inference methodology that calls <code>rprocess</code> but not <code>dprocess</code> is said to be <em>plug-and-play</em>. All popular modern Monte Carlo methods fall into this category.</li>
-<li>Simulation-based is equivalent to plug-and-play.</li>
+<li>Simulation-based is equivalent to plug-and-play.
+<ul>
 <li>Historically, simulation-based meant simulating forward from initial conditions to the end of the time series.</li>
 <li>However, particle filtering methods instead consider each observation interval sequentially. They carry out multiple, carefully selected, simulations over each interval.</li>
 <li>Plug-and-play methods can call <code>dmeasure</code>. A method that uses only <code>rprocess</code> and <code>rmeasure</code> is called “doubly plug-and-play”.</li>
+</ul></li>
 <li>Two <em>non-plug-and-play</em> methods (expectation-maximization (EM) algorithms and Markov chain Monte Carlo (MCMC)) have theoretical convergence problems for nonlinear POMP models. The failures of these two workhorses of statistical computation have prompted development of alternative methodology.</li>
 </ul>
 </div>
@@ -177,24 +179,30 @@ $(document).ready(function () {
 <ul>
 <li><em>Full-information</em> methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).</li>
 <li><em>Feature-based</em> methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.</li>
-<li>Asymptotically, full-information methods are statistically efficient and feature-based methods are not.</li>
+<li>Asymptotically, full-information methods are statistically efficient and feature-based methods are not.
+<ul>
 <li>Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.</li>
 <li>However, good low-dimensional summary statistics can be hard to find.</li>
 <li>When using statistically inefficient methods, it can be hard to know how much information you are losing.</li>
 <li>Intuition and scientific reasoning can be inadequate tools to derive informative low-dimensional summary statistics <span class="citation">(Shrestha et al. 2011,<span class="citation">Ionides (2011)</span>)</span>.</li>
+</ul></li>
 </ul>
 </div>
 <div id="bayesian-and-frequentist-methods" class="section level3">
 <h3>Bayesian and frequentist methods</h3>
 <ul>
-<li>Recently, plug-and-play Bayesian methods have been discovered:</li>
+<li>Recently, plug-and-play Bayesian methods have been discovered:
+<ul>
 <li>particle Markov chain Monte Carlo (PMCMC) <span class="citation">(Andrieu et al. 2010)</span>.</li>
 <li>approximate Bayesian computation (ABC) <span class="citation">(Toni et al. 2009)</span>.</li>
-<li>Prior belief specification is both the strength and weakness of Bayesian methodology:</li>
+</ul></li>
+<li>Prior belief specification is both the strength and weakness of Bayesian methodology:
+<ul>
 <li>The likelihood surface for nonlinear POMP models often contains nonlinear ridges and variations in curvature.</li>
 <li>These situations bring into question the appropriateness of independent priors derived from expert opinion on marginal distributions of parameters.</li>
 <li>They also are problematic for specification of “flat” or “uninformative” prior beliefs.</li>
 <li>Expert opinion can be treated as data for non-Bayesian analysis. However, our primary task is to identify the information in the data under investigation, so it can be helpful to use methods that do not force us to make our conclusions dependent on quantification of prior beliefs.</li>
+</ul></li>
 </ul>
 </div>
 <div id="full-information-plug-and-play-frequentist-methods" class="section level3">

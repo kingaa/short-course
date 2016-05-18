@@ -49,37 +49,37 @@ set.seed(557976883)
 #' ### Plug-and-play (also called simulation-based) methods
 #' 
 #' - Inference methodology that calls `rprocess` but not `dprocess` is said to be *plug-and-play*.
-#' All popular modern Monte Carlo methods fall into this category. 
+#'   All popular modern Monte Carlo methods fall into this category. 
 #' - Simulation-based is equivalent to plug-and-play. 
-#' + Historically, simulation-based meant simulating forward from initial conditions to the end of the time series. 
-#' + However, particle filtering methods instead consider each observation interval sequentially.
-#' They carry out multiple, carefully selected, simulations over each interval.
-#' + Plug-and-play methods can call `dmeasure`.
-#' A method that uses only `rprocess` and `rmeasure` is called "doubly plug-and-play".
+#'     + Historically, simulation-based meant simulating forward from initial conditions to the end of the time series. 
+#'     + However, particle filtering methods instead consider each observation interval sequentially.
+#'       They carry out multiple, carefully selected, simulations over each interval.
+#'     + Plug-and-play methods can call `dmeasure`.
+#'       A method that uses only `rprocess` and `rmeasure` is called "doubly plug-and-play".
 #' - Two *non-plug-and-play* methods (expectation-maximization (EM) algorithms and Markov chain Monte Carlo (MCMC)) have theoretical convergence problems for nonlinear POMP models.
-#' The failures of these two workhorses of statistical computation have prompted development of alternative methodology.
+#'   The failures of these two workhorses of statistical computation have prompted development of alternative methodology.
 #' 
 #' ### Full-information and feature-based methods
 #' 
 #' - *Full-information* methods are defined to be those based on the likelihood function for the full data (i.e., likelihood-based frequentist inference and Bayesian inference).
 #' - *Feature-based* methods either consider a summary statistic (a function of the data) or work with an an alternative to the likelihood.
 #' - Asymptotically, full-information methods are statistically efficient and feature-based methods are not.
-#' + Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.
-#' + However, good low-dimensional summary statistics can be hard to find. 
-#' + When using statistically inefficient methods, it can be hard to know how much information you are losing. 
-#' + Intuition and scientific reasoning can be inadequate tools to derive informative low-dimensional summary statistics [@shrestha11,@ionides11-statSci].
+#'     + Loss of statistical efficiency could potentially be an acceptable tradeoff for advantages in computational efficiency.
+#'     + However, good low-dimensional summary statistics can be hard to find. 
+#'     + When using statistically inefficient methods, it can be hard to know how much information you are losing. 
+#'     + Intuition and scientific reasoning can be inadequate tools to derive informative low-dimensional summary statistics [@shrestha11,@ionides11-statSci].
 #' 
 #' ### Bayesian and frequentist methods
 #' 
 #' - Recently, plug-and-play Bayesian methods have been discovered:
-#' + particle Markov chain Monte Carlo (PMCMC) [@andrieu10].
-#' + approximate Bayesian computation (ABC) [@toni09].
+#'     + particle Markov chain Monte Carlo (PMCMC) [@andrieu10].
+#'     + approximate Bayesian computation (ABC) [@toni09].
 #' - Prior belief specification is both the strength and weakness of Bayesian methodology:
-#' + The likelihood surface for nonlinear POMP models often contains nonlinear ridges and variations in curvature. 
-#' + These situations bring into question the appropriateness of independent priors derived from expert opinion on marginal distributions of parameters.
-#' + They also are problematic for specification of "flat" or "uninformative" prior beliefs.
-#' + Expert opinion can be treated as data for non-Bayesian analysis.
-#' However, our primary task is to identify the information in the data under investigation, so it can be helpful to use methods that do not force us to make our conclusions dependent on quantification of prior beliefs.
+#'     + The likelihood surface for nonlinear POMP models often contains nonlinear ridges and variations in curvature. 
+#'     + These situations bring into question the appropriateness of independent priors derived from expert opinion on marginal distributions of parameters.
+#'     + They also are problematic for specification of "flat" or "uninformative" prior beliefs.
+#'     + Expert opinion can be treated as data for non-Bayesian analysis.
+#'       However, our primary task is to identify the information in the data under investigation, so it can be helpful to use methods that do not force us to make our conclusions dependent on quantification of prior beliefs.
 #' 
 #' ### Full-information, plug-and-play, frequentist methods
 #' 
@@ -109,11 +109,11 @@ set.seed(557976883)
 #' 
 #' ## An iterated filtering algorithm (IF2)
 #' 
-#' * We use the IF2 algorithm of @ionides15. 
-#' * A particle filter is carried out with the parameter vector for each particle doing a random walk.
-#' * At the end of the time series, the collection of parameter vectors is recycled as starting parameters for a new particle filter with a smaller random walk variance.
-#' * Theoretically, this procedure converges toward the region of parameter space maximizing the maximum likelihood.
-#' * Empirically, we can test this claim on examples.
+#' - We use the IF2 algorithm of @ionides15. 
+#' - A particle filter is carried out with the parameter vector for each particle doing a random walk.
+#' - At the end of the time series, the collection of parameter vectors is recycled as starting parameters for a new particle filter with a smaller random walk variance.
+#' - Theoretically, this procedure converges toward the region of parameter space maximizing the maximum likelihood.
+#' - Empirically, we can test this claim on examples.
 #' 
 #' ### IF2 algorithm pseudocode
 #' 
@@ -147,11 +147,11 @@ set.seed(557976883)
 #' 
 #' __comments__:
 #' 
-#' * The $N$ loop (lines 4 through 10) is a basic particle filter applied to a model with stochastic perturbations to the parameters.
-#' * The $M$ loop repeats this particle filter with decreasing perturbations.
-#' * The superscript $F$ in $\Theta^{F,m}_{n,j}$ and $X^{F,m}_{n,j}$ denote solutions to the _filtering_ problem, with the particles $j=1,\dots,J$ providing a Monte Carlo representation of the conditional distribution at time $n$ given data $y^*_{1:n}$ for filtering iteration $m$.
-#' * The superscript $P$ in $\Theta^{P,m}_{n,j}$ and $X^{P,m}_{n,j}$ denote solutions to the _prediction_ problem, with the particles $j=1,\dots,J$ providing a Monte Carlo representation of the conditional distribution at time $n$ given data $y^*_{1:n-1}$ for filtering iteration $m$.
-#' * The _weight_ $w^m_{n,j}$ gives the likelihood of the data at time $n$ for particle $j$ in filtering iteration $m$.
+#' - The $N$ loop (lines 4 through 10) is a basic particle filter applied to a model with stochastic perturbations to the parameters.
+#' - The $M$ loop repeats this particle filter with decreasing perturbations.
+#' - The superscript $F$ in $\Theta^{F,m}_{n,j}$ and $X^{F,m}_{n,j}$ denote solutions to the _filtering_ problem, with the particles $j=1,\dots,J$ providing a Monte Carlo representation of the conditional distribution at time $n$ given data $y^*_{1:n}$ for filtering iteration $m$.
+#' - The superscript $P$ in $\Theta^{P,m}_{n,j}$ and $X^{P,m}_{n,j}$ denote solutions to the _prediction_ problem, with the particles $j=1,\dots,J$ providing a Monte Carlo representation of the conditional distribution at time $n$ given data $y^*_{1:n-1}$ for filtering iteration $m$.
+#' - The _weight_ $w^m_{n,j}$ gives the likelihood of the data at time $n$ for particle $j$ in filtering iteration $m$.
 #' 
 #' 
 #' ## Applying IF2 to the boarding school influenza outbreak
@@ -383,7 +383,10 @@ stew(file="box_search_local.rda",{
 },seed=482947940,kind="L'Ecuyer")
 
 #' 
-#' Although the filtering carried out by `mif2` in the final filtering iteration generates an approximation to the likelihood at the resulting point estimate, this is not usually good enough for reliable inference. Partly, this is because parameter perturbations are applied in the last filtering iteration. Partly, this is because `mif2` is usually carried out with a smaller number of particles than is necessary for a good likelihood evaluation---the errors in `mif2` average out over many iterations of the filtering. Therefore, we evaluate the likelihood, together with a standard error, using replicated particle filters at each point estimate:
+#' Although the filtering carried out by `mif2` in the final filtering iteration generates an approximation to the likelihood at the resulting point estimate, this is not usually good enough for reliable inference.
+#' Partly, this is because parameter perturbations are applied in the last filtering iteration.
+#' Partly, this is because `mif2` is usually carried out with a smaller number of particles than is necessary for a good likelihood evaluation---the errors in `mif2` average out over many iterations of the filtering.
+#' Therefore, we evaluate the likelihood, together with a standard error, using replicated particle filters at each point estimate:
 #' 
 ## ----lik_local-----------------------------------------------------------
 stew(file="lik_local.rda",{
@@ -403,7 +406,8 @@ stew(file="lik_local.rda",{
 results_local <- as.data.frame(results_local)
 
 #' 
-#' This investigation took  `r round(t_local_mif["elapsed"],0)` sec for the maximization and `r round(t_local_eval["elapsed"],0)` sec for the likelihood evaluation. These repeated stochastic maximizations can also show us the geometry of the likelihood surface in a neighborhood of this point estimate:
+#' This investigation took  `r round(t_local_mif["elapsed"],0)` sec for the maximization and `r round(t_local_eval["elapsed"],0)` sec for the likelihood evaluation.
+#' These repeated stochastic maximizations can also show us the geometry of the likelihood surface in a neighborhood of this point estimate:
 #' 
 #' 
 #' We add these newly explored points to our database:
@@ -414,9 +418,12 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' 
 #' ### A global search of the likelihood surface using randomized starting values
 #' 
-#' When carrying out parameter estimation for dynamic systems, we need to specify beginning values for both the dynamic system (in the state space) and the parameters (in the parameter space). By convention, we use  _initial values_ for the initialization of the dynamic system and _starting values_ for initialization of the parameter search.
+#' When carrying out parameter estimation for dynamic systems, we need to specify beginning values for both the dynamic system (in the state space) and the parameters (in the parameter space).
+#' By convention, we use  _initial values_ for the initialization of the dynamic system and _starting values_ for initialization of the parameter search.
 #' 
-#' Practical parameter estimation involves trying many starting values for the parameters. One can specify a large box in parameter space that contains all parameter vectors which seem remotely sensible. If an estimation method gives stable conclusions with starting values drawn randomly from this box, this gives some confidence that an adequate global search has been carried out. 
+#' Practical parameter estimation involves trying many starting values for the parameters.
+#' One can specify a large box in parameter space that contains all parameter vectors which seem remotely sensible.
+#' If an estimation method gives stable conclusions with starting values drawn randomly from this box, this gives some confidence that an adequate global search has been carried out. 
 #' 
 #' For our flu model, a box containing reasonable parameter values might be
 #' 
@@ -464,7 +471,8 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' One can visualize aspects of the global geometry of the likelihood surface with a scatterplot matrix of these diverse parameter estimates:
 #' 
 #' 
-#' We see that optimization attempts from diverse remote starting points end up with comparable likelihoods, even when the parameter values are quite distinct. This gives us some confidence in our maximization procedure. 
+#' We see that optimization attempts from diverse remote starting points end up with comparable likelihoods, even when the parameter values are quite distinct.
+#' This gives us some confidence in our maximization procedure. 
 #' 
 #' 
 #' --------------------------
