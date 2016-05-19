@@ -1,6 +1,6 @@
 ---
 title: 'Model-based Inference in Ecology and Epidemiology'
-date: ICTP Spring College 9--20 May 2016
+date: ICTP Spring College<br>9--20 May 2016
 output: html_document
 bibliography: course.bib
 csl: ecology.csl
