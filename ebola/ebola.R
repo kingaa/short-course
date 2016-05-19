@@ -100,6 +100,8 @@ dat %>%
 #' We implement Gamma distributions using the so-called *linear chain trick*.
 #' 
 #' 
+#' ![Model flow diagram.](./model_diagram.png)
+#' 
 #' ### Process model simulator
 #' 
 ## ----rproc---------------------------------------------------------------

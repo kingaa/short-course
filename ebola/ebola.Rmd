@@ -125,7 +125,7 @@ In this document, we'll fix $m=3$.
 
 We implement Gamma distributions using the so-called *linear chain trick*.
 
-```{r seir-diagram,echo=FALSE,cache=FALSE,purl=FALSE}
+```{r seir-diagram,include=FALSE,cache=FALSE,purl=FALSE,eval=FALSE}
 library(DiagrammeR)
 DiagrammeR("digraph SEIR {
   graph [rankdir=LR, overlap=false, fontsize = 10]
@@ -140,6 +140,8 @@ DiagrammeR("digraph SEIR {
   I->R I->d
 }",type="grViz",engine="dot",height=100,width=800)
 ```
+
+![Model flow diagram.](./model_diagram.png)
 
 ### Process model simulator
 
