@@ -21,6 +21,9 @@
 #' Please share and remix noncommercially, mentioning its origin.  
 #' ![CC-BY_NC](../graphics/cc-by-nc.png)
 #' 
+#' Produced with **R** version `r getRversion()` and **pomp** version `r packageVersion("pomp")`.
+#' 
+#' 
 #' 
 ## ----prelims,include=FALSE-----------------------------------------------
 library(pomp)
@@ -30,16 +33,18 @@ set.seed(5996485L)
 #' 
 #' ## Objectives
 #' 
-#' 1. Show how partially observed Markov process (POMP) methods can be used to understand transmission dynamics of polio.
-#' 2. Discuss the use of POMP methods for compartmental models for biological systems having age structure, seasonality and other covariates.
-#' 3. Get some practice maximizing the likelihood for such models. How does one set up a _global_ search for a maximum likelihood estimate? 
-#' How does one test whether such a search has been successful?
+#' In this lesson, we aim to 
+#' 
+#' 1. show how partially observed Markov process (POMP) methods can be used to understand transmission dynamics of polio.
+#' 2. discuss the use of POMP methods for compartmental models for biological systems having age structure, seasonality and other covariates.
+#' 3. get some practice maximizing the likelihood for such models. How does one set up a *global* search for a maximum likelihood estimate? 
+#' 4. see how to test whether such a search has been successful.
 #' 
 #' ## Introduction
 #' 
 #' The massive global polio eradication initiative (GPEI) has brought polio from a major global disease to the brink of extinction. 
 #' Finishing this task is proving hard, and an improved understanding of polio ecology might assist.
-#' Martinez et al. investigated this using extensive state level pre-vaccination era data in the USA [[@Martinez-Bakker2015]](http://dx.doi.org/10.1371/journal.pbio.1002172). 
+#' A recent paper investigated this using extensive state level pre-vaccination era data from the USA [[@Martinez-Bakker2015]](http://dx.doi.org/10.1371/journal.pbio.1002172). 
 #' We will follow the approach of @Martinez-Bakker2015 for one state (Wisconsin). 
 #' In the context of the @Martinez-Bakker2015 model, we can quantify seasonality of transmission, the role of the birth rate in explaining the transmission dynamics, and the persistence mechanism of polio. 
 #' @Martinez-Bakker2015 carrried out this analysis for all 48 contigous states and District of Columbia, and their data and code are all publicly available. 
@@ -53,7 +58,7 @@ polio_data <- read.table("http://kingaa.github.io/sbied/polio/polio_wisconsin.cs
 #' 
 #' ### Model formulation
 #' 
-#' We implement the compartmental model of @Martinez-Bakker2015.
+#' We implement the discrete-time compartmental model of @Martinez-Bakker2015.
 #' It has compartments representing susceptible babies in each of six one-month birth cohorts ($S^B_1$,...,$S^B_6$), susceptible older individuals ($S^O$), infected babies ($I^B$), infected older individuals ($I^O$), and individuals who have recovered with lifelong immunity ($R$). 
 #' The state vector of the disease transmission model consists of numbers of individuals in each compartment at each time, 
 #' $$X(t)=\big(S^B_1(t),...,S^B_6(t), I^B(t),I^O(t),R(t) \big).$$
@@ -78,20 +83,20 @@ polio_data <- read.table("http://kingaa.github.io/sbied/polio/polio_wisconsin.cs
 #' All compartments suffer a mortality rate, set at $\delta=1/60\mathrm{yr}^{-1}$. 
 #' Within each month, all susceptible individuals are modeled as having exposure to constant competing hazards of mortality and polio infection.
 #' The chance of remaining in the susceptible population when exposed to these hazards for one month is therefore
-#' $$p_n = \exp\big\{ -(\delta+\lambda_n)/12\big\},$$
+#' $$p_n = \exp\left\{-\frac{\delta+\lambda_n}{12}\right\},$$
 #' with the chance of polio infection being 
-#' $$q_n = (1-p_n)\lambda_n\big/(\lambda_n+\delta).$$
+#' $$q_n = (1-p_n)\,\frac{\lambda_n}{\lambda_n+\delta}.$$
 #' We employ a continuous population model, with no demographic stochasticity (in some sense, the demographic-scale stochasticity in $\lambda_n$ is in fact environmental stochasticity since it modifies a rate that affects all compartments equally).
-#' Writing $B_n$ for births in month $n$, we obtain the dynamic model of @Martinez-Bakker2015:
+#' Writing $B_n$ for births in month $n$, the full set of model equations is:
 #' $$\begin{aligned}
-#' S^B_{1,n+1}&= B_{n+1}\\
-#' S^B_{k,n+1}&= p_nS^B_{k-1,n} \quad\mbox{for $k=2,\dots,6$}\\
-#' S^O_{n+1}&= p_n(S^O_n+S^B_{6,n})\\
-#' I^B_{n+1}&= q_n \sum_{k=1}^6 S^B_{k,n}\\
-#' I^O_{n+1}&= q_n S^O_n
+#' S^B_{1,n+1} &= B_{n+1}\\
+#' S^B_{k,n+1} &= p_nS^B_{k-1,n} \quad\mbox{for $k=2,\dots,6$}\\
+#' S^O_{n+1} &= p_n(S^O_n+S^B_{6,n})\\
+#' I^B_{n+1} &= q_n \sum_{k=1}^6 S^B_{k,n}\\
+#' I^O_{n+1} &= q_n S^O_n
 #' \end{aligned}$$
 #' The model for the reported observations, conditional on the state, is a discretized normal distribution truncated at zero, with both environmental and Poisson-scale contributions to the variance:
-#' $$Y_n= \max\{\mathrm{round}(Z_n),0\}, \quad Z_n\sim\dist{Normal}{\rho I^O_n, \big(\tau I^O_n\big)^2 + \rho I^O_n}.$$
+#' $$Y_n= \max\{\mathrm{round}(Z_n),0\}, \quad Z_n\sim\dist{Normal}{\rho I^O_n, \rho I^O_n+\left(\tau I^O_n\right)^2}.$$
 #' Additional parameters are used to specify initial state values at time $t_0=1932+ 4/12$. 
 #' We will suppose there are parameters $\big(\tilde S^B_{1,0},...,\tilde S^B_{6,0}, \tilde I^B_0,\tilde I^O_0,\tilde S^O_0\big)$ that specify the population in each compartment at time $t_0$ via
 #' $$ S^B_{1,0}= {\tilde S}^B_{1,0} ,...,S^B_{6,0}= \tilde S^B_{6,0}, \quad I^B_{0}= P_0 \tilde I^B_{0},\quad S^O_{0}= P_0 \tilde S^O_{0}, \quad I^O_{0}= P_0 \tilde I^O_{0}.$$
@@ -432,7 +437,7 @@ arma_fit$loglik-sum(log_y)
 #' 
 #' ### Global likelihood maximization: parameter estimation using randomized starting values.
 #' 
-#' When carrying out parameter estimation for dynamic systems, we need to specify beginning values for both the dynamic system (in the state space) and the parameters (in the parameter space). By convention, we use  _initial values_ for the initialization of the dynamic system and _starting values_ for initialization of the parameter search.
+#' When carrying out parameter estimation for dynamic systems, we need to specify beginning values for both the dynamic system (in the state space) and the parameters (in the parameter space). By convention, we use  *initial values* for the initialization of the dynamic system and *starting values* for initialization of the parameter search.
 #' 
 #' Practical parameter estimation involves trying many starting values for the parameters. One can specify a large box in parameter space that contains all parameter vectors which seem remotely sensible. If an estimation method gives stable conclusions with starting values drawn randomly from this box, this gives some confidence that an adequate global search has been carried out. 
 #' 
@@ -624,7 +629,9 @@ library(grid)
 
 params %>%
   subset(loglik==max(loglik)) %>%
-  unlist() -> coef(polio)
+  unlist() -> mleparams
+
+coef(polio) <- mleparams
 
 bake(file="sims.rds",seed=398906785,
      simulate(polio,nsim=2000,as.data.frame=TRUE,include.data=TRUE)
@@ -671,7 +678,7 @@ sims %>%
 #' 
 #' Since only `r with(subset(num_zeros,sim!="data"),round(sum(zeros<datz)/length(zeros)*100,1))`% of the simulations had fewer zero-case months than did the data, the model does predict significantly more fadeouts than are seen in the data.
 #' Months with no asyptomatic infections for the simulations were rare, on average `r round(mean(fadeouts$fadeout1),1)` months per simulation. 
-#' Months with fewer than 80 infections averaged `r round(mean(fadeouts$fadeout80),1)` per simulation, which in the context of a reporting rate of `r signif(coef(polio,"rho"),3)` can explain the absences of case reports. 
+#' Months with fewer than 80 infections averaged `r round(mean(fadeouts$fadeout80),1)` per simulation, which in the context of a reporting rate of `r signif(mleparams["rho"],3)` can explain the absences of case reports. 
 #' 
 #' For this model, the mean monthly infections due to importations (i.e., due to the term $\psi$) is `r round(imports,1)`. 
 #' This does not give much opportunity for local elimination of poliovirus. 
@@ -681,7 +688,7 @@ sims %>%
 #' 
 #' #### Exercise: Initial values
 #' 
-#' When carrying out parameter estimation for dynamic systems, we need to specify beginning values for both the dynamic system (in the state space) and the parameters (in the parameter space). By convention, we use  _initial values_ for the initialization of the dynamic system and _starting values_ for initialization of the parameter search.
+#' When carrying out parameter estimation for dynamic systems, we need to specify beginning values for both the dynamic system (in the state space) and the parameters (in the parameter space). By convention, we use  *initial values* for the initialization of the dynamic system and *starting values* for initialization of the parameter search.
 #' 
 #' Discuss issues in specifying and inferring initial conditions, with particular reference to this polio example. 
 #' 
