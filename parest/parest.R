@@ -15,7 +15,7 @@
 #' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
 #' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 #' \newcommand\dlta[1]{{\Delta}{#1}}
-#' \newcommand\lik{\mathscr{L}}
+#' \newcommand\lik{\mathcal{L}}
 #' \newcommand\loglik{\ell}
 #' 
 #' This lesson is based on notes developed over the years and contains contributions originally made by Ben Bolker, John Drake, Pej Rohani, and David Smith.
@@ -452,7 +452,7 @@ abline(v=b.hat,lty=2)
 #' Then the log likelihood is
 #' $$\log\prob{y^*_t|Y_t} = \log{\left(\frac{1}{\sqrt{2\pi\sigma^2}}\,\exp{\left(-\frac{(y^*_t-Y_t)^2}{2\sigma^2}\right)}\right)} = -\tfrac{1}{2}\,\log{2\pi\sigma^2}-\tfrac{1}{2}\,\frac{(y^*_t-Y_t)^2}{\sigma^2}$$
 #' and
-#' $$\log\mathcal{L} = -\tfrac{1}{2}\,\left(\frac{1}{\sigma^2}\,\sum_{t}\!(y^*_t-Y_t)^2+\log{(\sigma^2)}+\log{(2\pi)}\right)$$
+#' $$\log\lik = -\tfrac{1}{2}\,\left(\frac{1}{\sigma^2}\,\sum_{t}\!(y^*_t-Y_t)^2+\log{(\sigma^2)}+\log{(2\pi)}\right)$$
 #' So MLE and least-squares are equivalent if the errors are normal with constant variance!
 #' 
 #' --------------------------

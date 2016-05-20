@@ -13,7 +13,7 @@
 #' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
 #' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 #' \newcommand\dlta[1]{{\Delta}{#1}}
-#' \newcommand\lik{\mathscr{L}}
+#' \newcommand\lik{\mathcal{L}}
 #' \newcommand\loglik{\ell}
 #' 
 #' [Licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).

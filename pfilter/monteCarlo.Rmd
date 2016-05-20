@@ -15,7 +15,7 @@ csl: ../ecology.csl
 \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 \newcommand\dd[1]{d{#1}}
 \newcommand\dlta[1]{{\Delta}{#1}}
-\newcommand\lik{\mathscr{L}}
+\newcommand\lik{\mathcal{L}}
 \newcommand\loglik{\ell}
 
 -----------------------------------

@@ -15,7 +15,7 @@
 #' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
 #' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 #' \newcommand\dlta[1]{{\Delta}{#1}}
-#' \newcommand\lik{\mathscr{L}}
+#' \newcommand\lik{\mathcal{L}}
 #' \newcommand\loglik{\ell}
 #' 
 #' This lesson is [licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
@@ -56,7 +56,7 @@ set.seed(1173489184)
 #' ## Definition
 #' 
 #' Likelihood is the *probability of a given set of data $D$ having occurred under a particular hypothesis $H$*: 
-#' $$\mathcal{L}(H,D)=\prob{D|H}$$
+#' $$\lik(H,D)=\prob{D|H}$$
 #' 
 #' A simple example: suppose $n$ individuals participate in a serological survey and $k$ of these individuals are found to be seropositive.
 #' One parameter of interest is the true fraction, $p$, of the population that has seroconverted.
@@ -76,8 +76,8 @@ plot(k,prob,type='h',lwd=5,lend=1,
 #' 
 #' The likelihood is a function of the unknown parameters.
 #' In this case, if we assume $n$ is known, then the likelihood is a function of $p$ alone:
-#' $$\mathcal{L}(p) = \binom{n}{k}\,p^k\,(1-p)^{n-k}$$
-#' Typically the logarithm of this function is more interesting than $\mathcal{L}$ itself.
+#' $$\\lik(p) = \binom{n}{k}\,p^k\,(1-p)^{n-k}$$
+#' Typically the logarithm of this function is more interesting than $\\lik$ itself.
 #' Looking at this function for each of two different surveys:
 ## ----binom-lik-plot1-----------------------------------------------------
 k1 <- 18
