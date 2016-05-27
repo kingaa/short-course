@@ -48,7 +48,7 @@ set.seed(1173489184)
 #' 
 #' ### The SIR model
 #' 
-#' As a simple example for use in this lesson, we'll focus on the classical SIR model [@Kermack1921].
+#' As a simple example for use in this lesson, we'll focus on the classical SIR model [@Kermack1927].
 #' This model's simplicity allows us to postpone many of the complexities that will arise as we grapple with real data.
 #' However, it enjoys the feature that many complexities can be incorporated as modifications and extensions of the model.
 #' The model divides a population of hosts into three classes:
@@ -89,10 +89,6 @@ ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
 #' A classical approach to the estimation of parameters is to identify informative features of a dataset and then choose parameters in a model so as to match those features.
 #' This *feature matching* approach is sometimes known as the *generalized method of moments* and is experiencing something of a revival in recent years.
 #' Here, we give some examples of this approach in the specific context of a single epidemic curve, modeled as a closed SIR epidemic.
-#' 
-#' ### Estimating $R_0$ from the final size
-#' 
-#' If we know the final size of an outbreak and the total population size, we can use the [final size equation](./odes.html#the-epidemic-final-size) to estimate $R_0$.
 #' 
 #' ### Estimating $R_0$ in an invasion
 #' 
@@ -162,11 +158,16 @@ ggplot(ests,mapping=aes(x=interval,y=R0.hat,
   labs(x="length of initial phase",y=expression("estimated"~R[0]))
 
 #' 
+#' ### Estimating $R_0$ from the final size
+#' 
+#' If we know the final size of an outbreak and the total population size, we can use the [final size equation](./odes.html#the-epidemic-final-size) to estimate $R_0$.
+#' 
 #' --------------------------
 #' 
 #' #### Exercise: estimating $R_0$ for measles in Niamey
 #' 
-#' Use both the final-size and the invasion rate methods to obtain estimates of $R_0$ for measles using the data from each of the communities of Niamey, assuming that the infectious period is approximately two weeks.
+#' Combine the final-size and the invasion rate methods to obtain estimates of $R_0$ and $N$ using the data from each of the communities of Niamey, assuming that the infectious period is approximately two weeks.
+#' 
 #' 
 #' --------------------------
 #' 
@@ -581,6 +582,19 @@ ggplot(data=cbind(as.data.frame(niameyA2),
   labs(y="cases",x="biweek")
 
 #' 
+#' --------------------------
+#' 
+#' #### Exercise: three-parameter estimation
+#' Try to estimate $p$, $b$, and $S(0)$ simultaneously.
+#' 
+#' --------------------------
+#' 
+#' #### Exercise: binomial errors
+#' Reformulate the problem using the binomial error model.
+#' Modify the parameter estimation codes appropriately, estimate the parameters, and comment on the results.
+#' 
+#' --------------------------
+#' 
 #' 
 #' ### Overdispersion: a negative binomial model
 #' 
@@ -620,17 +634,6 @@ mle3 <- with(as.list(coef(fit7)),
 #' Essentially, the deterministic SIR model, as we've written it, cannot capture the shape of the epidemic.
 #' In order to fit the data, the optimization algorithm has expanded the error variance, to the point of absurdity.
 #' The typical model realization (in blue) does not much resemble the data.
-#' 
-#' --------------------------
-#' 
-#' #### Exercise: three-parameter estimation
-#' Try to estimate $p$, $b$, and $S(0)$ simultaneously.
-#' 
-#' --------------------------
-#' 
-#' #### Exercise: binomial errors
-#' Reformulate the problem using the binomial error model.
-#' Modify the parameter estimation codes appropriately, estimate the parameters, and comment on the results.
 #' 
 #' --------------------------
 #' 
