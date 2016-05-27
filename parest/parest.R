@@ -31,7 +31,7 @@ library(reshape2)
 options(stringsAsFactors=FALSE)
 library(ggplot2)
 theme_set(theme_bw())
-set.seed(1173489184)
+set.seed(1173439184)
 
 #' 
 #' ## Introduction
@@ -486,72 +486,126 @@ poisson.loglik <- function (params) {
 }
 
 #' 
+#' #### Estimating one parameter: point estimate and confidence interval
+#' 
 #' Let's see what the MLE parameters are for this model.
 #' We'll start by estimating just one parameter.
-#' Now, we must have $b>0$.
-#' This is a *constraint* on the parameter.
-#' One way to enforce this constraint is by transforming the parameter so that it cannot ever be negative.
-#' We'll log-transform $b$ in writing our objective function, $f$.
 #' Note that the objective function should return the negative log likelihood!
 ## ----fit-b,results='markup'----------------------------------------------
-f4 <- function (log.b) {
-  params <- c(S_0=20000,I_0=1,gamma=1,b=exp(log.b),p=0.2)
+f4 <- function (par) {
+  params <- c(S_0=20000,I_0=1,gamma=1,b=par,p=0.2)
   -poisson.loglik(params)
 }
 
 #' 
-#' For something new, we'll use the `mle2` function from the **bbmle** package to maximize the likelihood.
-#' `mle2` will employ an iterative algorithm for maximizing the likelihood.
+#' Let's again use `optim` to minimize the objective function.
 #' To get started, it needs an initial guess.
-#' It's always a good idea to put a bit of thought into the guess.
+#' It's always a good idea to put a bit of thought into this.
 #' Since $b=\beta/N=R_0/(\mathrm{IP}\,N)$, where $\mathrm{IP}$ is the infectious period,
 #' and using guesses $R_0\,\approx\,15$, $\mathrm{IP}\,\approx\,14$&nbsp;da, and $N\,\approx\,50000$, we get $b\,\approx\,15/(14{\times}50000)\,\mathrm{da}^{-1}\approx{`r signif(15/14/50000*14,1)`}~\mathrm{biweek}^{-1}$.
 #' 
-## ----bbmle-one-----------------------------------------------------------
-library(bbmle)
-fit4 <- mle2(f4,start=list(log.b=log(0.0003))); fit4
+## ----fit-b-optim---------------------------------------------------------
+fit4 <- optim(f4,par=c(0.0003),method="Brent",
+              lower=0,upper=1); fit4
 
 #' 
-#' We can get an idea about the uncertainty and in particular obtain confidence intervals using the *profile likelihood*.
-#' To profile over a parameter, we fix the value of that parameter at each of several values, then maximize the likelihood over the remaining unknown parameters.
-#' In **bblme**, this is quite easy to obtain.
+#' We can get an idea about the uncertainty and in particular obtain confidence intervals by comparing the likelihoods we get at different values of the parameter.
 #' 
-## ----profile1------------------------------------------------------------
-prof.b <- profile(fit4)
-plot(prof.b)
+## ----profile1a-----------------------------------------------------------
+prof.b <- expand.grid(b=seq(8e-5,1.2e-4,length=100))
+prof.b$loglik <- -sapply(prof.b$b,f4)
+maxloglik <- -fit4$value
+plot(loglik~b,data=prof.b,type="l")
+abline(v=fit4$par)
+abline(h=maxloglik)
 
+#' 
+#' An important and extremely useful property of the log likelihood is that differences in log likelihood have a natural scale that, to a first approximation, does not depend on the model or the data.
+#' In particular, log likelihood differences on the order of 1 units are statistically meaningful.
+#' The scale above, of 1000s of log likelihood units, is far too gross to be meaningful.
+#' 
+## ----profile1b-----------------------------------------------------------
+prof.b <- expand.grid(b=seq(9.8e-5,1.01e-4,length=200))
+prof.b$loglik <- -sapply(prof.b$b,f4)
+plot(loglik~b,data=prof.b,type="l",ylim=maxloglik+c(-10,0))
+cutoff <- maxloglik-qchisq(p=0.95,df=1)/2
+abline(h=c(0,cutoff))
+abline(v=range(subset(prof.b,loglik>cutoff)$b),lty=2)
+
+#' 
+#' In the above, we've computed an approximate 95% confidence interval for the $b$ parameter, subject to the assumptions we've made about the fixed values of the other parameters.
+#' 
+#' #### Estimating multiple parameters
 #' 
 #' Now let's try to estimate both $b$ and the reporting probability $p$.
-#' Since we have constraints on $p$ ($0 \le p \le 1$), we'll transform it as well.
-#' For this, the *logit* function and its inverse are useful: 
-#' $$\mathrm{logit}(p)=\log{\frac{p}{1-p}} \qquad \mathrm{expit}(x)=\frac{1}{1+e^{-x}}.$$
+#' Since we have constraints on both $b$ and $p$ ($b > 0$, $0 \le p \le 1$), we'll transform both parameters and estimate them on the transformed scale.
+#' For parameters like $p$ that vary on the unit interval, the *logit* function and its inverse are useful: 
+#' $$\mathrm{logit}(p)=\log{\frac{p}{1-p}}, \qquad \mathrm{expit}(x)=\frac{1}{1+e^{-x}}.$$
+#' 
+#' Now, we must have $b>0$.
+#' This is a *constraint* on the parameter.
+#' One way to enforce this constraint is by transforming the parameter so that it cannot ever be negative.
+#' We'll log-transform $b$ in writing our objective function, $f$.
 #' 
 ## ----fit-b-p-------------------------------------------------------------
 logit <- function (p) log(p/(1-p))    # the logit transform
 expit <- function (x) 1/(1+exp(-x))   # inverse logit
 
-f5 <- function (log.b, logit.p) {
-  params <- c(S_0=20000,I_0=1,gamma=1,b=exp(log.b),p=expit(logit.p))
+f5 <- function (par) {
+  params <- c(S_0=20000,I_0=1,gamma=1,b=exp(par[1]),p=expit(par[2]))
   -poisson.loglik(params)
 }
 
-fit5 <- mle2(f5,start=list(log.b=log(0.0001),logit.p=logit(0.2)))
+fit5 <- optim(f5,par=c(log(0.0001),logit(0.2)))
 fit5
 
 #' 
-#' Now we must untransform the parameters:
+#' Note that `optim` estimates these parameters on the transformed scale.
+#' To get our estimates on the original scale, we must back-transform:
 #' 
 ## ----fit-b-p-mle---------------------------------------------------------
-mle1 <- with(as.list(coef(fit5)),c(b=exp(log.b),p=expit(logit.p))); mle1
+mle1 <- c(b=exp(fit5$par[1]),p=expit(fit5$par[2]))
+signif(mle1,3)
 
 #' 
-## ----profile2,results='hide'---------------------------------------------
-prof2 <- profile(fit5)
-plot(prof2)
+#' To construct confidence intervals---and more generally to visualize the portion of the likelihood surface most relevant to the data---we can construct a *profile likelihood* for each parameter in turn.
+#' To profile over a parameter, we fix the value of that parameter at each of several values, then maximize the likelihood over the remaining unknown parameters.
+#' 
+## ----profile2a,results='hide'--------------------------------------------
+prof2.b <- expand.grid(b=seq(9.6e-5,1.01e-4,length=100))
+fitfn <- function (dat) {
+  fit <- optim(fn=function(p)f5(c(log(dat$b),logit(p))),
+               par=mle1[2],method="Brent",lower=0,upper=1)
+  c(p=expit(fit$par),loglik=-fit$value)
+}
+
+library(plyr)
+ddply(prof2.b,~b,fitfn) -> prof2.b
+maxloglik <- max(prof2.b$loglik)
+plot(loglik~b,data=prof2.b,type="l",ylim=maxloglik+c(-10,0))
+cutoff <- maxloglik-qchisq(p=0.95,df=1)/2
+abline(h=c(0,cutoff))
+abline(v=range(subset(prof2.b,loglik>cutoff)$b),lty=2)
+
+#' 
+## ----profile2b,results='hide'--------------------------------------------
+prof2.p <- expand.grid(p=seq(0.35,0.42,length=100))
+fitfn <- function (dat) {
+  fit <- optim(fn=function(b)f5(c(log(b),logit(dat$p))),
+               par=mle1[1],method="Brent",lower=9.5e-5,upper=1e-4)
+  c(b=expit(fit$par),loglik=-fit$value)
+}
+
+library(plyr)
+ddply(prof2.p,~p,fitfn) -> prof2.p
+maxloglik <- max(prof2.p$loglik)
+plot(loglik~p,data=prof2.p,type="l",ylim=maxloglik+c(-10,0))
+cutoff <- maxloglik-qchisq(p=0.95,df=1)/2
+abline(h=c(0,cutoff))
+abline(v=range(subset(prof2.p,loglik>cutoff)$p),lty=2)
 
 #' 
 #' Let's make a contour plot to visualize the likelihood surface.
-#' This time the objective function has to take a vector argument.
 #' 
 #' 
 #' The scale over which the log likelihood is varying is clearly huge relative to what is meaningful.
@@ -614,19 +668,17 @@ negbin.loglik <- function (params) {
               log=TRUE))
 }
 
-f7 <- function (log.b, logit.p, log.theta) {
-  params <- c(S_0=20000,I_0=1,gamma=1,b=NA,p=NA,theta=NA)
-  params[c("b","p","theta")] <- unname(c(exp(log.b),
-                                         expit(logit.p),
-                                         exp(log.theta)))
+f7 <- function (par) {
+  params <- c(S_0=20000,I_0=1,gamma=1,
+              b=exp(par[1]),p=expit(par[2]),theta=exp(par[3]))
   -negbin.loglik(params)
 }
 
-guess <- list(log.b=log(0.0001),logit.p=logit(0.4),log.theta=0)
-fit7 <- mle2(f7,start=guess); fit7
+guess <- c(log(0.0001),logit(0.4),log(1))
+fit7 <- optim(fn=f7,par=guess); fit7
 
-mle3 <- with(as.list(coef(fit7)),
-             c(b=exp(log.b),p=expit(logit.p),theta=exp(log.theta)))
+mle3 <- c(b=exp(fit7$par[1]),p=expit(fit7$par[2]),theta=exp(fit7$par[3]))
+signif(mle3,3)
 
 #' 
 #' 
