@@ -186,8 +186,7 @@ init1 &lt;- Csnippet(&quot;
 
 pomp(data=data.frame(time=1:50,data=NA),
      times=&quot;time&quot;,t0=0,
-     skeleton=closed.sir.ode,
-     skeleton.type=&quot;vectorfield&quot;,
+     skeleton=vectorfield(closed.sir.ode),
      initializer=init1,
      statenames=c(&quot;S&quot;,&quot;I&quot;,&quot;R&quot;),
      paramnames=c(&quot;Beta&quot;,&quot;gamma&quot;,&quot;N&quot;)) -&gt; closed.sir</code></pre>
@@ -258,8 +257,7 @@ init2 &lt;- Csnippet(&quot;
 
 pomp(data=data.frame(time=seq(0,20,by=1/52),cases=NA),
      times=&quot;time&quot;,t0=-1/52,
-     skeleton=open.sir.ode,
-     skeleton.type=&quot;vectorfield&quot;,
+     skeleton=vectorfield(open.sir.ode),
      initializer=init2,
      statenames=c(&quot;S&quot;,&quot;I&quot;,&quot;R&quot;),
      paramnames=c(&quot;Beta&quot;,&quot;gamma&quot;,&quot;mu&quot;,&quot;S_0&quot;,&quot;I_0&quot;,&quot;N&quot;)
@@ -311,8 +309,7 @@ Explore how host lifespan affects the dynamics by integrating the differential e
 &quot;)
 
 pomp(open.sir,
-     skeleton=seasonal.sir.ode,
-     skeleton.type=&quot;vectorfield&quot;,
+     skeleton=vectorfield(seasonal.sir.ode),
      initializer=init2,
      statenames=c(&quot;S&quot;,&quot;I&quot;,&quot;R&quot;),
      paramnames=c(&quot;beta0&quot;,&quot;beta1&quot;,&quot;gamma&quot;,&quot;mu&quot;,&quot;N&quot;,&quot;S_0&quot;,&quot;I_0&quot;)

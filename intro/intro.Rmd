@@ -331,7 +331,7 @@ library(ggplot2)
 library(plyr)
 library(reshape2)
 library(pomp)
-stopifnot(packageVersion("pomp")>="1.4.5")
+stopifnot(packageVersion("pomp")>="1.4.9")
 ```
 
 A pre-built `pomp` object encoding the Ricker model comes included with the package.
@@ -573,12 +573,11 @@ skel <- Csnippet("DN = r*N*exp(-N);")
 ```
 We then add this to the `pomp` object:
 ```{r parus-add-skel}
-parus <- pomp(parus,skeleton=skel,skeleton.type='map',
-              paramnames=c("r"),statenames=c("N"))
+parus <- pomp(parus,skeleton=map(skel),paramnames=c("r"),statenames=c("N"))
 ```
 Note that we have to inform **pomp** as to which of the variables we've referred to in `skel` is a state variable (`statenames`) and which is a parameter (`paramnames`).
 In writing a `Csnippet` for the deterministic skeleton, we use `D` to designate the map's value.
-The `skeleton.type` argument tells **pomp** that the skeleton is a discrete-time dynamical system (a map) rather than a continuous-time system (a vectorfield).
+The `map` call tells **pomp** that the skeleton is a discrete-time dynamical system (a map) rather than a continuous-time system (a vectorfield).
 
 With just the skeleton defined, we are in a position to compute the trajectories of the deterministic skeleton at any point in parameter space.
 For example, here we compute the trajectory and superimpose it on a plot of one simulation:

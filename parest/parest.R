@@ -25,7 +25,7 @@
 #' 
 ## ----prelims,include=FALSE,cache=FALSE-----------------------------------
 library(pomp)
-stopifnot(packageVersion("pomp")>"1.4.5")
+stopifnot(packageVersion("pomp")>"1.4.9")
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
@@ -190,15 +190,15 @@ ggplot(ests,mapping=aes(x=interval,y=R0.hat,
 pomp(
   data=subset(niamey,community=="A",select=-community),
   times="biweek",t0=0,
-  skeleton=Csnippet("
-  DS = -Beta*S*I/N;
-  DI = Beta*S*I/N-gamma*I;
-  DR = gamma*I;"),
-  skeleton.type="vectorfield",
+  skeleton=vectorfield(
+    Csnippet("
+      DS = -Beta*S*I/N;
+      DI = Beta*S*I/N-gamma*I;
+      DR = gamma*I;")),
   initializer=Csnippet("
-  S = S_0;
-  I = I_0;
-  R = N-S_0-I_0;"),
+      S = S_0;
+      I = I_0;
+      R = N-S_0-I_0;"),
   statenames=c("S","I","R"),
   paramnames=c("Beta","gamma","N","S_0","I_0")) -> niameyA
 
@@ -408,15 +408,15 @@ fit2
 pomp(
   data=subset(niamey,community=="A",select=-community),
   times="biweek",t0=0,
-  skeleton.type="vectorfield",
-  skeleton=Csnippet("
-  double incidence;
-  incidence = b*S*I;
-  DS = -incidence;
-  DI = incidence-gamma*I;"),
+  skeleton=vectorfield(
+    Csnippet("
+      double incidence;
+      incidence = b*S*I;
+      DS = -incidence;
+      DI = incidence-gamma*I;")),
   initializer=Csnippet("
-  S = S_0;
-  I = I_0;"),
+      S = S_0;
+      I = I_0;"),
   paramnames=c("b","gamma","S_0","I_0"),
   statenames=c("S","I")) -> niameyA2
 

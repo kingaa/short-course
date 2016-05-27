@@ -264,15 +264,15 @@ summary(fit1)</code></pre>
 <pre class="r"><code>pomp(
   data=subset(niamey,community==&quot;A&quot;,select=-community),
   times=&quot;biweek&quot;,t0=0,
-  skeleton=Csnippet(&quot;
-  DS = -Beta*S*I/N;
-  DI = Beta*S*I/N-gamma*I;
-  DR = gamma*I;&quot;),
-  skeleton.type=&quot;vectorfield&quot;,
+  skeleton=vectorfield(
+    Csnippet(&quot;
+      DS = -Beta*S*I/N;
+      DI = Beta*S*I/N-gamma*I;
+      DR = gamma*I;&quot;)),
   initializer=Csnippet(&quot;
-  S = S_0;
-  I = I_0;
-  R = N-S_0-I_0;&quot;),
+      S = S_0;
+      I = I_0;
+      R = N-S_0-I_0;&quot;),
   statenames=c(&quot;S&quot;,&quot;I&quot;,&quot;R&quot;),
   paramnames=c(&quot;Beta&quot;,&quot;gamma&quot;,&quot;N&quot;,&quot;S_0&quot;,&quot;I_0&quot;)) -&gt; niameyA</code></pre>
 <p>Now we set up a function that will calculate the sum of the squared errors (SSE), or discrepancies between the data and the model predictions.</p>
@@ -410,15 +410,15 @@ fit2</code></pre>
 <pre class="r"><code>pomp(
   data=subset(niamey,community==&quot;A&quot;,select=-community),
   times=&quot;biweek&quot;,t0=0,
-  skeleton.type=&quot;vectorfield&quot;,
-  skeleton=Csnippet(&quot;
-  double incidence;
-  incidence = b*S*I;
-  DS = -incidence;
-  DI = incidence-gamma*I;&quot;),
+  skeleton=vectorfield(
+    Csnippet(&quot;
+      double incidence;
+      incidence = b*S*I;
+      DS = -incidence;
+      DI = incidence-gamma*I;&quot;)),
   initializer=Csnippet(&quot;
-  S = S_0;
-  I = I_0;&quot;),
+      S = S_0;
+      I = I_0;&quot;),
   paramnames=c(&quot;b&quot;,&quot;gamma&quot;,&quot;S_0&quot;,&quot;I_0&quot;),
   statenames=c(&quot;S&quot;,&quot;I&quot;)) -&gt; niameyA2</code></pre>
 <p>Earlier, we used sum of squared error (SSE) as a measure of the discrepancy between model predictions and data. Now let’s use likelihood instead. Let’s suppose that, when we record cases, we make errors that are normally distributed. Here’s how we can compute the log likelihood of the data given the model and its parameters:</p>

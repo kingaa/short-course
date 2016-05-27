@@ -25,7 +25,7 @@
 #' 
 ## ----prelims,include=FALSE,cache=FALSE-----------------------------------
 library(pomp)
-stopifnot(packageVersion("pomp")>"1.4.5")
+stopifnot(packageVersion("pomp")>"1.4.9")
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
@@ -97,8 +97,7 @@ init1 <- Csnippet("
 
 pomp(data=data.frame(time=1:50,data=NA),
      times="time",t0=0,
-     skeleton=closed.sir.ode,
-     skeleton.type="vectorfield",
+     skeleton=vectorfield(closed.sir.ode),
      initializer=init1,
      statenames=c("S","I","R"),
      paramnames=c("Beta","gamma","N")) -> closed.sir
@@ -229,8 +228,7 @@ init2 <- Csnippet("
 
 pomp(data=data.frame(time=seq(0,20,by=1/52),cases=NA),
      times="time",t0=-1/52,
-     skeleton=open.sir.ode,
-     skeleton.type="vectorfield",
+     skeleton=vectorfield(open.sir.ode),
      initializer=init2,
      statenames=c("S","I","R"),
      paramnames=c("Beta","gamma","mu","S_0","I_0","N")
@@ -307,8 +305,7 @@ seasonal.sir.ode <- Csnippet("
 ")
 
 pomp(open.sir,
-     skeleton=seasonal.sir.ode,
-     skeleton.type="vectorfield",
+     skeleton=vectorfield(seasonal.sir.ode),
      initializer=init2,
      statenames=c("S","I","R"),
      paramnames=c("beta0","beta1","gamma","mu","N","S_0","I_0")
