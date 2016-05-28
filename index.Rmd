@@ -74,7 +74,7 @@ Students will learn how to formulate questions as models and answer the question
 
 - Familiarity with deterministic dynamics (discrete-time maps, ordinary differential equations) and probability.
 - Some programming experience, in any language.
-- Completion of the [**R** tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial) before the beginning of the course.
+- Completion of the [**R** tutorial](http://kingaa.github.io/R_Tutorial) before the beginning of the course.
 - A sense of humor.
 
 ### Format and expectations
@@ -94,7 +94,7 @@ We will make extensive use of the open-source **R** statistical computing enviro
 Students with laptops should install **R** and **RStudio** on their computers before the first day of the course.
 [Instructions for doing so can be found here](./prep/preparation.html).
 
-The course does not assume familiarity with **R**, but students should work through the [**R** tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial) before the course commences.
+The course does not assume familiarity with **R**, but students should work through the [**R** tutorial](http://kingaa.github.io/R_Tutorial) before the course commences.
 In particular, students should work through the the exercises in the tutorial.
 
 ### Readings
@@ -118,7 +118,7 @@ The **pomp** package is described and illustrated in
 Students should do the following **before the first day of the course**:
 
 1. Follow the [instructions to prepare your laptop by installing **R**, **RStudio**, and the needed **R** packages](http://kingaa.github.io/short-course/prep/preparation.html).
-1. If you are not proficient in **R**, work through the [**R** tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial).
+1. If you are not proficient in **R**, work through the [**R** tutorial](http://kingaa.github.io/R_Tutorial).
 If you are proficient in **R**, look through the tutorial nevertheless.
 
 ## Tentative Schedule
@@ -148,7 +148,7 @@ Date,Topic
 
 ----------------------
 
-[**R** Tutorial](http://kinglab.eeb.lsa.umich.edu/R_Tutorial)  
+[**R** Tutorial](http://kingaa.github.io/R_Tutorial)  
 
 [Tutorial on data munging with `plyr`, `reshape2`, and `magrittr`](http://kingaa.github.io/short-course/hadley/munging.html)  
 
