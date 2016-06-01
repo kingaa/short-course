@@ -7,7 +7,7 @@ title: Software installation instructions
 Please read the appropriate sections below, which give specific instructions for installing and testing the software we will be using.
 First follow the instructions for "all users", then those for your specific operating system (OS).
 
-**NB:** If you run into problems, send a note to kingaaictp@gmail.com with a detailed description of the problem you've encountered.
+**NB:** If you run into problems, send a note to kingaa@umich.edu with a detailed description of the problem you've encountered.
 In this message, be **certain** to include:
 
 - the operating system you’re running,
