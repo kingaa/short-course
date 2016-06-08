@@ -1,0 +1,5 @@
+figure
+cache
+www
+**/*\.o
+**/*\.so
