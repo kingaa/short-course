@@ -28,6 +28,7 @@
 #' [Licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
 #' Please share and remix noncommercially, mentioning its origin.  
 #' ![CC-BY_NC](../graphics/cc-by-nc.png)
+#' This document has its origins in the [SISMID short course on Simulation-based Inference](https://kingaa.github.io/sbied/measles/measles.html) given by Aaron King and Edward Ionides.
 #' 
 #' Produced in **R** version `r getRversion()` using **pomp** version `r packageVersion("pomp")`.
 #' 

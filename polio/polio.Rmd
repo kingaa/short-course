@@ -20,6 +20,7 @@ csl: ../ecology.csl
 Licensed under the [Creative Commons attribution-noncommercial license](http://creativecommons.org/licenses/by-nc/3.0/).
 Please share and remix noncommercially, mentioning its origin.  
 ![CC-BY_NC](../graphics/cc-by-nc.png)
+This document has its origins in the [SISMID short course on Simulation-based Inference](https://kingaa.github.io/sbied/polio/polio.html) given by Aaron King and Edward Ionides.
 
 Produced with **R** version `r getRversion()` and **pomp** version `r packageVersion("pomp")`.
 

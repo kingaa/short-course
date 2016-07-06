@@ -1,6 +1,6 @@
 ---
 title: "Simulation of stochastic dynamic models"
-author: "Edward L. Ionides and Aaron A. King"
+author: "Aaron A. King and Edward L. Ionides"
 output:
   html_document:
     toc: yes
@@ -25,6 +25,7 @@ nocite: >
 [Licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
 Please share and remix noncommercially, mentioning its origin.  
 ![CC-BY_NC](../graphics/cc-by-nc.png)
+This document has its origins in the [SISMID short course on Simulation-based Inference](https://kingaa.github.io/sbied/stochsim/stochsim.html) given by Aaron King and Edward Ionides.
 
 Produced with **R** version `r getRversion()` and **pomp** version `r packageVersion("pomp")`.
 
