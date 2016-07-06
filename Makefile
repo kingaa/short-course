@@ -1,11 +1,9 @@
 MODULES = prep intro stochsim parest pfilter mif polio measles salix hadley
-INSTALLDIR = $(CURDIR)/www
 
 default: index.html modules
-	install -m0600 index.html $(INSTALLDIR)
 
 modules:
-	for module in $(MODULES); do ($(MAKE) INSTALLDIR=$(INSTALLDIR)/$$module -C $$module); done
+	for module in $(MODULES); do ($(MAKE) -C $$module); done
 
 %.html: %.Rmd
 	PATH=/usr/lib/rstudio/bin/pandoc:$$PATH \
