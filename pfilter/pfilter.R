@@ -231,14 +231,14 @@ summary(exp(ell))
 #' $$\prob{x_{n}|y^*_{1:n},\theta} = \prob{x_{n}|y^*_{n},y^*_{1:n-1},\theta} =\frac{\prob{y^*_{n}|x_{n},\theta}\,\prob{x_{n}|y^*_{1:n-1},\theta}}{\displaystyle\int\!\prob{y^*_{n}|x_{n},\theta}\,\prob{x_{n}|y^*_{1:n-1},\theta}\,dx_{n}}.\tag{3}$$
 #' 
 #' This suggests that we keep track of two key distributions.
-#' We'll refer to the distribution of $X_n | y^*_{1:n-1}$ as the *prediction distribution* at time $n$ and
-#' the distribution of $X_{n} | y^*_{1:n}$ as the *filtering distribution* at time $n$.
+#' We'll refer to the distribution of $X_n | y^*_{1:n-1}$ as the *prediction distribution* at time $t_n$ and
+#' the distribution of $X_{n} | y^*_{1:n}$ as the *filtering distribution* at time $t_n$.
 #' 
 #' Let's use Monte Carlo techniques to estimate the integrals.
-#' Suppose $\left\{x_{n-1,j}^{F}\right\}_{j=1}^J$ is a set of points drawn from the filtering distribution at time $n-1$.
-#' Eqn.&nbsp;2 tells us that we obtain a sample $\left\{x_{n,j}^{P}\right\}$ of points drawn from the prediction distribution at time $n$ by simply simulating the process model:
+#' Suppose $\left\{x_{n-1,j}^{F}\right\}_{j=1}^J$ is a set of points drawn from the filtering distribution at time $t_{n-1}$.
+#' Eqn.&nbsp;2 tells us that we obtain a sample $\left\{x_{n,j}^{P}\right\}$ of points drawn from the prediction distribution at time $t_n$ by simply simulating the process model:
 #' $$X_{n,j}^{P} \sim \mathrm{process}(x_{n-1,j}^{F},\theta), \qquad j=1,\dots,J.$$
-#' Having obtained $\left\{x_{n,j}^{P}\right\}$, we obtain a sample of points from the filtering distribution at time $n$ by *resampling* from $\left\{x_{n,j}^{P}\right\}$ with weights proportional to $\prob{y^*_{n}|x_{n},\theta}$.
+#' Having obtained $\left\{x_{n,j}^{P}\right\}$, we obtain a sample of points from the filtering distribution at time $t_n$ by *resampling* from $\left\{x_{n,j}^{P}\right\}$ with weights proportional to $\prob{y^*_{n}|x_{n},\theta}$.
 #' The Monte Carlo theorem tells us, too, that the conditional likelihood 
 #' $$\lik_n(\theta) = \prob{y^*_n|y^*_{1:n-1},\theta} = \sum_{x_{n}}\,\prob{y^*_{n}|x_{n},\theta}\,\prob{x_{n}|y^*_{1:n-1},\theta} \approx \frac{1}{J}\,\sum_j\,\prob{y^*_{n}|x_{n,j}^{P},\theta}.$$
 #' We can iterate this procedure through the data, one step at a time, alternately simulating and resampling, until we reach $n=N$.
