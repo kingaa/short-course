@@ -413,7 +413,7 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
 #' --------------------------
 #' 
 #' ## [Back to course homepage](http://kingaa.github.io/short-course)
-#' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/stochsim/stochsim.R)
+#' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/master/stochsim/stochsim.R)
 #' 
 #' --------------------------
 #' 

@@ -135,6 +135,6 @@ plot(p,loglik,type='l',ylim=max(loglik)+c(-10,0))
 #' --------------------------
 #' 
 #' ## [Back to course homepage](http://kingaa.github.io/short-course)
-#' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/gh-pages/parest/likelihood.R)
+#' ## [**R** codes for this document](http://raw.githubusercontent.com/kingaa/short-course/master/parest/likelihood.R)
 #' 
 #' ## References
