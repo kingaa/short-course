@@ -164,7 +164,7 @@ ggplot(ests,mapping=aes(x=interval,y=R0.hat,
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: estimating $R_0$ for measles in Niamey
+#' ##### Exercise: estimating $R_0$ for measles in Niamey
 #' 
 #' Combine the final-size and the invasion rate methods to obtain estimates of $R_0$ and $N$ using the data from each of the communities of Niamey, assuming that the infectious period is approximately two weeks.
 #' 
@@ -267,19 +267,19 @@ ggplot(dat,aes(x=time))+
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: least-squares estimation of $R_0$
+#' ##### Exercise: least-squares estimation of $R_0$
 #' Use this method to obtain estimates of $R_0$ for measles from each of the three communities in Niamey.
 #' You may again assume that the infectious period is two weeks.
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: interpreting local optima
+#' ##### Exercise: interpreting local optima
 #' The above plot of SSE against $\beta$ shows a second local minimum of the SSE at a much higher value of $\beta$.
 #' Why is this?
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: local vs global optima
+#' ##### Exercise: local vs global optima
 #' 
 #' Discuss the following:
 #' 
@@ -316,13 +316,13 @@ ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: interpreting the shape of the likelihood surface
+#' ##### Exercise: interpreting the shape of the likelihood surface
 #' Discuss the shape of this surface: 
 #' what does it tell us about the uncertainty in the model's parameters?
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: SEIR model estimation
+#' ##### Exercise: SEIR model estimation
 #' Repeat the estimation using a closed SEIR model.
 #' Assume that the infectious period is 5&nbsp;da and the latent period is 8&nbsp;da.
 #' How and why does your estimate of $R_0$ differ from that you obtained using the SIR model?
@@ -356,14 +356,14 @@ fit2
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: four-parameter optimization
+#' ##### Exercise: four-parameter optimization
 #' Try to estimate all four parameters at once.
 #' Start your algorithm from several places to check that they all converge to the same place.
 #' You may find it useful to restart the optimizer to verify its convergence.
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: rescaling the data
+#' ##### Exercise: rescaling the data
 #' In the foregoing, we've estimated parameters by minimizing the sum of squared differences between model-predicted number of cases and the data.
 #' What would happen if we tried to minimize the squared error on the log scale, i.e., to minimize $(\log(\mathrm{model})-\log(\mathrm{data}))^2$?
 #' What would happen if we minimized the squared error on the square-root scale, i.e., $(\sqrt{\mathrm{model}}-\sqrt{\mathrm{data}})^2$?
@@ -378,7 +378,7 @@ fit2
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: alternative optimization algorithms
+#' ##### Exercise: alternative optimization algorithms
 #' 
 #' 1. Change the optimization algorithm used by `optim` via the `method` argument.
 #'   Investigate the effect on your parameter estimates.
@@ -458,7 +458,7 @@ abline(v=b.hat,lty=2)
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: log-normal errors
+#' ##### Exercise: log-normal errors
 #' Suppose, alternatively, that the errors are log-normal with constant variance.
 #' Under what definition of SSE will least-squares and maximum likelihood give the same parameter estimates?
 #' 
@@ -638,12 +638,12 @@ ggplot(data=cbind(as.data.frame(niameyA2),
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: three-parameter estimation
+#' ##### Exercise: three-parameter estimation
 #' Try to estimate $p$, $b$, and $S(0)$ simultaneously.
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: binomial errors
+#' ##### Exercise: binomial errors
 #' Reformulate the problem using the binomial error model.
 #' Modify the parameter estimation codes appropriately, estimate the parameters, and comment on the results.
 #' 
@@ -689,14 +689,14 @@ signif(mle3,3)
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: modifying the mean-variance relationship
+#' ##### Exercise: modifying the mean-variance relationship
 #' Reformulate the problem using a normal error model in which the variance is proportional to the mean:
 #' $$y_t\;\sim\;\dist{Normal}{p\,I_t,\sigma\,\sqrt{I_t}}.$$
 #' Modify the parameter estimation codes appropriately, estimate the parameters (including both $p$ and $\sigma$), and comment on the results.
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: prevalence vs incidence
+#' ##### Exercise: prevalence vs incidence
 #' We've been treating the Niamey data as if they were direct---though inaccurate---measurements of the prevalence.
 #' Actually, these are incidence data: they are measures of unique infections.
 #' It would be more appropriate to model these data by adding another equation

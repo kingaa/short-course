@@ -130,7 +130,7 @@ set.seed(594709947L)
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: From Markov chain to ODE 
+#' ##### Exercise: From Markov chain to ODE 
 #' Find the expected value of $N_{SI}(t+\delta)-N_{SI}(t)$ and $N_{IR}(t+\delta)-N_{IR}(t)$ given the current state, $S(t)$, $I(t)$ and $R(t)$.
 #' Take the limit as $\delta\to 0$ and show that this gives the ODE model.
 #' 
@@ -216,7 +216,7 @@ set.seed(594709947L)
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: SDE version of the SIR model
+#' ##### Exercise: SDE version of the SIR model
 #' 
 #' Write down the Euler-Maruyama method for an SDE representation of the closed-population SIR model. 
 #' Consider some difficulties that might arise with non-negativity constraints, and propose some practical way one might deal with that issue.
@@ -341,14 +341,13 @@ pomp(sir,rprocess=euler.sim(sir_step,delta.t=1/6),initializer=sir_init,
 pomp(sir,zeronames="H") -> sir
 
 #' 
-#' Now, to include the observations in the model, we must write both a `dmeasure` and an `rmeasure` component:
+#' Now, to include the observations in the model, we must write an `rmeasure` component:
 ## ----meas-model----------------------------------------------------------
-dmeas <- Csnippet("lik = dbinom(B,H,rho,give_log);")
 rmeas <- Csnippet("B = rbinom(H,rho);")
 
 #' and put these into our `pomp` object:
 ## ----add-meas-model------------------------------------------------------
-sir <- pomp(sir,rmeasure=rmeas,dmeasure=dmeas,statenames="H",paramnames="rho")
+sir <- pomp(sir,rmeasure=rmeas,statenames="H",paramnames="rho")
 
 #' 
 #' ### Testing the model: simulations
@@ -373,13 +372,13 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: Explore the SIR model
+#' ##### Exercise: Explore the SIR model
 #' 
 #' Fiddle with the parameters to see if you can't find parameters for which the data are a more plausible realization.
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: The SEIR model
+#' ##### Exercise: The SEIR model
 #' 
 #' Below is a diagram of the so-called SEIR model.
 #' This differs from the SIR model in that infected individuals must pass a period of latency before becoming infectious.
@@ -390,7 +389,7 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
 #' 
 #' --------------------------
 #' 
-#' #### Exercise: Rethinking the boarding-school flu data
+#' ##### Exercise: Rethinking the boarding-school flu data
 #' 
 #' In the preceding, we've been assuming that $B_t$ represents the number of boys *sent* to bed on day $t$.
 #' Actually, this isn't correct at all.
