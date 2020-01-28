@@ -29,8 +29,9 @@
 #' 
 #' --------------------------
 #' 
+
 #' 
-## ----prelims,cache=FALSE,include=FALSE-----------------------------------
+## ----prelims,cache=FALSE,include=FALSE----------------------------------------
 library(pomp)
 stopifnot(packageVersion("pomp")>="1.4.5")
 library(ggplot2)
@@ -97,6 +98,7 @@ set.seed(1221234211)
 #' State variables depend on state variables at the previous timestep.
 #' To be more precise, the distribution of the state $X_{n+1}$, conditional on $X_{n}$, is independent of the values of $X_{k}$, $k<n$ and $Y_{k}$, $k\le n$.
 #' Moreover, the distribution of the measurement $Y_{n}$, conditional on $X_{n}$, is independent of all other variables.
+
 #' 
 #' #### POMP model notation
 #' 
@@ -117,6 +119,7 @@ set.seed(1221234211)
 #' Since the probability of the observation, $Y_n$, depends only on $X_n$ and $\theta$, and since, in particular $Y_{m}$ and $Y_{n}$ are independent given $X_{m}$ and $X_{n}$, we have $$\lik(\theta) = \prod_{n} f_{Y_n|X_n}(y_n^*;x_n(\theta),\theta)$$ or $$\ell(\theta) = \log\lik(\theta) = \sum_{n} \log f_{Y_n|X_n}(y_n^*;x_n(\theta),\theta).$$
 #' The following diagram illustrates this.
 #' 
+
 #' 
 #' In this diagram, $\hat y_n$ refers to the model prediction ($\hat y_n = \expect{Y_n \vert X_n=x_n(\theta)}$) and $y_n^*$ to the data.
 #' 
@@ -150,7 +153,7 @@ set.seed(1221234211)
 #' Let's go back to the boarding school influenza outbreak to see what this looks like in practice.
 #' Let's reconstruct the toy SIR model we were working with.
 #' 
-## ----flu-construct-------------------------------------------------------
+## ----flu-construct------------------------------------------------------------
 read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt") -> bsflu
 
 rproc <- Csnippet("
@@ -189,7 +192,7 @@ pomp(subset(bsflu,select=-C),
 
 #' 
 #' Let's generate a large number of simulated trajectories at some particular point in parameter space.
-## ----bbs-mc-like-2-------------------------------------------------------
+## ----bbs-mc-like-2------------------------------------------------------------
 simulate(flu,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9),
          nsim=5000,states=TRUE) -> x
 matplot(time(flu),t(x["R1",1:50,]),type='l',lty=1,
@@ -198,13 +201,13 @@ lines(time(flu),obs(flu,"B"),lwd=2,col='black')
 
 #' 
 #' We can use the function `dmeasure` to evaluate the log likelihood of the data given the states, the model, and the parameters:
-## ----bbs-mc-like-3,cache=T-----------------------------------------------
+## ----bbs-mc-like-3,cache=T----------------------------------------------------
 ell <- dmeasure(flu,y=obs(flu),x=x,times=time(flu),log=TRUE,
                 params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9))
 dim(ell)
 
 #' According to the equation above, we should sum up the log likelihoods across time:
-## ----bbs-mc-like-4-------------------------------------------------------
+## ----bbs-mc-like-4------------------------------------------------------------
 ell <- apply(ell,1,sum)
 summary(exp(ell))
 
@@ -258,13 +261,13 @@ summary(exp(ell))
 #' In **pomp**, the basic particle filter is implemented in the command `pfilter`.
 #' We must choose the number of particles to use by setting the `Np` argument.
 #' 
-## ----flu-pfilter-1,cache=T-----------------------------------------------
+## ----flu-pfilter-1,cache=T----------------------------------------------------
 pf <- pfilter(flu,Np=5000,params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9))
 logLik(pf)
 
 #' 
 #' We can run a few particle filters to get an estimate of the Monte Carlo variability:
-## ----flu-pfilter-2,cache=T-----------------------------------------------
+## ----flu-pfilter-2,cache=T----------------------------------------------------
 pf <- replicate(10,
                 pfilter(flu,Np=5000,
                         params=c(Beta=3,mu_I=1/2,mu_R1=1/4,mu_R2=1/1.8,rho=0.9)))
@@ -289,7 +292,7 @@ logmeanexp(ll,se=TRUE)
 #' We'll make slices in the $\beta$ and $\mu_I$ directions.
 #' Both slices will pass through the central point.
 #' 
-## ----flu-like-slice,cache=TRUE,results='hide'----------------------------
+## ----flu-like-slice,cache=TRUE,results='hide'---------------------------------
 sliceDesign(
   center=c(Beta=2,mu_I=1,mu_R1=1/4,mu_R2=1/1.8,rho=0.9),
   Beta=rep(seq(from=0.5,to=4,length=40),each=3),
@@ -315,7 +318,7 @@ foreach (theta=iter(p,"row"),.combine=rbind,
 #' Note that we've used the **foreach** package with the parallel backend (**doParallel**) to parallelize these computations.
 #' To ensure that we have high-quality random numbers in each parallel *R* session, we use a parallel random number generator (`kind="L'Ecuyer"`, `.options.multicore=list(set.seed=TRUE)`).
 #' 
-## ----flu-like-slice-plot,cache=FALSE,echo=FALSE--------------------------
+## ----flu-like-slice-plot,cache=FALSE,echo=FALSE-------------------------------
 library(magrittr)
 library(reshape2)
 library(ggplot2)
@@ -340,7 +343,7 @@ p %>%
 #' 
 #' Slices offer a very limited perspective on the geometry of the likelihood surface.
 #' With just two parameters, we can evaluate the likelihood at a grid of points and visualize the surface directly.
-## ----flu-grid1-----------------------------------------------------------
+## ----flu-grid1----------------------------------------------------------------
 bake(file="flu-grid1.rds",seed=421776444,kind="L'Ecuyer",{
   
   expand.grid(Beta=seq(from=1.5,to=5,length=50),
@@ -365,7 +368,7 @@ bake(file="flu-grid1.rds",seed=421776444,kind="L'Ecuyer",{
   
 })-> p
 
-## ----flu-grid1-plot,echo=F,purl=T----------------------------------------
+## ----flu-grid1-plot,echo=F,purl=T---------------------------------------------
 library(magrittr)
 library(reshape2)
 library(plyr)
@@ -486,7 +489,7 @@ p %>%
 #' We'll try using `optim`'s default method: Nelder-Mead, fixing the random-number generator seed to make the likelihood calculation deterministic.
 #' Since Nelder-Mead is an unconstrained optimizer, we must transform the parameters.
 #' The following `Csnippet`s encode an appropriate transformation and its inverse, and introduce them into the `pomp` object.
-## ----flu-partrans--------------------------------------------------------
+## ----flu-partrans-------------------------------------------------------------
 toEst <- Csnippet("
  TBeta = log(Beta);
  Tmu_R1 = log(mu_R1);
@@ -507,7 +510,7 @@ pomp(flu,toEstimationScale=toEst,
 
 #' 
 #' Let's fix a reference point in parameter space and insert these parameters into the `pomp` object:
-## ----flu-ref-params------------------------------------------------------
+## ----flu-ref-params-----------------------------------------------------------
 coef(flu) <- c(Beta=2,mu_I=1,mu_R1=512/sum(bsflu$B),mu_R2=512/sum(bsflu$C),rho=0.9)
 
 #' 
@@ -517,7 +520,7 @@ coef(flu) <- c(Beta=2,mu_I=1,mu_R1=512/sum(bsflu$B),mu_R2=512/sum(bsflu$C),rho=0
 #' Note too, how this function returns a large (and therefore bad) value when the particle filter encounters and error.
 #' This behavior makes the objective function more robust.
 #' 
-## ----flu-like-optim-1----------------------------------------------------
+## ----flu-like-optim-1---------------------------------------------------------
 neg.ll <- function (par, est) {
   allpars <- coef(flu,transform=TRUE)
   allpars[est] <- par
@@ -533,7 +536,7 @@ neg.ll <- function (par, est) {
 
 #' 
 #' Now we call `optim` to minimize this function:
-## ----flu-like-optim-2----------------------------------------------------
+## ----flu-like-optim-2---------------------------------------------------------
 ## use Nelder-Mead with fixed RNG seed
 fit <- optim(
   par=c(log(2), log(1), log(0.9/(1-0.9))),
@@ -554,12 +557,12 @@ ll <- logmeanexp(lls,se=TRUE); ll
 
 #' 
 #' We plot some simulations at these parameters.
-## ----flu-sims------------------------------------------------------------
+## ----flu-sims-----------------------------------------------------------------
 simulate(mle,nsim=10,as.data.frame=TRUE,include.data=TRUE) -> sims
 
 #' The data are shown in blue.
 #' The `r max(sims$sim)` simulations are shown in red.
-## ----flu-sims-plot,echo=F------------------------------------------------
+## ----flu-sims-plot,echo=F-----------------------------------------------------
 ggplot(data=sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
   guides(color=FALSE)+
   geom_line()
