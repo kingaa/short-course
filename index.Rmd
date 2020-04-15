@@ -61,12 +61,10 @@ hr {
 
 <div class="nb"> 
 **Important Note:**
-The materials here use an old version of **pomp**.
-With version 2, the **pomp** syntax changed substantially so that these codes will no longer run.
-An up-to-date tutorial covering much the same ground can be found [here](https://kingaa.github.io/sbied/).
-
-In some instances, the materials have been superseded entirely.
-In these cases, links are provided to more up-to-date versions.
+As of version 2, **pomp** syntax changed substantially so that the codes in these notes would no longer run.
+Accordingly, some of these materials have been updated to use a newer version of **pomp**.
+In some instances, however, the materials have been superseded entirely.
+In these cases, links are provided to more up-to-date versions that cover the same ground.
 </div>
 
 ### Instructor
