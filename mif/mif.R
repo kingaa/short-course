@@ -23,7 +23,8 @@
 #' 
 #' Produced with **R** version `r getRversion()` and **pomp** version `r packageVersion("pomp")`.
 #' 
-## ----prelims,include=FALSE,purl=TRUE,cache=FALSE-------------------------
+
+## ----prelims,include=FALSE,purl=TRUE,cache=FALSE------------------------------
 library(pomp)
 options(stringsAsFactors=FALSE)
 stopifnot(packageVersion("pomp")>="1.4.7")
@@ -163,7 +164,7 @@ set.seed(557976883)
 #' Only one adult developed influenza-like illness, so adults are omitted from the data and model.
 #' First, we read in the data:
 #' 
-## ----load_bbs------------------------------------------------------------
+## ----load_bbs-----------------------------------------------------------------
 bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt")
 
 #' 
@@ -176,6 +177,7 @@ bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_da
 #' These measurements are modeled as $Y_n=(B_n,C_n)$ with $B_n\sim\mathrm{Poisson}(\rho R_1(t_n))$ and $C_n\sim\mathrm{Poisson}(\rho R_2(t_n))$.
 #' Here, $\rho$ is a reporting rate corresponding to the chance of being symptomatic.
 #' 
+
 #' 
 #' The index case for the epidemic was proposed to be a boy returning to Britain from Hong Kong, who was reported to have a transient febrile illness from 15 to 18 January.
 #' It would therefore be reasonable to initialize the epidemic with $I(t_0)=1$ at $t_0=-6$.
@@ -199,16 +201,17 @@ bsflu_data <- read.table("http://kingaa.github.io/short-course/stochsim/bsflu_da
 #' If we confine ourselves for the present to fitting only the bed-confinement data, then we need not track $R_2$.
 #' For the code, we enumerate the state variables ($S$, $I$, $R_1$) and the parameters ($\beta$, $\mu_I$, $\rho$, $\mu_{R_1}$) as follows:
 #' 
-## ----bsflu_names---------------------------------------------------------
+## ----bsflu_names--------------------------------------------------------------
 statenames <- c("S","I","R1")
 paramnames <- c("Beta","mu_I","mu_R1","rho")
 
 #' 
 #' In the codes below, we'll refer to the data variables by their names ($B$, $C$), as given in the `bsflu_data` data-frame:
+
 #' 
 #' Now, we write the model code:
 #' 
-## ----csnippets_bsflu-----------------------------------------------------
+## ----csnippets_bsflu----------------------------------------------------------
 dmeas <- Csnippet("
   lik = dpois(B,rho*R1+1e-6,give_log);
 ")
@@ -248,7 +251,7 @@ init <- Csnippet("
 #' 
 #' We build the `pomp` object:
 #' 
-## ----pomp_bsflu----------------------------------------------------------
+## ----pomp_bsflu---------------------------------------------------------------
 library(pomp)
 
 pomp(
@@ -262,6 +265,7 @@ pomp(
   paramnames=paramnames
 ) -> bsflu
 
+
 #' 
 #' 
 #' ### Testing the codes.
@@ -269,21 +273,23 @@ pomp(
 #' To develop and debug code, it is useful to have example codes that run quickly.
 #' Here, we run some simulations and a particle filter, simply to check that the codes are working correctly.
 #' We'll use the following parameters, derived from our earlier explorations:
-## ----start_params--------------------------------------------------------
+## ----start_params-------------------------------------------------------------
 params <- c(Beta=2,mu_I=1,rho=0.9,mu_R1=1/3,mu_R2=1/2)
 
 #' 
 #' Now to run and plot some simulations:
-## ----init_sim------------------------------------------------------------
+## ----init_sim-----------------------------------------------------------------
 y <- simulate(bsflu,params=params,nsim=10,as.data.frame=TRUE)
+
 
 #' 
 #' Before engaging in iterated filtering, it is a good idea to check that the basic particle filter is working since iterated filtering builds on this technique.
 #' The simulations above check the `rprocess` and `rmeasure` codes;
 #' the particle filter depends on the `rprocess` and `dmeasure` codes and so is a check of the latter.
 #' 
-## ----init_pfilter--------------------------------------------------------
+## ----init_pfilter-------------------------------------------------------------
 pf <- pfilter(bsflu,params=params,Np=1000)
+
 
 #' 
 #' These plots show the data along with the *effective sample size* of the particle filter (`ess`) and the log likelihood of each observation conditional on the preceding ones (`cond.logLik`).
@@ -292,7 +298,7 @@ pf <- pfilter(bsflu,params=params,Np=1000)
 #' 
 #' Let's treat $\mu_{R_1}$ and  $\mu_{R_2}$ as known, and fix these parameters at the empirical means of the bed-confinement and convalescence times for symptomatic cases, respectively:
 #' 
-## ----fixed_params--------------------------------------------------------
+## ----fixed_params-------------------------------------------------------------
 (fixed_params <- with(bsflu_data,c(mu_R1=1/(sum(B)/512),mu_R2=1/(sum(C)/512))))
 
 #' 
@@ -305,7 +311,7 @@ pf <- pfilter(bsflu,params=params,Np=1000)
 #' i. the parallel for loop provided by the **foreach** package; and
 #' i. proper attention to the use of parallel random number generators.
 #' 
-## ----parallel-setup,cache=FALSE------------------------------------------
+## ----parallel-setup,cache=FALSE-----------------------------------------------
 library(foreach)
 library(doParallel)
 
@@ -320,7 +326,7 @@ registerDoParallel()
 #' 
 #' We proceed to carry out replicated particle filters at an initial guess of $\beta=2$, $\mu_I=1$, and $\rho=0.9$.
 #' 
-## ----pf------------------------------------------------------------------
+## ----pf-----------------------------------------------------------------------
 stew(file="pf.rda",{
   t_pf <- system.time(
     pf <- foreach(i=1:10,.packages='pomp',
@@ -346,7 +352,7 @@ stew(file="pf.rda",{
 #' This will become progressively more complete as our parameter-space search goes on.
 #' At this point, we've computed the likelihood at a single point.
 #' Let's store this point, together with the estimated likelihood and our estimate of the standard error on that likelihood, in a CSV file:
-## ----init_csv------------------------------------------------------------
+## ----init_csv-----------------------------------------------------------------
 results <- as.data.frame(as.list(c(coef(pf[[1]]),loglik=L_pf[1],loglik=L_pf[2])))
 write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 
@@ -359,7 +365,7 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' For simplicity, we'll use the same perturbation size on $\rho$.
 #' We fix `cooling.fraction.50=0.5`, so that after 50 `mif2` iterations, the perturbations are reduced to half their original magnitudes.
 #' 
-## ----box_search_local----------------------------------------------------
+## ----box_search_local---------------------------------------------------------
 stew(file="box_search_local.rda",{
   t_local_mif <- system.time({
     mifs_local <- foreach(i=1:20,
@@ -383,13 +389,14 @@ stew(file="box_search_local.rda",{
   })
 },seed=482947940,kind="L'Ecuyer")
 
+
 #' 
 #' Although the filtering carried out by `mif2` in the final filtering iteration generates an approximation to the likelihood at the resulting point estimate, this is not usually good enough for reliable inference.
 #' Partly, this is because parameter perturbations are applied in the last filtering iteration.
 #' Partly, this is because `mif2` is usually carried out with a smaller number of particles than is necessary for a good likelihood evaluation---the errors in `mif2` average out over many iterations of the filtering.
 #' Therefore, we evaluate the likelihood, together with a standard error, using replicated particle filters at each point estimate:
 #' 
-## ----lik_local-----------------------------------------------------------
+## ----lik_local----------------------------------------------------------------
 stew(file="lik_local.rda",{
   t_local_eval <- system.time({
     results_local <- foreach(mf=mifs_local,
@@ -410,9 +417,10 @@ results_local <- as.data.frame(results_local)
 #' This investigation took  `r round(t_local_mif["elapsed"],0)` sec for the maximization and `r round(t_local_eval["elapsed"],0)` sec for the likelihood evaluation.
 #' These repeated stochastic maximizations can also show us the geometry of the likelihood surface in a neighborhood of this point estimate:
 #' 
+
 #' 
 #' We add these newly explored points to our database:
-## ----local_database------------------------------------------------------
+## ----local_database-----------------------------------------------------------
 results <- rbind(results,results_local[names(results)])
 write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 
@@ -428,7 +436,7 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' 
 #' For our flu model, a box containing reasonable parameter values might be
 #' 
-## ----box_global----------------------------------------------------------
+## ----box_global---------------------------------------------------------------
 params_box <- rbind(
   Beta=c(1,5),
   mu_I=c(0.5,3),
@@ -438,7 +446,7 @@ params_box <- rbind(
 #' 
 #' We are now ready to carry out likelihood maximizations from diverse starting points.
 #' 
-## ----box_search_global---------------------------------------------------
+## ----box_search_global--------------------------------------------------------
 stew(file="box_search_global.rda",{
   n_global <- getDoParWorkers()
   t_global <- system.time({
@@ -471,6 +479,7 @@ write.csv(results,file="bsflu_params.csv",row.names=FALSE)
 #' This took in `r round(t_global["elapsed"]/60,1)` minutes altogether on a machine with `r n_global` processors.
 #' One can visualize aspects of the global geometry of the likelihood surface with a scatterplot matrix of these diverse parameter estimates:
 #' 
+
 #' 
 #' We see that optimization attempts from diverse remote starting points end up with comparable likelihoods, even when the parameter values are quite distinct.
 #' This gives us some confidence in our maximization procedure. 

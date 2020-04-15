@@ -13,19 +13,47 @@
 #' \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
 #' \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
 #' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+#' \newcommand\cov[1]{\mathrm{Cov}\left[{#1}\right]}
 #' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 #' \newcommand\dlta[1]{{\Delta}{#1}}
+#' \newcommand{\dd}[1]{\mathrm{d}{#1}}
+#' \newcommand{\transpose}{\mathrm{T}}
 #' \newcommand\lik{\mathcal{L}}
 #' \newcommand\loglik{\ell}
+#' \newcommand{\scinot}[2]{#1{\times}10^{#2}}
+#' \newcommand{\pd}[3][]{\frac{\partial^{#1}{#2}}{\partial{#3}^{#1}}}
+#' \newcommand{\deriv}[3][]{\frac{\mathrm{d}^{#1}{#2}}{\mathrm{d}{#3}^{#1}}}
 #' 
 #' This lesson is based on notes developed over the years and contains contributions originally made by Ben Bolker, John Drake, Pej Rohani, and David Smith.
 #' It is [licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
 #' Please share and remix noncommercially, mentioning its origin.  
 #' ![CC-BY_NC](../graphics/cc-by-nc.png)
 #' 
-## ----prelims,include=FALSE,cache=FALSE-----------------------------------
+#' <style type="text/css">
+#' div .nb {
+#' 	background-color: #ffeca3;
+#' 	border-style: solid;
+#' 	border-width: 2;
+#' 	border-color: #00274c;
+#' 	padding: 1em;
+#' }
+#' hr {
+#' 	border-width: 3;
+#' 	border-color: #00274c;
+#' }
+#' </style>
+#' 
+#' <div class="nb"> 
+#' **Important Note:**
+#' These materials have been updated for use with version `r packageVersion("pomp")`.
+#' As of version 2, **pomp** syntax has changed substantially.
+#' These changes [are documented](http://kingaa.github.io/pomp/vignettes/upgrade_guide.html) on the **pomp** website.
+#' </div>
+#' 
+
+## ----prelims,include=FALSE,cache=FALSE----------------------------------------
 library(pomp)
-stopifnot(packageVersion("pomp")>"1.4.9")
+stopifnot(packageVersion("pomp")>="2.8")
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
@@ -73,7 +101,7 @@ set.seed(1173439184)
 #' Biweekly data for outbreaks of measles in three communities within Niamey, Niger [@Grais2006] are provided on the course website.
 #' To download and plot the data, do, e.g.,
 #' 
-## ----niamey-data,warning=FALSE-------------------------------------------
+## ----niamey-data,warning=FALSE------------------------------------------------
 niamey <- read.csv("http://kingaa.github.io/short-course/parest/niamey.csv")
 ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
   geom_line()+geom_point()
@@ -101,7 +129,7 @@ ggplot(niamey,mapping=aes(x=biweek,y=measles,color=community))+
 #' 
 #' Let us plot the Niamey measles data [@Grais2006] from community "A" in this way to see if this is the case.
 #' 
-## ----measles-log,purl=TRUE,echo=FALSE------------------------------------
+## ----measles-log,purl=TRUE,echo=FALSE-----------------------------------------
 ggplot(data=subset(niamey,community=="A"),
        mapping=aes(x=biweek,y=measles))+
   geom_point()+geom_line()+
@@ -111,7 +139,7 @@ ggplot(data=subset(niamey,community=="A"),
 #' 
 #' Plotted on a log scale, the linearity of the first several data points is evident.
 #' This suggests that we can obtain a cheap and cheerful estimate of $R_0$ by a simple linear regression:
-## ----measles-lm,echo=T,results='markup',purl=TRUE------------------------
+## ----measles-lm,echo=T,results='markup',purl=TRUE-----------------------------
 fit1 <- lm(log(measles)~biweek,data=subset(niamey,biweek<=8&community=="A"))
 summary(fit1)
 coef(fit1)
@@ -125,7 +153,7 @@ slope <- coef(fit1)[2]; slope
 #' Our strategy in this case has been to redefine the problem so that it fits a standard form, i.e., we showed how to rearrange the model so that the relevant quantity ($R_0$) could be obtained from linear regression. 
 #' This means that all the usual diagnostics associated with linear regression are also available to check the fit of the model.
 #' We can get a rough estimate of the uncertainty in our estimate by looking at the standard errors in our estimator.
-## ----measles-se,purl=TRUE------------------------------------------------
+## ----measles-se,purl=TRUE-----------------------------------------------------
 coef(summary(fit1))
 slope.se <- coef(summary(fit1))[2,2]
 1*slope.se
@@ -139,7 +167,7 @@ slope.se <- coef(summary(fit1))[2,2]
 #' Below, we estimate $R_0$ and its standard error using the first 2, 3, 4, ..., 10 data points.
 #' We then plot these estimates with their uncertainties to show this precision-accuracy tradeoff.
 #' 
-## ----inv-R0-est,echo=F,purl=TRUE,warning=FALSE---------------------------
+## ----inv-R0-est,echo=F,purl=TRUE,warning=FALSE--------------------------------
 fitfn <- function (interval) {
   fit <- lm(log(measles)~biweek,data=subset(niamey,community=="A"&biweek<=interval))
   slope <- coef(summary(fit))[2,1]
@@ -168,6 +196,7 @@ ggplot(ests,mapping=aes(x=interval,y=R0.hat,
 #' 
 #' Combine the final-size and the invasion rate methods to obtain estimates of $R_0$ and $N$ using the data from each of the communities of Niamey, assuming that the infectious period is approximately two weeks.
 #' 
+
 #' 
 #' --------------------------
 #' 
@@ -187,7 +216,7 @@ ggplot(ests,mapping=aes(x=interval,y=R0.hat,
 #' For now, under the assumption that the epidemic is deterministic, parameter estimation is a matter of finding the model trajectory that gives the best fit to the data.
 #' The first thing we need is a `pomp` object encoding the model and the data.
 #' 
-## ----closed-sir-predictions----------------------------------------------
+## ----closed-sir-predictions---------------------------------------------------
 pomp(
   data=subset(niamey,community=="A",select=-community),
   times="biweek",t0=0,
@@ -196,7 +225,7 @@ pomp(
       DS = -Beta*S*I/N;
       DI = Beta*S*I/N-gamma*I;
       DR = gamma*I;")),
-  initializer=Csnippet("
+  rinit=Csnippet("
       S = S_0;
       I = I_0;
       R = N-S_0-I_0;"),
@@ -206,7 +235,7 @@ pomp(
 #' 
 #' Now we set up a function that will calculate the sum of the squared errors (SSE), or discrepancies between the data and the model predictions.
 #' 
-## ----sse1----------------------------------------------------------------
+## ----sse1---------------------------------------------------------------------
 sse <- function (params) {
   x <- trajectory(niameyA,params=params)
   discrep <- x["I",,]-obs(niameyA)
@@ -217,7 +246,7 @@ sse <- function (params) {
 #' To get a sense of what this gives us, let's vary some parameters and computing the SSE for community "A" of the Niamey data set.
 #' To begin with, we'll assume we know that $\gamma=1$ and that the initial numbers of susceptibles, infectives, and recovereds, $S(0)$, $I(0)$, $R(0)$ are known to be 10000, 10, and 20000, respectively.
 #' We'll write a little function that will plug a value of $\beta$ into the parameter vector and compute the SSE.
-## ----sse-calc1-----------------------------------------------------------
+## ----sse-calc1----------------------------------------------------------------
 f1 <- function (beta) {
   params <- c(Beta=beta,gamma=1,N=50000,S_0=10000,I_0=10)
   sse(params)
@@ -227,11 +256,11 @@ SSE <- sapply(beta,f1)
 
 #' 
 #' We take our estimate, $\hat{\beta}$ to be the value of $\beta$ that gives the smallest SSE,
-## ----beta.hat------------------------------------------------------------
+## ----beta.hat-----------------------------------------------------------------
 beta.hat <- beta[which.min(SSE)]
 
 #' and plot SSE vs.\ $\beta$:
-## ----sse-vs-beta---------------------------------------------------------
+## ----sse-vs-beta--------------------------------------------------------------
 plot(beta,SSE,type='l')
 abline(v=beta.hat,lty=2)
 
@@ -239,16 +268,16 @@ abline(v=beta.hat,lty=2)
 #' What does the SIR model predict at $\beta=\hat{\beta}$?
 #' We compute the model's trajectory to find out:
 #' 
-## ----sse-betahat---------------------------------------------------------
+## ----sse-betahat--------------------------------------------------------------
 coef(niameyA) <- c(Beta=beta.hat,gamma=1,N=50000,S_0=10000,I_0=10)
-x <- trajectory(niameyA,as.data.frame=TRUE)
-ggplot(data=join(as.data.frame(niameyA),x,by='time'),
-       mapping=aes(x=time))+
+x <- trajectory(niameyA,format="data.frame")
+ggplot(data=join(as.data.frame(niameyA),x,by='biweek'),
+       mapping=aes(x=biweek))+
   geom_line(aes(y=measles),color='black')+
   geom_line(aes(y=I),color='red')
 
 #' 
-## ----sse2----------------------------------------------------------------
+## ----sse2---------------------------------------------------------------------
 beta <- seq(from=0,to=40,by=0.5)
 SSE <- sapply(beta,f1)
 
@@ -257,10 +286,10 @@ beta.hat <- beta[which.min(SSE)]
 abline(v=beta.hat,lty=2)
 
 coef(niameyA,"Beta") <- beta.hat
-x <- trajectory(niameyA,as.data.frame=TRUE)
-dat <- join(as.data.frame(niameyA),x,by='time')
+x <- trajectory(niameyA,format="data.frame")
+dat <- join(as.data.frame(niameyA),x,by='biweek')
 
-ggplot(dat,aes(x=time))+
+ggplot(dat,aes(x=biweek))+
   geom_line(aes(y=measles),color='black')+
   geom_line(aes(y=I),color='red')
 
@@ -295,19 +324,19 @@ ggplot(dat,aes(x=time))+
 #' [NB: the initial value of $R$ is entirely irrelevant.  Why?]
 #' Let's see what happens when we try to estimate two parameters at once.
 #' 
-## ----sse-calc2-----------------------------------------------------------
+## ----sse-calc2----------------------------------------------------------------
 grid <- expand.grid(Beta=seq(from=0,to=20,length=50),
                     S_0=seq(from=4000,to=20000,length=50),
                     N=50000,gamma=1,I_0=10)
-x <- trajectory(niameyA,params=t(grid),as.data.frame=TRUE)
+x <- trajectory(niameyA,params=t(grid),format="data.frame")
 library(plyr)
-join(x,as.data.frame(niameyA),by="time") -> x
-ddply(x,~traj,summarize,sse=sum((measles-I)^2)) -> x
+join(x,as.data.frame(niameyA),by="biweek") -> x
+ddply(x,~.id,summarize,sse=sum((measles-I)^2)) -> x
 cbind(grid,x) -> grid
 
 #' 
 #' We can visualize this as a surface:
-## ----sse-plot2,echo=F----------------------------------------------------
+## ----sse-plot2,echo=F---------------------------------------------------------
 library(ggplot2)
 ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
   geom_tile()+geom_contour(bins=30)+
@@ -337,7 +366,7 @@ ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
 #' Many of them are implemented in **R**.
 #' 
 #' The first place to go is the function `optim`, which implements several common, well-studied, generally-useful optimization algorithms.
-## ----eval=FALSE----------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 ## ?optim
 
 #' To use it, we have to specify the function we want to *minimize* and a starting value for the parameters.
@@ -345,7 +374,7 @@ ggplot(data=grid,mapping=aes(x=Beta,y=S_0,z=sqrt(sse),fill=sqrt(sse)))+
 #' 
 #' We'll write an objective function to try to estimate $\beta$, $S_0$, and $I_0$ simultaneously.
 #' For the moment, we'll continue to assume that the recovery rate $\gamma$ is known.
-## ----sse-calc3,eval=T,cache=T,results='hide',warning=FALSE---------------
+## ----sse-calc3,eval=T,cache=T,results='hide',warning=FALSE--------------------
 f2 <- function (par) {
   params <- c(Beta=par[3],gamma=1,N=50000,S_0=par[1],I_0=par[2])
   sse(params)
@@ -405,7 +434,7 @@ fit2
 #' 1. $\beta$ only ever occurs in combination with $N$, so we can combine these two into a single parameter by defining $b=\beta/N$.
 #' We can modify the **R** codes we used before to take account of this.
 #' 
-## ----closed-sir-model-defn-two-------------------------------------------
+## ----closed-sir-model-defn-two------------------------------------------------
 pomp(
   data=subset(niamey,community=="A",select=-community),
   times="biweek",t0=0,
@@ -415,7 +444,7 @@ pomp(
       incidence = b*S*I;
       DS = -incidence;
       DI = incidence-gamma*I;")),
-  initializer=Csnippet("
+  rinit=Csnippet("
       S = S_0;
       I = I_0;"),
   paramnames=c("b","gamma","S_0","I_0"),
@@ -427,7 +456,7 @@ pomp(
 #' Let's suppose that, when we record cases, we make errors that are normally distributed.
 #' Here's how we can compute the log likelihood of the data given the model and its parameters:
 #' 
-## ----closed-sir-normal-lik-----------------------------------------------
+## ----closed-sir-normal-lik----------------------------------------------------
 loglik.normal <- function (params) {
   x <- trajectory(niameyA2,params=params)
   sum(dnorm(x=obs(niameyA2),mean=x["I",,],
@@ -479,7 +508,7 @@ abline(v=b.hat,lty=2)
 #' where the parameter $p$ reflects a combination of sampling efficiency and the detectability of infections.
 #' The latter leads to the following log-likelihood function
 #' 
-## ----poisson-lik---------------------------------------------------------
+## ----poisson-lik--------------------------------------------------------------
 poisson.loglik <- function (params) {
   x <- trajectory(niameyA2,params=params)
   sum(dpois(x=obs(niameyA2),lambda=params["p"]*x["I",,],log=TRUE))
@@ -491,7 +520,7 @@ poisson.loglik <- function (params) {
 #' Let's see what the MLE parameters are for this model.
 #' We'll start by estimating just one parameter.
 #' Note that the objective function should return the negative log likelihood!
-## ----fit-b,results='markup'----------------------------------------------
+## ----fit-b,results='markup'---------------------------------------------------
 f4 <- function (par) {
   params <- c(S_0=20000,I_0=1,gamma=1,b=par,p=0.2)
   -poisson.loglik(params)
@@ -504,14 +533,14 @@ f4 <- function (par) {
 #' Since $b=\beta/N=R_0/(\mathrm{IP}\,N)$, where $\mathrm{IP}$ is the infectious period,
 #' and using guesses $R_0\,\approx\,15$, $\mathrm{IP}\,\approx\,14$&nbsp;da, and $N\,\approx\,50000$, we get $b\,\approx\,15/(14{\times}50000)\,\mathrm{da}^{-1}\approx{`r signif(15/14/50000*14,1)`}~\mathrm{biweek}^{-1}$.
 #' 
-## ----fit-b-optim---------------------------------------------------------
+## ----fit-b-optim--------------------------------------------------------------
 fit4 <- optim(f4,par=c(0.0003),method="Brent",
               lower=0,upper=1); fit4
 
 #' 
 #' We can get an idea about the uncertainty and in particular obtain confidence intervals by comparing the likelihoods we get at different values of the parameter.
 #' 
-## ----profile1a-----------------------------------------------------------
+## ----profile1a----------------------------------------------------------------
 prof.b <- expand.grid(b=seq(8e-5,1.2e-4,length=100))
 prof.b$loglik <- -sapply(prof.b$b,f4)
 maxloglik <- -fit4$value
@@ -524,7 +553,7 @@ abline(h=maxloglik)
 #' In particular, log likelihood differences on the order of 1 units are statistically meaningful.
 #' The scale above, of 1000s of log likelihood units, is far too gross to be meaningful.
 #' 
-## ----profile1b-----------------------------------------------------------
+## ----profile1b----------------------------------------------------------------
 prof.b <- expand.grid(b=seq(9.8e-5,1.01e-4,length=200))
 prof.b$loglik <- -sapply(prof.b$b,f4)
 plot(loglik~b,data=prof.b,type="l",ylim=maxloglik+c(-10,0))
@@ -547,7 +576,7 @@ abline(v=range(subset(prof.b,loglik>cutoff)$b),lty=2)
 #' One way to enforce this constraint is by transforming the parameter so that it cannot ever be negative.
 #' We'll log-transform $b$ in writing our objective function, $f$.
 #' 
-## ----fit-b-p-------------------------------------------------------------
+## ----fit-b-p------------------------------------------------------------------
 logit <- function (p) log(p/(1-p))    # the logit transform
 expit <- function (x) 1/(1+exp(-x))   # inverse logit
 
@@ -563,7 +592,7 @@ fit5
 #' Note that `optim` estimates these parameters on the transformed scale.
 #' To get our estimates on the original scale, we must back-transform:
 #' 
-## ----fit-b-p-mle---------------------------------------------------------
+## ----fit-b-p-mle--------------------------------------------------------------
 mle1 <- c(b=exp(fit5$par[1]),p=expit(fit5$par[2]))
 signif(mle1,3)
 
@@ -571,7 +600,7 @@ signif(mle1,3)
 #' To construct confidence intervals---and more generally to visualize the portion of the likelihood surface most relevant to the data---we can construct a *profile likelihood* for each parameter in turn.
 #' To profile over a parameter, we fix the value of that parameter at each of several values, then maximize the likelihood over the remaining unknown parameters.
 #' 
-## ----profile2a,results='hide'--------------------------------------------
+## ----profile2a,results='hide'-------------------------------------------------
 prof2.b <- expand.grid(b=seq(9.6e-5,1.01e-4,length=100))
 fitfn <- function (dat) {
   fit <- optim(fn=function(p)f5(c(log(dat$b),logit(p))),
@@ -588,7 +617,7 @@ abline(h=c(0,cutoff))
 abline(v=range(subset(prof2.b,loglik>cutoff)$b),lty=2)
 
 #' 
-## ----profile2b,results='hide'--------------------------------------------
+## ----profile2b,results='hide'-------------------------------------------------
 prof2.p <- expand.grid(p=seq(0.35,0.42,length=100))
 fitfn <- function (dat) {
   fit <- optim(fn=function(b)f5(c(log(b),logit(dat$p))),
@@ -607,15 +636,17 @@ abline(v=range(subset(prof2.p,loglik>cutoff)$p),lty=2)
 #' 
 #' Let's make a contour plot to visualize the likelihood surface.
 #' 
+
 #' 
 #' The scale over which the log likelihood is varying is clearly huge relative to what is meaningful.
 #' Let's focus in on the region around the MLE.
 #' 
+
 #' 
 #' Let's look at the model's predictions at the MLE.
 #' The model is a probability distribution, so we should look at a number of simulations.
 #' An important question is: are the data a plausible sample from the predicted probability distribution?
-## ----predictions,warning=F-----------------------------------------------
+## ----predictions,warning=F----------------------------------------------------
 coef(niameyA2) <- c(S_0=20000,I_0=1,gamma=1,mle1)
 model.pred <- trajectory(niameyA2)["I",,]
 
@@ -628,7 +659,7 @@ typ <- sample(nrow(simdat),1)
 ggplot(data=cbind(as.data.frame(niameyA2),
                   quantiles,
                   typical=simdat[typ,]),
-       mapping=aes(x=time))+
+       mapping=aes(x=biweek))+
   geom_line(aes(y=`50%`),color='red')+
   geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
   geom_line(aes(y=measles),color='black')+
@@ -659,7 +690,7 @@ ggplot(data=cbind(as.data.frame(niameyA2),
 #' Let's explore the alternative assumption that $y_t$ is negative-binomially distributed with mean $p\,I_t$, as before, but larger variance, $p\,I_t\,(1+\theta\,p\,I_t)$, i.e.,
 #' $$y_t\;\sim\;\dist{Negbin}{\mathrm{mean}=p\,I_t,\;\mathrm{size}=\frac{1}{\theta}}$$
 #' 
-## ----negbin-fit,warning=FALSE--------------------------------------------
+## ----negbin-fit,warning=FALSE-------------------------------------------------
 negbin.loglik <- function (params) {
   x <- trajectory(niameyA2,params=params)
   prediction <- x["I",,]
@@ -681,6 +712,7 @@ mle3 <- c(b=exp(fit7$par[1]),p=expit(fit7$par[2]),theta=exp(fit7$par[3]))
 signif(mle3,3)
 
 #' 
+
 #' 
 #' What does this plot tell us?
 #' Essentially, the deterministic SIR model, as we've written it, cannot capture the shape of the epidemic.

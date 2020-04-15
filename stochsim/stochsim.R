@@ -15,10 +15,16 @@
 #' \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
 #' \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
 #' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+#' \newcommand\cov[1]{\mathrm{Cov}\left[{#1}\right]}
 #' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 #' \newcommand\dlta[1]{{\Delta}{#1}}
+#' \newcommand{\dd}[1]{\mathrm{d}{#1}}
+#' \newcommand{\transpose}{\mathrm{T}}
 #' \newcommand\lik{\mathcal{L}}
 #' \newcommand\loglik{\ell}
+#' \newcommand{\scinot}[2]{#1{\times}10^{#2}}
+#' \newcommand{\pd}[3][]{\frac{\partial^{#1}{#2}}{\partial{#3}^{#1}}}
+#' \newcommand{\deriv}[3][]{\frac{\mathrm{d}^{#1}{#2}}{\mathrm{d}{#3}^{#1}}}
 #' 
 #' --------------------------
 #' 
@@ -29,17 +35,39 @@
 #' 
 #' Produced with **R** version `r getRversion()` and **pomp** version `r packageVersion("pomp")`.
 #' 
+#' <style type="text/css">
+#' div .nb {
+#' 	background-color: #ffeca3;
+#' 	border-style: solid;
+#' 	border-width: 2;
+#' 	border-color: #00274c;
+#' 	padding: 1em;
+#' }
+#' hr {
+#' 	border-width: 3;
+#' 	border-color: #00274c;
+#' }
+#' </style>
+#' 
+#' <div class="nb"> 
+#' **Important Note:**
+#' These materials have been updated for use with version `r packageVersion("pomp")`.
+#' As of version 2, **pomp** syntax has changed substantially.
+#' These changes [are documented](http://kingaa.github.io/pomp/vignettes/upgrade_guide.html) on the **pomp** website.
+#' </div>
+#' 
 #' --------------------------
 #' 
+
 #' 
-## ----prelims,echo=F,cache=F----------------------------------------------
+## ----prelims,echo=F,cache=F---------------------------------------------------
 library(plyr)
 library(reshape2)
 library(pomp)
 library(ggplot2)
 theme_set(theme_bw())
 options(stringsAsFactors=FALSE)
-stopifnot(packageVersion("pomp")>="1.4.5")
+stopifnot(packageVersion("pomp")>="2.8")
 set.seed(594709947L)
 
 #' 
@@ -59,6 +87,7 @@ set.seed(594709947L)
 #' Let us derive deterministic and stochastic versions of the susceptible-infected-recovered (SIR) model of disease transmission dynamics in a closed population.
 #' In so doing, we will use notation that generalizes to more complex systems [[@breto09]](http://dx.doi.org/10.1214/08-AOAS201).
 #' 
+
 #' 
 #' - Let $S$, $I$, and $R$ represent, respectively, the number of susceptible hosts, the number of infected (and, by assumption, infectious) hosts, and the number of recovered or removed hosts. 
 #' - We suppose that each arrow has an associated *per capita* rate, so here there is a rate $\mu_{SI}$ at which individuals in $S$ transition to $I$, and $\mu_{IR}$ at which individuals in $I$ transition to $R$. 
@@ -243,13 +272,13 @@ set.seed(594709947L)
 #' As an example that we can probe in some depth, let's look at an isolated outbreak of influenza that occurred in a boarding school for boys in England [@Anonymous1978].
 #' <!--- 763 boys were at risk, and ultimately 512 spent time away from class (either confined to bed or in convalescence. --->
 #' Download the data and examine it:
-## ----flu-data1-----------------------------------------------------------
+## ----flu-data1----------------------------------------------------------------
 read.table("http://kingaa.github.io/short-course/stochsim/bsflu_data.txt") -> bsflu
 head(bsflu)
 
 #' The variable `B` refers to boys confined to bed and `C` to boys in convalescence.
 #' Let's restrict our attention for the moment to the `B` variable.
-## ----flu-data2,echo=F----------------------------------------------------
+## ----flu-data2,echo=F---------------------------------------------------------
 ggplot(data=bsflu,aes(x=day,y=B))+geom_line()+geom_point()
 
 #' 
@@ -265,6 +294,7 @@ ggplot(data=bsflu,aes(x=day,y=B))+geom_line()+geom_point()
 #' R, recovered and immune hosts. 
 #' The rate at which individuals move from S to I is the force of infection, $\lambda=\mu_{SI}=\beta\,I/N$, while that at which individuals move into the R class is $\mu_{IR}=\gamma$.
 #' 
+
 #' 
 #' Let's look at how we can view the SIR as a POMP model.
 #' The unobserved state variables, in this case, are the numbers of individuals, $S$, $I$, $R$ in the S, I, and R compartments, respectively.
@@ -280,7 +310,7 @@ ggplot(data=bsflu,aes(x=day,y=B))+geom_line()+geom_point()
 #' In particular, we model the number, $\dlta{N_{SI}}$, moving from S to I over interval $\dlta{t}$ as $$\dlta{N_{SI}} \sim \dist{Binomial}{S,1-e^{-\lambda\dlta{t}}},$$ and the number moving from I to R as $$\dlta{N_{IR}} \sim \dist{Binomial}{I,1-e^{-\gamma\dlta{t}}}.$$
 #' 
 #' A `Csnippet` that encodes such a simulator is as follows:
-## ----rproc1--------------------------------------------------------------
+## ----rproc1-------------------------------------------------------------------
 sir_step <- Csnippet("
   double dN_SI = rbinom(S,1-exp(-Beta*I/N*dt));
   double dN_IR = rbinom(I,1-exp(-gamma*dt));
@@ -291,7 +321,7 @@ sir_step <- Csnippet("
 
 #' At day zero, we'll assume that $I=1$ and $R=0$, but we don't know how big the school is, so we treat $N$ as a parameter to be estimated and let $S(0)=N-1$.
 #' Thus an initializer `Csnippet` is
-## ----init1---------------------------------------------------------------
+## ----init1--------------------------------------------------------------------
 sir_init <- Csnippet("
   S = N-1;
   I = 1;
@@ -299,9 +329,9 @@ sir_init <- Csnippet("
 ")
 
 #' We fold these `Csnippets`, with the data, into a `pomp` object thus:
-## ----rproc1-pomp---------------------------------------------------------
-pomp(bsflu,time="day",t0=0,rprocess=euler.sim(sir_step,delta.t=1/6),
-     initializer=sir_init,paramnames=c("N","Beta","gamma"),
+## ----rproc1-pomp--------------------------------------------------------------
+pomp(bsflu,time="day",t0=0,rprocess=euler(sir_step,delta.t=1/6),
+     rinit=sir_init,paramnames=c("N","Beta","gamma"),
      statenames=c("S","I","R")) -> sir
 
 #' 
@@ -311,7 +341,7 @@ pomp(bsflu,time="day",t0=0,rprocess=euler.sim(sir_step,delta.t=1/6),
 #' Let's modify our `Csnippet` above, adding a variable $H$ to track the incidence.
 #' We'll then replace the `rprocess` with the new one.
 #' 
-## ----rproc2--------------------------------------------------------------
+## ----rproc2-------------------------------------------------------------------
 sir_step <- Csnippet("
   double dN_SI = rbinom(S,1-exp(-Beta*I/N*dt));
   double dN_IR = rbinom(I,1-exp(-gamma*dt));
@@ -328,7 +358,7 @@ sir_init <- Csnippet("
   H = 0;
 ")
 
-pomp(sir,rprocess=euler.sim(sir_step,delta.t=1/6),initializer=sir_init,
+pomp(sir,rprocess=euler(sir_step,delta.t=1/6),rinit=sir_init,
      paramnames=c("Beta","gamma","N"),statenames=c("S","I","R","H")) -> sir
 
 #' 
@@ -336,17 +366,17 @@ pomp(sir,rprocess=euler.sim(sir_step,delta.t=1/6),initializer=sir_init,
 #' $$B_t \sim \dist{Binomial}{H(t)-H(t-1),\rho}.$$
 #' But we have a problem, since at time $t$, the variable `H` we've defined will contain $H(t)$, not $H(t)-H(t-1)$.
 #' We can overcome this by telling `pomp` that we want `H` to be set to zero immediately following each observation.
-#' We do this by setting the `zeronames` argument to `pomp`:
-## ----zero1---------------------------------------------------------------
-pomp(sir,zeronames="H") -> sir
+#' We do this by setting the `accumvars` argument to `pomp`:
+## ----zero1--------------------------------------------------------------------
+pomp(sir,accumvars="H") -> sir
 
 #' 
 #' Now, to include the observations in the model, we must write an `rmeasure` component:
-## ----meas-model----------------------------------------------------------
+## ----meas-model---------------------------------------------------------------
 rmeas <- Csnippet("B = rbinom(H,rho);")
 
 #' and put these into our `pomp` object:
-## ----add-meas-model------------------------------------------------------
+## ----add-meas-model-----------------------------------------------------------
 sir <- pomp(sir,rmeasure=rmeas,statenames="H",paramnames="rho")
 
 #' 
@@ -362,11 +392,11 @@ sir <- pomp(sir,rmeasure=rmeas,statenames="H",paramnames="rho")
 #' If the infectious period is roughly 1&nbsp;da, then $1/\gamma \approx 1~\text{da}$ and $\beta = \gamma\,R_0 \approx 1.5~\text{da}^{-1}$.
 #' Let's simulate the model at these parameters.
 #' 
-## ----sir_sim1------------------------------------------------------------
+## ----sir_sim1-----------------------------------------------------------------
 sims <- simulate(sir,params=c(Beta=1.5,gamma=1,rho=0.9,N=2600),
-                 nsim=20,as.data.frame=TRUE,include.data=TRUE)
+                 nsim=20,format="data.frame",include.data=TRUE)
 
-ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
+ggplot(sims,mapping=aes(x=day,y=B,group=.id,color=.id=="data"))+
   geom_line()+guides(color=FALSE)
 
 #' 
@@ -383,6 +413,7 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
 #' Below is a diagram of the so-called SEIR model.
 #' This differs from the SIR model in that infected individuals must pass a period of latency before becoming infectious.
 #' 
+
 #' 
 #' Modify the codes above to construct a `pomp` object containing the flu data and an SEIR model.
 #' Perform simulations as above and adjust parameters to get a sense of whether improvement is possible by including a latent period.
@@ -400,10 +431,12 @@ ggplot(sims,mapping=aes(x=time,y=B,group=sim,color=sim=="data"))+
 #' Moreover, we have data on the number of boys, $C_t$, convalescent at day $t$.
 #' Since $1540~\text{boy-da}/512~\text{boy} \approx 3~\text{da}$, we know that the average duration spent in bed was 3&nbsp;da and, since $\sum_t\!C_t=`r sum(bsflu$C)`$, we can infer that the average time spent convalescing was $`r sum(bsflu$C)`~\text{boy-da}/512~\text{boy} \approx `r signif(sum(bsflu$C)/512,2)`~\text{da}$.
 #' 
+
 #' 
 #' Formulate a model with both confinement and convalescent stages.
 #' Implement it in **pomp** using a compartmental model like that diagrammed below.
 #' 
+
 #' 
 #' You will have to give some thought to just how to model the relationship between the data ($B$ and $C$) and the state variables.
 #' How many parameters can reasonably be fixed?  How many must be estimated?

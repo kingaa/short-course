@@ -7,25 +7,52 @@
 #'     toc_depth: 4
 #' bibliography: ../course.bib
 #' csl: ../ecology.csl
-#' 
 #' ---
 #' 
 #' \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
 #' \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
 #' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+#' \newcommand\cov[1]{\mathrm{Cov}\left[{#1}\right]}
 #' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 #' \newcommand\dlta[1]{{\Delta}{#1}}
+#' \newcommand{\dd}[1]{\mathrm{d}{#1}}
+#' \newcommand{\transpose}{\mathrm{T}}
 #' \newcommand\lik{\mathcal{L}}
 #' \newcommand\loglik{\ell}
+#' \newcommand{\scinot}[2]{#1{\times}10^{#2}}
+#' \newcommand{\pd}[3][]{\frac{\partial^{#1}{#2}}{\partial{#3}^{#1}}}
+#' \newcommand{\deriv}[3][]{\frac{\mathrm{d}^{#1}{#2}}{\mathrm{d}{#3}^{#1}}}
 #' 
 #' This lesson is based on notes developed over the years and contains contributions originally made by Ben Bolker, John Drake, Pej Rohani, and David Smith.
 #' It is [licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
 #' Please share and remix noncommercially, mentioning its origin.  
 #' ![CC-BY_NC](../graphics/cc-by-nc.png)
 #' 
-## ----prelims,include=FALSE,cache=FALSE-----------------------------------
+#' <style type="text/css">
+#' div .nb {
+#' 	background-color: #ffeca3;
+#' 	border-style: solid;
+#' 	border-width: 2;
+#' 	border-color: #00274c;
+#' 	padding: 1em;
+#' }
+#' hr {
+#' 	border-width: 3;
+#' 	border-color: #00274c;
+#' }
+#' </style>
+#' 
+#' <div class="nb"> 
+#' **Important Note:**
+#' These materials have been updated for use with version `r packageVersion("pomp")`.
+#' As of version 2, **pomp** syntax has changed substantially.
+#' These changes [are documented](http://kingaa.github.io/pomp/vignettes/upgrade_guide.html) on the **pomp** website.
+#' </div>
+#' 
+
+## ----prelims,include=FALSE,cache=FALSE----------------------------------------
 library(pomp)
-stopifnot(packageVersion("pomp")>"1.4.9")
+stopifnot(packageVersion("pomp")>="2.8")
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
@@ -80,7 +107,7 @@ set.seed(1173489184)
 #' To incorporate these deterministic equations into a `pomp` object, we supply them to the `pomp` function via the `skeleton` argument as a `Csnippet`.
 #' We must also provide a `Csnippet` to initialize the state variables $S$, $I$, and $R$.
 #' For example:
-## ----closed-sir-model-defn-three-----------------------------------------
+## ----closed-sir-model-defn-three----------------------------------------------
 library(pomp)
 
 closed.sir.ode <- Csnippet("
@@ -98,7 +125,7 @@ init1 <- Csnippet("
 pomp(data=data.frame(time=1:50,data=NA),
      times="time",t0=0,
      skeleton=vectorfield(closed.sir.ode),
-     initializer=init1,
+     rinit=init1,
      statenames=c("S","I","R"),
      paramnames=c("Beta","gamma","N")) -> closed.sir
 
@@ -106,17 +133,17 @@ pomp(data=data.frame(time=1:50,data=NA),
 #' Now we can call `trajectory` to compute trajectories of the model.
 #' To do this, we'll need some values of the parameters.
 #' If we're thinking of a disease something like measles, and measuring time in days, we might use something like:
-## ----set-closed-params---------------------------------------------------
+## ----set-closed-params--------------------------------------------------------
 params1 <- c(Beta=1,gamma=1/13,N=763)
 
 #' What is the infectious period of this disease?
 #' 
 #' Next, we compute a model trajectory with the `trajectory` command and store the result in a data-frame:
-## ----solve-closed-sir----------------------------------------------------
-x <- trajectory(closed.sir,params=params1,as.data.frame=TRUE)
+## ----solve-closed-sir---------------------------------------------------------
+x <- trajectory(closed.sir,params=params1,format="data.frame")
 
 #' and plot the results using the commands:
-## ----epi-curve-plot,eval=T-----------------------------------------------
+## ----epi-curve-plot,eval=T----------------------------------------------------
 library(ggplot2)
 ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 
@@ -133,17 +160,18 @@ ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 #' Let's study how the epidemic curve depends on the transmission rate, $\beta$, and the infectious period.
 #' In particular, we'll investigate how the epidemic curve changes as we vary $\beta$ from 0.05 to 2 and the infectious period from 1 to 8 days.
 #' 
-## ----nine-curves,echo=FALSE,warning=FALSE,purl=TRUE----------------------
+## ----nine-curves,echo=FALSE,warning=FALSE,purl=TRUE---------------------------
 expand.grid(Beta=c(0.05,1,2),gamma=1/c(1,2,4,8),N=763) -> params2
 
-x <- trajectory(closed.sir,params=t(params2),as=TRUE,times=seq(0,50))
+x <- trajectory(closed.sir,params=t(params2),times=seq(0,50),
+                format="d")
 
 library(plyr)
-mutate(params2,traj=seq_along(Beta)) -> params2
-join(x,params2,by="traj") -> x
+mutate(params2,.id=seq_along(Beta)) -> params2
+join(x,params2,by=".id") -> x
 
 library(ggplot2)
-ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
+ggplot(data=x,mapping=aes(x=time,y=I,group=.id,
                           linetype=factor(Beta),color=factor(1/gamma)))+
   geom_line()+scale_y_log10(limits=c(1e-3,NA))+
   labs(x="time (da)",color=expression("IP"==1/gamma),
@@ -184,7 +212,7 @@ ggplot(data=x,mapping=aes(x=time,y=I,group=traj,
 #' $$R_0=-\frac{\log{(1-f)}}{f}.$$
 #' 
 #' The following shows the relationship between final size and $R_0$:
-## ----final-size,echo=F,purl=TRUE-----------------------------------------
+## ----final-size,echo=F,purl=TRUE----------------------------------------------
 f <- seq(0,1,length=100)
 R0 <- -log(1-f)/f
 plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
@@ -213,7 +241,7 @@ plot(f~R0,type='l',xlab=expression(R[0]),ylab="fraction infected",bty='l')
 #' \end{aligned}$$
 #' 
 #' We must modify the ODE function accordingly:
-## ----open-sir-model-defn-------------------------------------------------
+## ----open-sir-model-defn------------------------------------------------------
 open.sir.ode <- Csnippet("
   DS = -Beta*S*I/N+mu*(N-S);
   DI = Beta*S*I/N-gamma*I-mu*I;
@@ -229,25 +257,25 @@ init2 <- Csnippet("
 pomp(data=data.frame(time=seq(0,20,by=1/52),cases=NA),
      times="time",t0=-1/52,
      skeleton=vectorfield(open.sir.ode),
-     initializer=init2,
+     rinit=init2,
      statenames=c("S","I","R"),
      paramnames=c("Beta","gamma","mu","S_0","I_0","N")
 ) -> open.sir
 
 #' 
 #' We'll need to specify a birth/death rate in addition to the two parameters we specified before:
-## ----set-open-params-----------------------------------------------------
-params <- c(mu=1/50,Beta=400,gamma=13,
-            N=100000,S_0=100000/12,I_0=100)
+## ----set-open-params----------------------------------------------------------
+params3 <- c(mu=1/50,Beta=400,gamma=365/13,
+  N=100000,S_0=100000/12,I_0=100)
 
 #' We integrate the equations as before:
-## ----solve-open-sir------------------------------------------------------
-x <- trajectory(open.sir,params=params,as=TRUE)
+## ----solve-open-sir-----------------------------------------------------------
+x <- trajectory(open.sir,params=params3,format="d")
 
 #' 
 #' We can plot each of the state variables against time, and $I$ against $S$:
 #' 
-## ----open-epi-plot,eval=TRUE,fig.show='hold'-----------------------------
+## ----open-epi-plot,eval=TRUE,fig.show='hold'----------------------------------
 library(ggplot2)
 ggplot(data=x,mapping=aes(x=time,y=I))+geom_line()
 ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
@@ -296,7 +324,7 @@ ggplot(data=x,mapping=aes(x=S,y=I))+geom_path()
 #' An important driver in childhood infections of humans (e.g., measles) is seasonality in contact rates because of aggregation of children the during school term. 
 #' We can analyze the consequences of this by assuming sinusoidal forcing on $\beta$ according to $\beta(t)=\beta_0\,(1+\beta_1\cos(2\,\pi\,t))$. 
 #' We can modify the code presented above to solve the equations for a seasonally forced epidemic.
-## ----seas-sir,cache=TRUE-------------------------------------------------
+## ----seas-sir,cache=TRUE------------------------------------------------------
 seasonal.sir.ode <- Csnippet("
   double Beta = beta0*(1+beta1*cos(2*M_PI*t));
   DS = -Beta*S*I/N+mu*(N-S);
@@ -306,7 +334,7 @@ seasonal.sir.ode <- Csnippet("
 
 pomp(open.sir,
      skeleton=vectorfield(seasonal.sir.ode),
-     initializer=init2,
+     rinit=init2,
      statenames=c("S","I","R"),
      paramnames=c("beta0","beta1","gamma","mu","N","S_0","I_0")
 ) -> seas.sir
@@ -314,7 +342,7 @@ pomp(open.sir,
 params3 <- c(mu=1/50,beta0=400,beta1=0.15,gamma=26,
              N=1e5,S_0=7000,I_0=50)
 
-trajectory(seas.sir,params=params3,as=TRUE) -> x
+trajectory(seas.sir,params=params3,format="data.frame") -> x
 
 library(ggplot2)
 ggplot(x,mapping=aes(x=time,y=I))+geom_path()

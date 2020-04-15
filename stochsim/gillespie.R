@@ -7,15 +7,50 @@
 #'     toc_depth: 4
 #' bibliography: ../course.bib
 #' csl: ../ecology.csl
-#' nocite: |
+#' nocite: >
 #'   @Gardiner2009
 #' ---
 #' 
+#' \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
+#' \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
+#' \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+#' \newcommand\cov[1]{\mathrm{Cov}\left[{#1}\right]}
+#' \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
+#' \newcommand\dlta[1]{{\Delta}{#1}}
+#' \newcommand{\dd}[1]{\mathrm{d}{#1}}
+#' \newcommand{\transpose}{\mathrm{T}}
+#' \newcommand\lik{\mathcal{L}}
+#' \newcommand\loglik{\ell}
+#' \newcommand{\scinot}[2]{#1{\times}10^{#2}}
+#' \newcommand{\pd}[3][]{\frac{\partial^{#1}{#2}}{\partial{#3}^{#1}}}
+#' \newcommand{\deriv}[3][]{\frac{\mathrm{d}^{#1}{#2}}{\mathrm{d}{#3}^{#1}}}
+#' 
 #' Licensed under the Creative Commons attribution-noncommercial license, http://creativecommons.org/licenses/by-nc/3.0/.
 #' Please share and remix noncommercially, mentioning its origin.  
-#' ![CC-BY_NC](http://kinglab.eeb.lsa.umich.edu/graphics/cc-by-nc.png)
+#' ![CC-BY_NC](../graphics/cc-by-nc.png)
 #' 
-## ----include=FALSE,cache=FALSE-------------------------------------------
+#' <style type="text/css">
+#' div .nb {
+#' 	background-color: #ffeca3;
+#' 	border-style: solid;
+#' 	border-width: 2;
+#' 	border-color: #00274c;
+#' 	padding: 1em;
+#' }
+#' hr {
+#' 	border-width: 3;
+#' 	border-color: #00274c;
+#' }
+#' </style>
+#' 
+#' <div class="nb"> 
+#' **Important Note:**
+#' These materials have been updated for use with version `r packageVersion("pomp")`.
+#' As of version 2, **pomp** syntax has changed substantially.
+#' These changes [are documented](http://kingaa.github.io/pomp/vignettes/upgrade_guide.html) on the **pomp** website.
+#' </div>
+#' 
+## ----include=FALSE,cache=FALSE------------------------------------------------
 library(knitr)
 prefix <- "gillespie"
 opts_chunk$set(
@@ -62,23 +97,23 @@ options(keep.source=TRUE,encoding="UTF-8")
 #' This is, in fact, a perfectly reasonable assumption since not all infected individuals will give rise to exactly the same number of secondary infections nor recover after exactly the same interval of time. 
 #' Since the random variation considered in this example is variation among individuals, such as scenario is referred to as *demographic stochasticity*.
 #' 
-#'  At this point, there are still a number of different directions we could go. 
-#'  We will make two assumptions that, together with the assumption of demographic stochasticity, uniquely determine a whole class of models. 
-#'  First, we assume that the epidemic is a *Markov chain*. 
-#'  A Markov chain is a stochastic process with the property that the future state of the system is dependent only on the present state of the system and conditionally independent of all past states. 
-#'  This is known as the *memoryless property*. 
-#'  Second, we assume that the changes in the state variables (increments and decrements) occur one at a time. 
-#'  That is, we cannot have two individuals simultaneously undergoing a "transition", where  refers to any change in the state variables (birth, death, conversion  between classes, etc.). 
-#'  Any time an individual undergoes such a transition, we will call it an "event". 
-#'  Accordingly, this kind of modeling is sometimes referred to as "event-driven simulation". 
-#'  For historical reasons, the continuous time Markov chain with increments and decrements of one is known as a birth-death process.
-#'  (In general, a Markov chain with integer-valued increments and decrements is known as a *jump process*.)
+#' At this point, there are still a number of different directions we could go. 
+#' We will make two assumptions that, together with the assumption of demographic stochasticity, uniquely determine a whole class of models. 
+#' First, we assume that the epidemic is a *Markov chain*. 
+#' A Markov chain is a stochastic process with the property that the future state of the system is dependent only on the present state of the system and conditionally independent of all past states. 
+#' This is known as the *memoryless property*. 
+#' Second, we assume that the changes in the state variables (increments and decrements) occur one at a time. 
+#' That is, we cannot have two individuals simultaneously undergoing a "transition", where  refers to any change in the state variables (birth, death, conversion  between classes, etc.). 
+#' Any time an individual undergoes such a transition, we will call it an "event". 
+#' Accordingly, this kind of modeling is sometimes referred to as "event-driven simulation". 
+#' For historical reasons, the continuous time Markov chain with increments and decrements of one is known as a birth-death process.
+#' (In general, a Markov chain with integer-valued increments and decrements is known as a *jump process*.)
 #' 
-#'  [Note: An aside about birth-death processes is that notation varies considerably from author to author, even though the authors are referring to exactly the same stochastic process. 
-#'    Particularly, the computational literature uses a notation borrow from chemistry, e.g., $S \stackrel{\mu S}{\longrightarrow} {S-1}$, probably because the algorithms that are  commonly used to simulate birth-death processes were developed in the context of chemical kinetics. 
-#'    Probabilists, by contrast, often use the generating function notation and scientists that come to birth-death processes from a background in statistical mechanics represent the process using the *Forward Kolmogorov Equation* or *Fokker-Planck Equation* (a partial differential equation). 
-#'    Textbooks in  epidemiology differ, too. 
-#'    The point is that once you learn to "read" the different notations, they are all saying the same thing, i.e., that changes in the state variables occur according to such and such rates. It's these rates that are the basis of simulation modeling.]
+#' [Note: An aside about birth-death processes is that notation varies considerably from author to author, even though the authors are referring to exactly the same stochastic process. 
+#' Particularly, the computational literature uses a notation borrow from chemistry, e.g., $S \stackrel{\mu S}{\longrightarrow} {S-1}$, probably because the algorithms that are  commonly used to simulate birth-death processes were developed in the context of chemical kinetics. 
+#' Probabilists, by contrast, often use the generating function notation and scientists that come to birth-death processes from a background in statistical mechanics represent the process using the *Forward Kolmogorov Equation* or *Fokker-Planck Equation* (a partial differential equation). 
+#' Textbooks in  epidemiology differ, too. 
+#' The point is that once you learn to "read" the different notations, they are all saying the same thing, i.e., that changes in the state variables occur according to such and such rates. It's these rates that are the basis of simulation modeling.]
 #' 
 #' ## Simple stochastic SI epidemic
 #' 
@@ -105,7 +140,7 @@ options(keep.source=TRUE,encoding="UTF-8")
 #' 
 #' Here's a function implementing the Gillespie direct method.
 #' Note that it just takes one step at a time and depends on another function which actually computes that step.
-## ----si-loop-------------------------------------------------------------
+## ----si-loop------------------------------------------------------------------
 SI.simul <- function (x, params, nstep) {
   ## set up an array to store results
   output <- array(dim=c(nstep+1,3))       
@@ -122,7 +157,7 @@ SI.simul <- function (x, params, nstep) {
 
 #' 
 #' Here's the function that takes the step.
-## ----si-onestep----------------------------------------------------------
+## ----si-onestep---------------------------------------------------------------
 SI.onestep <- function (x, params) {     
   ## the second element of x is number of susceptibles X
   X <- x[2]
@@ -139,7 +174,7 @@ SI.onestep <- function (x, params) {
 #' Note that because time is continuous and the process is stochastic, the number of events that occur in a specified amount of time will vary.
 #' Instead, we save some pre-set number of "events". 
 #' 
-## ----sim1,cache=T,fig.height=7-------------------------------------------
+## ----sim1,cache=T,fig.height=7------------------------------------------------
 set.seed(38499583)    # make results repeatable
 nsims <- 10           # number of simulations to run
 pop.size <- 200       # size of the population
@@ -160,11 +195,11 @@ for (k in 1:nsims)
   lines(Y~time,data=simdat[[k]],col=k,type='o',pch=16)
 
 #' 
-#' #### Exercise
-#'   Simulate the stochastic SI model using Gillespie's direct method. 
-#'   Experiment with the initial number of infecteds ($Y_0$) and with the total population size ($N$). 
-#'   What effects do these have on the predictability of the epidemic? 
-#'   What effects do these have on the variability of the final outbreak size?
+#' ##### Exercise
+#' Simulate the stochastic SI model using Gillespie's direct method. 
+#' Experiment with the initial number of infecteds ($Y_0$) and with the total population size ($N$). 
+#' What effects do these have on the predictability of the epidemic? 
+#' What effects do these have on the variability of the final outbreak size?
 #' 
 #' 
 #' 
@@ -192,8 +227,7 @@ for (k in 1:nsims)
 #' 
 #' Let's see how to implement this in `R`.
 #' As before, we first define a one-step function.
-## ----sir-onestep---------------------------------------------------------
-
+## ----sir-onestep--------------------------------------------------------------
 SIR.onestep <- function (x, params) {
   X <- x[2]
   Y <- x[3]
@@ -204,22 +238,22 @@ SIR.onestep <- function (x, params) {
   gamma <- params["gamma"]
   ## each individual rate
   rates <- c(
-             birth=mu*N,
-             infection=beta*X*Y/N,
-             recovery=gamma*Y,
-             sdeath=mu*X,
-             ideath=mu*Y,
-             rdeath=mu*Z
-             )
+    birth=mu*N,
+    infection=beta*X*Y/N,
+    recovery=gamma*Y,
+    sdeath=mu*X,
+    ideath=mu*Y,
+    rdeath=mu*Z
+  )
   ## what changes with each event?
   transitions <- list( 
-                      birth=c(1,0,0),
-                      infection=c(-1,1,0),
-                      recovery=c(0,-1,1),
-                      sdeath=c(-1,0,0),
-                      ideath=c(0,-1,0),
-                      rdeath=c(0,0,-1)
-                      )
+    birth=c(1,0,0),
+    infection=c(-1,1,0),
+    recovery=c(0,-1,1),
+    sdeath=c(-1,0,0),
+    ideath=c(0,-1,0),
+    rdeath=c(0,0,-1)
+  )
   ## total event rate
   total.rate <- sum(rates)
   ## waiting time
@@ -232,13 +266,12 @@ SIR.onestep <- function (x, params) {
   x+c(tau,transitions[[event]])
 }
 
-
 #' 
 #' Also as before, we set parameters and loop through the process.
 #' We do things slightly differently here:
 #' we'll stop the simulations if ever we run out of susceptibles.
 #' For safety's sake, however, we'll put an upper bound on the amount of work we'll do.
-## ----sir-sim-------------------------------------------------------------
+## ----sir-sim------------------------------------------------------------------
 SIR.simul <- function (x, params, maxstep = 10000) {
   output <- array(dim=c(maxstep+1,4))
   colnames(output) <- names(x)
@@ -255,7 +288,7 @@ SIR.simul <- function (x, params, maxstep = 10000) {
 
 #' 
 #' Now let's repeat for 10 runs and plot.
-## ----sir-runs------------------------------------------------------------
+## ----sir-runs-----------------------------------------------------------------
 set.seed(56856583)
 nsims <- 10
 xstart <- c(time=0,X=392,Y=8,Z=0) #initial conditions
@@ -263,58 +296,71 @@ params <- c(mu=0.02,beta=60,gamma=365/13) #parameters
 
 require(plyr)
 simdat <- rdply(
-                nsims,
-                SIR.simul(xstart,params)
-                )
+  nsims,
+  SIR.simul(xstart,params)
+)
 head(simdat)
 plot(Y~time,data=simdat,type='n')
 d_ply(simdat,".n",function(x)lines(Y~time,data=x,col=.n))
 
 #' 
-#' #### Exercise
-#'   Check out the `simdat` data frame created by the above code.
-#'   Use `class`, `head`, `tail`, `str`, and `plot` to examine it.
+#' ##### Exercise
+#' 
+#' Check out the `simdat` data frame created by the above code.
+#' Use `class`, `head`, `tail`, `str`, and `plot` to examine it.
 #' 
 #' 
-#' #### Exercise
-#'   Simulate the stochastic SIR model using Gillespie's direct method. 
-#'   As before, experiment with the initial number of infecteds ($Y_0$) and with the total population size ($N$). 
-#'   What effects do these have on the predictability of the epidemic?
+#' ##### Exercise
+#' 
+#' Simulate the stochastic SIR model using Gillespie's direct method. 
+#' As before, experiment with the initial number of infecteds ($Y_0$) and with the total population size ($N$). 
+#' What effects do these have on the predictability of the epidemic?
 #' 
 #' 
-#' ### Alternative implementation
+#' ## The Gillespie algorithm in **pomp**
 #' 
-#' An alternative implementation of the codes above will return the results at specified time-points.
+#' We can achieve much faster speeds using the implementation of Gillespie's algorithm in **pomp**.
 #' 
-## ----sir-sim-alt,cache=FALSE---------------------------------------------
-SIR.simul.alt <- function (x, params, times) {
-  output <- array(dim=c(length(times),4),dimnames=list(NULL,names(x)))
-  t <- x[1]
-  stopifnot(t<=times[1])
-  ## loop until either k > maxstep or
-  ## there are no more infectives
-  k <- 1
-  while (k <= length(times)) {
-    while (t < times[k]) {
-      x <- SIR.onestep(x,params)
-      t <- x[1]
-    }
-    while (t >= times[k] && k <= length(times)) {
-      output[k,] <- x
-      k <- k+1
-    }
-  }
-  as.data.frame(output)
-}
+#' The following codes implement the SIR simulation above in **pomp**.
+#' 
+## ----pomp---------------------------------------------------------------------
+library(pomp)
 
-## ----test-simul-alt,cache=FALSE,results='markup',include=FALSE-----------
-xstart <- c(time=0,X=392,Y=8,Z=0)
-params <- c(mu=0.02,beta=60,gamma=365/13)
-times <- seq(from=0,to=0.5,by=0.001)
-x <- SIR.simul.alt(xstart,times=times,params=params)
-print(x[1,])
-matplot(x[,1],x[,-1],type='l')
+pomp(
+  data=data.frame(
+    time=seq(0.01,0.5,by=0.01),
+    reports=NA
+  ),
+  times="time",t0=0,
+  rprocess=gillespie_hl(
+    birth=list("rate = mu*N;",c(N=1,X=1,Y=0,Z=0,cases=0)),
+    deathS=list("rate=mu*X;",c(N=-1,X=-1,Y=0,Z=0,cases=0)),
+    deathI=list("rate=mu*Y;",c(N=-1,X=0,Y=-1,Z=0,cases=0)),
+    deathR=list("rate=mu*Z;",c(N=-1,X=0,Y=0,Z=-1,cases=0)),
+    infection=list("rate=Beta*X*Y/N;",c(N=0,X=-1,Y=1,Z=0,cases=1)),
+    recovery=list("rate=gamma*Y;",c(N=0,X=0,Y=-1,Z=1,cases=0)),
+    hmax=0.01
+  ),
+  rmeasure=Csnippet("reports=rbinom(cases,rho);"),
+  paramnames=c("rho","mu","Beta","gamma"),
+  statenames=c("N","X","Y","Z","cases"),
+  accumvars=c("cases"),
+  params=c(X.0=392,Y.0=8,Z.0=0,N.0=400,cases.0=0,
+           mu=0.02,Beta=60,gamma=365/13,rho=0.5)
+) -> sir
 
+simulate(sir,nsim=10,format="data.frame") -> sims
+
+library(ggplot2)
+library(reshape2)
+ggplot(melt(sims,id=c("time",".id")),
+       aes(x=time,y=value,group=.id,color=.id))+
+  geom_line()+
+  guides(color=FALSE)+
+  facet_grid(variable~.,scales="free_y")
+
+
+#' 
 #' 
 #' ## Exploring the vicinity of the $R_0=1$ threshold
 #' 
@@ -326,97 +372,67 @@ matplot(x[,1],x[,-1],type='l')
 #' The following codes perform many simulations at each of several values of $R_0$.
 #' These simulations can be used to determine the shape of the distribution of epidemic final sizes.
 #' 
-## ----crit-sims,cache=T---------------------------------------------------
+## ----crit-sims,cache=T--------------------------------------------------------
 R0vals <- c(0.5,3)                      # R0 values to explore
-xstart <- c(time=0,X=392,Y=8,Z=0)
-params <- c(mu=0.02,beta=60,gamma=365/13) #parameters
-nsims <- 100                      # number of simulations per R0 value
-simdat <- array(dim=c(length(R0vals),nsims))
-for (k in seq_along(R0vals)) {
-  R0 <- R0vals[k]
-  params <- c(mu=1/60,gamma=365/13,beta=R0*365/13)
-  simdat[k,] <- replicate(n=nsims,
-                          {
-                            sim <- SIR.simul(xstart,params)
-                            tail(sim$Z,1)
-                          }
-                          )
-}
+params <- c(mu=0.02,Beta=NA,gamma=365/13,rho=0.5,
+            X.0=392,Y.0=8,Z.0=0,
+            N.0=400,cases.0=0) 
+
+library(foreach)
+library(doParallel)
+registerDoParallel()
+
+foreach (R0=R0vals) %dopar% {
+  params["Beta"] <- R0*365/13
+  simulate(sir,params=params,nsim=100,format="data.frame",times=0.5) -> sims
+  cbind(sims,R0=R0)
+} -> simdat
+
+library(plyr)
+ldply(simdat) -> simdat
+
+subset(simdat,time==max(time),select=c(Z,R0)) -> simfs
 
 #' 
 #' We can plot these distributions using histograms.
-## ----crit-sims-hist,results='markup'-------------------------------------
-binwidth <- 10
-popsize <- sum(xstart[-1])
-breaks <- seq(from=0,to=popsize,by=binwidth)
-hists <- apply(simdat,1,hist,breaks=breaks,plot=FALSE)
-midpoints <- hists[[1]]$mids
-counts <- sapply(hists,function(x)x$counts)
-prob <- sapply(hists,function(x)x$density)
-
-barplot(height=t(prob),width=binwidth,names=midpoints,
-        beside=T,col=seq_along(R0vals),
-        xlab="epidemic final size")
-legend("top",legend=R0vals,fill=seq_along(R0vals),
-       title=expression(R[0]),bty='n')
+## ----crit-sims-hist,results='markup'------------------------------------------
+ggplot(simfs,aes(x=Z,fill=R0,group=R0))+
+  geom_histogram(binwidth=10)+
+  labs(x="final size")
 
 #' 
-#' Just for fun, let's make a similar plot using `plyr`, `reshape2`, and `ggplot2`.
-## ----crit-sims-hist-ggplot,cache=T---------------------------------------
-require(ggplot2)
-require(reshape2)
-
-rownames(simdat) <- R0vals
-simdat2 <- melt(simdat,
-                varnames=c("R0","rep"),
-                value.name="finalsize"
-                )
-ggplot(data=simdat2,mapping=aes(x=finalsize,group=R0))+
-  geom_histogram(binwidth=10,color=NA,position='dodge')+
-  facet_grid(R0~.,labeller=label_bquote(R[0]==.(x)))
-
-#' 
-#' #### Exercise
-#'   Use the codes above to explore the final size in a neighborhood of the critical threshold.
-#'   How do the results from the deterministic and stochastic models differ?
+#' ##### Exercise
+#' Use the codes above to explore the final size in a neighborhood of the critical threshold.
+#' How do the results from the deterministic and stochastic models differ?
 #' 
 #' 
-## ----crit-explore-exercise,cache=TRUE,include=FALSE----------------------
+## ----crit-explore-exercise,cache=TRUE,include=FALSE---------------------------
 R0vals <- seq(0.8,1.4,by=0.05)
-xstart <- c(time=0,X=392,Y=8,Z=0)
-nsims <- 1000
-data <- array(dim=c(length(R0vals),nsims))
-for (k in seq_along(R0vals)) {
-  R0 <- R0vals[k]
-  params <- c(mu=1/60,gamma=365/13,beta=R0*365/13)
-  data[k,] <- replicate(n=nsims,
-                        {
-                          sim <- SIR.simul(xstart,params)
-                          tail(sim$Z,1)
-                        }
-                        )
-}
-medians <- apply(data,1,median)
-means <- apply(data,1,mean)
-sds <- apply(data,1,sd)
-matplot(R0vals,cbind(mean=means,sd=sds,median=medians),
-        xlab=expression(R[0]),ylab="number of infections",
-        type='n')
-lines(R0vals,means,col='red')
-lines(R0vals,sds,col='blue')
-lines(R0vals,medians,col='black')
-legend("topleft",
-       lty=1,col=c("red","blue","black"),
-       legend=c("mean","sd","median"),
-       title="epidemic final size",
-       bty='n')
+library(foreach)
+library(doParallel)
+registerDoParallel()
+
+foreach (R0=R0vals) %dopar% {
+  params["Beta"] <- R0*365/13
+  simulate(sir,params=params,nsim=500,format="data.frame",times=0.5) -> sims
+  cbind(sims,R0=R0)
+} -> simdat
+
+library(plyr)
+ldply(simdat) -> simdat
+
+subset(simdat,select=c(Z,R0)) -> simfs
+ggplot(simfs,aes(x=Z,group=R0))+
+  geom_histogram(binwidth=10,aes(y=..density..))+
+  labs(x="final size")+
+  facet_grid(R0~.)
 
 #' 
-#' #### Exercise
-#'   Use the stochastic simulator to generate some "data" for known parameter values: $R_0=2$, infectious period of 13~da, host lifespan of 50~yr.
-#'   Estimate $R_0$ for each simulated epidemic using the invasion-phase growth rate method.
-#'   Estimate $R_0$ and $\gamma$ using the trajectory-matching approach.
-#'   Comment on the agreement between the true parameters and your estimates.
+#' ##### Exercise
+#' Use the stochastic simulator to generate some "data" for known parameter values: $R_0=2$, infectious period of 13~da, host lifespan of 50~yr.
+#' Estimate $R_0$ for each simulated epidemic using the invasion-phase growth rate method.
+#' Estimate $R_0$ and $\gamma$ using the trajectory-matching approach.
+#' Comment on the agreement between the true parameters and your estimates.
 #' 
 #' 
 #' ## Stochastic differential equations
@@ -435,9 +451,7 @@ legend("topleft",
 #' 
 #' --------------------------
 #' 
-#' **Diagram of the SIR model**
-#' 
-#' ![CC-BY_NC](http://kinglab.eeb.lsa.umich.edu/ICTPWID/SaoPaulo_2015/Aaron/graphics/SIR_diagram1.png)
+#' ![Diagram of the SIR model](../graphics/SIR_diagram1.png)
 #' 
 #' $N_{XY}$ represents the cumulative number of individuals that have moved beetween compartments X and Y.
 #' 
@@ -459,17 +473,17 @@ legend("topleft",
 #' The easiest way to simulate realizations of an SDE model such as this is to use the *Euler-Maruyama* method.
 #' The following code implements Euler-Maruyama for an arbitrary system of SDE.
 #' 
-## ----euler-maruyama------------------------------------------------------
-eulmar <- function (func, xstart, times, params, dt) {
+## ----euler-maruyama-----------------------------------------------------------
+eulmar <- function (func, xstart, times, dt, ...) {
   out <- array(
-               dim=c(length(times),length(xstart)),
-               dimnames=list(NULL,names(xstart))
-               )
+    dim=c(length(times),length(xstart)),
+    dimnames=list(NULL,names(xstart))
+  )
   out[1,] <- x <- xstart
   t <- times[1]
   for (k in seq.int(from=2,to=length(times))) {
     while (t < times[k]) {
-      dx <- func(t,x,params,dt)
+      dx <- func(t,x,dt,...)
       x <- x+dx
       t <- t+dt
     }
@@ -482,31 +496,31 @@ eulmar <- function (func, xstart, times, params, dt) {
 #' In the `eulmar` function, it is assumed that `func` is a function that takes one Euler-Maruyama step of size `dt`.
 #' Here's an example of such a function for the SIR model.
 #' 
-## ----sir-eulerstep-------------------------------------------------------
-sir.eulerstep <- function (t, x, params, dt) {
+## ----sir-eulerstep------------------------------------------------------------
+sir.eulerstep <- function (t, x, dt, mu, Beta, gamma) {
   N <- sum(x)
   means <- c(
-             params["mu"]*N,
-             params["beta"]*x[1]*x[2]/N,
-             params["gamma"]*x[2],
-             params["mu"]*x
-             )*dt
+    mu*N,
+    Beta*x[1]*x[2]/N,
+    gamma*x[2],
+    mu*x
+  )*dt
   dn <- rnorm(n=6,mean=means,sd=sqrt(means))
   c(
     dn[1]-dn[2]-dn[4],
     dn[2]-dn[3]-dn[5],
     dn[3]-dn[6]
-    )
+  )
 }
 
 #' 
-## ----sir-sde-sim,cache=T-------------------------------------------------
+## ----sir-sde-sim,cache=T------------------------------------------------------
 set.seed(238785319)
 xstart <- c(X=392,Y=8,Z=0) #initial conditions
-params <- c(mu=0.02,beta=50,gamma=365/13) #parameters
 times <- seq(from=0,to=0.5,by=1/365)
 x <- eulmar(func=sir.eulerstep,
-            xstart=xstart,params=params,
+            xstart=xstart,
+            mu=0.02, Beta=50, gamma=365/13,
             times=times,
             dt=0.001)
 plot(Y~time,data=x,type='o')
@@ -522,60 +536,59 @@ plot(Y~time,data=x,type='o')
 #' $$dy = \frac{1}{Y}\,\left(dN_{SI}-dN_{IR}-dN_{I{\emptyset}}\right)-\frac{1}{2\,Y^2}\,\left(\frac{\beta\,X\,Y}{X+Y+Z}+\mu\,Y+\gamma\,Y\right)\,dt$$
 #' $$dz = \frac{1}{Z}\,\left(dN_{IR}-dN_{R{\emptyset}}\right)-\frac{1}{2\,Z^2}\,\left(\gamma\,Z+\mu\,Z\right)\,dt$$
 #' 
-## ----log-sir-sims,cache=TRUE---------------------------------------------
-log.sir.eulerstep <- function (t, x, params, dt) {
+## ----log-sir-sims,cache=TRUE--------------------------------------------------
+log.sir.eulerstep <- function (t, x, dt, mu, Beta, gamma) {
   x <- exp(x)
   N <- sum(x)
   means <- c(
-             params["mu"]*N,
-             params["beta"]*x[1]*x[2]/N,
-             params["gamma"]*x[2],
-             params["mu"]*x
-             )*dt
+    mu*N,
+    Beta*x[1]*x[2]/N,
+    gamma*x[2],
+    mu*x
+  )*dt
   v <- means
   dn <- rnorm(n=6,mean=means,sd=sqrt(means))
   c(
     (dn[1]-dn[2]-dn[4])/x[1]-sum(v[c(1,2,4)])/2/x[1]/x[1],
     (dn[2]-dn[3]-dn[5])/x[2]-sum(v[c(2,3,5)])/2/x[2]/x[2],
     (dn[3]-dn[6])/x[3]-sum(v[c(3,6)])/2/x[3]/x[3]
-    )
+  )
 }
 
 set.seed(23785319)
 xstart <- c(X=392,Y=8,Z=1)
-params <- c(mu=0.02,beta=50,gamma=365/13)
 times <- seq(from=0,to=0.5,by=1/365)
 x <- eulmar(func=log.sir.eulerstep,
             xstart=log(xstart),
-            params=params,
+            mu=0.02, Beta=50, gamma=365/13,
             times=times,
             dt=0.001)
 within(
-       x,
-       {
-         X <- exp(X)
-         Y <- exp(Y)
-         Z <- exp(Z)
-       }
-       ) -> x
+  x,
+  {
+    X <- exp(X)
+    Y <- exp(Y)
+    Z <- exp(Z)
+  }
+) -> x
 plot(Y~time,data=x,type='o')
 
 require(plyr)
 simdat <- rdply(
-                20,
-                within(
-                       eulmar(func=log.sir.eulerstep,
-                              xstart=log(xstart),
-                              params=params,
-                              times=times,
-                              dt=0.001),
-                       {
-                         X <- exp(X)
-                         Y <- exp(Y)
-                         Z <- exp(Z)
-                       }
-                       )
-                )
+  20,
+  within(
+    eulmar(func=log.sir.eulerstep,
+           xstart=log(xstart),
+           mu=0.02, Beta=50, gamma=365/13,
+           times=times,
+           dt=0.001),
+    {
+      X <- exp(X)
+      Y <- exp(Y)
+      Z <- exp(Z)
+    }
+  )
+)
 plot(Y~time,data=simdat,type='n')
 d_ply(simdat,".n",function(x)lines(Y~time,data=x,col=.n))
 

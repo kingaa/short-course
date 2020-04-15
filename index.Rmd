@@ -59,6 +59,16 @@ hr {
 }
 </style>
 
+<div class="nb"> 
+**Important Note:**
+The materials here use an old version of **pomp**.
+With version 2, the **pomp** syntax changed substantially so that these codes will no longer run.
+An up-to-date tutorial covering much the same ground can be found [here](https://kingaa.github.io/sbied/).
+
+In some instances, the materials have been superseded entirely.
+In these cases, links are provided to more up-to-date versions.
+</div>
+
 ### Instructor
 
 Prof.&nbsp;Aaron A. King, Ph.D.  
@@ -136,13 +146,6 @@ Students should do the following **before the first day of the course**:
 If you are proficient in **R**, look through the tutorial nevertheless.
 
 ## Tentative Schedule
-
-<div class="nb"> 
-**Important Note:**
-Note that the materials here use an old version of **pomp**.
-With version 2, the **pomp** syntax changed substantially so that these codes will no longer run.
-An up-to-date tutorial covering much the same ground can be found [here](https://kingaa.github.io/sbied/).
-</div>
 
 ```{r sched1,echo=FALSE}
 begin.date <- as.Date("2016-05-09")

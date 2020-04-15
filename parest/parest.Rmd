@@ -13,15 +13,42 @@ csl: ../ecology.csl
 \newcommand\prob[1]{\mathbb{P}\left[{#1}\right]}
 \newcommand\expect[1]{\mathbb{E}\left[{#1}\right]}
 \newcommand\var[1]{\mathrm{Var}\left[{#1}\right]}
+\newcommand\cov[1]{\mathrm{Cov}\left[{#1}\right]}
 \newcommand\dist[2]{\mathrm{#1}\left(#2\right)}
 \newcommand\dlta[1]{{\Delta}{#1}}
+\newcommand{\dd}[1]{\mathrm{d}{#1}}
+\newcommand{\transpose}{\mathrm{T}}
 \newcommand\lik{\mathcal{L}}
 \newcommand\loglik{\ell}
+\newcommand{\scinot}[2]{#1{\times}10^{#2}}
+\newcommand{\pd}[3][]{\frac{\partial^{#1}{#2}}{\partial{#3}^{#1}}}
+\newcommand{\deriv}[3][]{\frac{\mathrm{d}^{#1}{#2}}{\mathrm{d}{#3}^{#1}}}
 
 This lesson is based on notes developed over the years and contains contributions originally made by Ben Bolker, John Drake, Pej Rohani, and David Smith.
 It is [licensed under the Creative Commons Attribution-NonCommercial license](http://creativecommons.org/licenses/by-nc/4.0/).
 Please share and remix noncommercially, mentioning its origin.  
 ![CC-BY_NC](../graphics/cc-by-nc.png)
+
+<style type="text/css">
+div .nb {
+	background-color: #ffeca3;
+	border-style: solid;
+	border-width: 2;
+	border-color: #00274c;
+	padding: 1em;
+}
+hr {
+	border-width: 3;
+	border-color: #00274c;
+}
+</style>
+
+<div class="nb"> 
+**Important Note:**
+These materials have been updated for use with version `r packageVersion("pomp")`.
+As of version 2, **pomp** syntax has changed substantially.
+These changes [are documented](http://kingaa.github.io/pomp/vignettes/upgrade_guide.html) on the **pomp** website.
+</div>
 
 ```{r knitr-opts,include=FALSE,purl=FALSE,cache=FALSE}
 library(knitr)
@@ -45,7 +72,7 @@ options(keep.source=TRUE,encoding="UTF-8")
 ```
 ```{r prelims,include=FALSE,cache=FALSE}
 library(pomp)
-stopifnot(packageVersion("pomp")>"1.4.9")
+stopifnot(packageVersion("pomp")>="2.8")
 library(plyr)
 library(reshape2)
 options(stringsAsFactors=FALSE)
@@ -241,7 +268,7 @@ pomp(
       DS = -Beta*S*I/N;
       DI = Beta*S*I/N-gamma*I;
       DR = gamma*I;")),
-  initializer=Csnippet("
+  rinit=Csnippet("
       S = S_0;
       I = I_0;
       R = N-S_0-I_0;"),
@@ -286,9 +313,9 @@ We compute the model's trajectory to find out:
 
 ```{r sse-betahat}
 coef(niameyA) <- c(Beta=beta.hat,gamma=1,N=50000,S_0=10000,I_0=10)
-x <- trajectory(niameyA,as.data.frame=TRUE)
-ggplot(data=join(as.data.frame(niameyA),x,by='time'),
-       mapping=aes(x=time))+
+x <- trajectory(niameyA,format="data.frame")
+ggplot(data=join(as.data.frame(niameyA),x,by='biweek'),
+       mapping=aes(x=biweek))+
   geom_line(aes(y=measles),color='black')+
   geom_line(aes(y=I),color='red')
 ```
@@ -302,10 +329,10 @@ beta.hat <- beta[which.min(SSE)]
 abline(v=beta.hat,lty=2)
 
 coef(niameyA,"Beta") <- beta.hat
-x <- trajectory(niameyA,as.data.frame=TRUE)
-dat <- join(as.data.frame(niameyA),x,by='time')
+x <- trajectory(niameyA,format="data.frame")
+dat <- join(as.data.frame(niameyA),x,by='biweek')
 
-ggplot(dat,aes(x=time))+
+ggplot(dat,aes(x=biweek))+
   geom_line(aes(y=measles),color='black')+
   geom_line(aes(y=I),color='red')
 ```
@@ -344,10 +371,10 @@ Let's see what happens when we try to estimate two parameters at once.
 grid <- expand.grid(Beta=seq(from=0,to=20,length=50),
                     S_0=seq(from=4000,to=20000,length=50),
                     N=50000,gamma=1,I_0=10)
-x <- trajectory(niameyA,params=t(grid),as.data.frame=TRUE)
+x <- trajectory(niameyA,params=t(grid),format="data.frame")
 library(plyr)
-join(x,as.data.frame(niameyA),by="time") -> x
-ddply(x,~traj,summarize,sse=sum((measles-I)^2)) -> x
+join(x,as.data.frame(niameyA),by="biweek") -> x
+ddply(x,~.id,summarize,sse=sum((measles-I)^2)) -> x
 cbind(grid,x) -> grid
 ```
 
@@ -460,7 +487,7 @@ pomp(
       incidence = b*S*I;
       DS = -incidence;
       DI = incidence-gamma*I;")),
-  initializer=Csnippet("
+  rinit=Csnippet("
       S = S_0;
       I = I_0;"),
   paramnames=c("b","gamma","S_0","I_0"),
@@ -698,7 +725,7 @@ typ <- sample(nrow(simdat),1)
 ggplot(data=cbind(as.data.frame(niameyA2),
                   quantiles,
                   typical=simdat[typ,]),
-       mapping=aes(x=time))+
+       mapping=aes(x=biweek))+
   geom_line(aes(y=`50%`),color='red')+
   geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
   geom_line(aes(y=measles),color='black')+
@@ -766,7 +793,7 @@ typ <- sample(nrow(simdat),1)
 ggplot(data=cbind(as.data.frame(niameyA2),
                   quantiles,
                   typical=simdat[typ,]),
-       mapping=aes(x=time))+
+       mapping=aes(x=biweek))+
   geom_line(aes(y=`50%`),color='red')+
   geom_ribbon(aes(ymin=`2.5%`,ymax=`97.5%`),fill='red',alpha=0.2)+
   geom_line(aes(y=measles),color='black')+
